@@ -11,6 +11,60 @@ try {
   }
 }
 
+// Connection status functions
+async function getClientIP() {
+  try {
+    const response = await fetch('https://wtfismyip.com/json');
+    const data = await response.json();
+    return data.YourFuckingIPAddress;
+  } catch (error) {
+    console.error('Failed to get client IP:', error);
+    return 'unknown';
+  }
+}
+
+async function measurePing() {
+  try {
+    const start = Date.now();
+    await fetch('/api/server-info', { method: 'HEAD' });
+    const end = Date.now();
+    return end - start;
+  } catch (error) {
+    console.error('Failed to measure ping:', error);
+    return 'unknown';
+  }
+}
+
+async function updateConnectionStatus() {
+  const statusElement = document.getElementById('connection-status');
+  if (!statusElement) return;
+
+  try {
+    // Get server info
+    const serverResponse = await fetch('/api/server-info');
+    const serverData = await serverResponse.json();
+
+    // Get client IP
+    const clientIP = await getClientIP();
+
+    // Measure ping
+    const ping = await measurePing();
+
+    // Update status
+    const statusText = `connected to ${serverData.serverIP} via cloudflare tunnel (${serverData.domain}), from ${clientIP}. ping: ${ping}ms`;
+    statusElement.textContent = statusText;
+    statusElement.title = statusText; // Show full text on hover
+
+    // Update periodically
+    setTimeout(updateConnectionStatus, 30000); // Update every 30 seconds
+  } catch (error) {
+    console.error('Failed to update connection status:', error);
+    statusElement.textContent = 'Connection status unavailable';
+    // Retry after 10 seconds on error
+    setTimeout(updateConnectionStatus, 10000);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Blocked Hostnames Check
   const blockedHostnames = ["gointerstellar.app"];
@@ -25,14 +79,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const nav = document.querySelector(".f-nav");
 
   if (nav) {
-    const themeId = localStorage.getItem("theme");
-    let LogoUrl = "/assets/media/favicon/main.png";
-    if (themeId === "Inverted") {
-      LogoUrl = "/assets/media/favicon/main-inverted.png";
-    }
     const html = `
       <div id="icon-container">
-        <a class="icon" href="/./"><img alt="nav" id="INImg" src="${LogoUrl}"/></a>
+        <div id="connection-status" class="status-display">Loading connection status...</div>
       </div>
       <div class="f-nav-right">
         <a class="navbar-link" href="/./a"><i class="fa-solid fa-gamepad navbar-icon"></i><an>&#71;&#97;</an><an>&#109;&#101;&#115;</an></a>
@@ -41,6 +90,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <a class="navbar-link" href="/./c"><i class="fa-solid fa-gear navbar-icon settings-icon"></i><an>&#83;&#101;&#116;</an><an>&#116;&#105;&#110;&#103;</an></a>
       </div>`;
     nav.innerHTML = html;
+
+    // Initialize connection status
+    updateConnectionStatus();
   }
 
   // LocalStorage Setup for 'dy'

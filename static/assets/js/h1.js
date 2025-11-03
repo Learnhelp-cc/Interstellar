@@ -51,18 +51,22 @@ if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem
 }
 // Particles
 document.addEventListener("DOMContentLoaded", event => {
-  if (window.localStorage.getItem("Particles") === "true") {
+  // Enable particles by default for rain effect
+  if (!window.localStorage.getItem("particles")) {
+    window.localStorage.setItem("particles", "true");
+  }
+  if (window.localStorage.getItem("particles") === "true") {
     const particlesConfig = {
       particles: {
         number: {
-          value: 200,
+          value: 500,
           density: {
             enable: true,
             value_area: 600,
           },
         },
         color: {
-          value: "#ffffff",
+          value: "#87CEEB",
         },
         shape: {
           type: "circle",
@@ -80,12 +84,12 @@ document.addEventListener("DOMContentLoaded", event => {
           },
         },
         opacity: {
-          value: 1,
+          value: 0.8,
           random: true,
           anim: {
             enable: false,
             speed: 1,
-            opacity_min: 0.1,
+            opacity_min: 0.4,
             sync: false,
           },
         },
@@ -95,7 +99,7 @@ document.addEventListener("DOMContentLoaded", event => {
           anim: {
             enable: false,
             speed: 40,
-            size_min: 0.1,
+            size_min: 1,
             sync: false,
           },
         },
@@ -108,10 +112,10 @@ document.addEventListener("DOMContentLoaded", event => {
         },
         move: {
           enable: true,
-          speed: 2,
+          speed: 12,
           direction: "bottom",
           random: true,
-          straight: false,
+          straight: true,
           out_mode: "out",
           bounce: false,
           attract: {
@@ -169,14 +173,14 @@ document.addEventListener("DOMContentLoaded", event => {
 const SplashT = [
   "Over 8 Million Users since 2023",
   "Fastest growing proxy server",
-  "Made by xBubbo",
-  "Check out discord.gg/interstellar :)",
+  "Made by xBubbo modded by ilikepancakes.ink",
+  "big smoke",
   "Thanks for using the site",
-  "Follow us on Tiktok (@useinterstellar)",
-  "Subscribe to us on YouTube (@unblocking)",
-  "Subscribe to my Youtube (@xbubbo)",
+  "slaap lekker en laat de bedwantsen je niet bijten :3",
+  "you wouldn't download a car",
+  "check out my website ilikepancakes.ink",
   "Check out the settings page",
-  "Check out our Patreon (https://www.patreon.com/gointerstellar)",
+  ":3",
 ];
 
 let SplashI = Math.floor(Math.random() * SplashT.length);
@@ -190,6 +194,43 @@ function US() {
 SplashE.innerText = SplashT[SplashI];
 
 SplashE.addEventListener("click", US);
+
+// Rotating Welcome Messages
+const welcomeMessages = [
+  "Welcome",        // English
+  "Bienvenido",     // Spanish
+  "Welkom",         // Dutch
+  "Willkommen",     // German
+  "Bienvenue",      // French
+  "Välkommen",      // Swedish
+  "ようこそ",       // Japanese
+  "환영합니다",     // Korean
+  "欢迎"            // Chinese
+];
+
+let currentMessageIndex = 0;
+const welcomeText = document.getElementById("welcome-text");
+
+function rotateWelcomeMessage() {
+  // Fade out
+  welcomeText.classList.add("fade-out");
+
+  setTimeout(() => {
+    // Change text
+    currentMessageIndex = (currentMessageIndex + 1) % welcomeMessages.length;
+    welcomeText.textContent = welcomeMessages[currentMessageIndex];
+
+    // Fade in
+    welcomeText.classList.remove("fade-out");
+  }, 1000); // Half of transition time
+}
+
+// Start rotating after page load
+setTimeout(() => {
+  rotateWelcomeMessage();
+  setInterval(rotateWelcomeMessage, 3000); // Change every 3 seconds
+}, 2000); // Start after 2 seconds
+
 // Random URL
 function getRandomUrl() {
   const randomUrls = [
