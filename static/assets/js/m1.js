@@ -11,6 +11,34 @@ try {
   }
 }
 
+// Last updated fetch function
+async function updateLastUpdated() {
+  const lastUpdatedElement = document.getElementById('last-updated');
+  if (!lastUpdatedElement) return;
+
+  try {
+    const response = await fetch('https://api.github.com/repos/Learnhelp-cc/Interstellar/commits?per_page=1');
+    if (!response.ok) {
+      throw new Error('Failed to fetch commit data');
+    }
+    const commits = await response.json();
+    if (commits && commits.length > 0) {
+      const commitDate = new Date(commits[0].commit.author.date);
+      const formattedDate = commitDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      lastUpdatedElement.textContent = `Last Updated: ${formattedDate}`;
+    } else {
+      throw new Error('No commits found');
+    }
+  } catch (error) {
+    console.error('Failed to fetch last updated date:', error);
+    lastUpdatedElement.textContent = 'Last Updated: Unable to fetch';
+  }
+}
+
 // Connection status functions
 async function getClientIP() {
   try {
@@ -90,28 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // LocalStorage Setup for 'dy'
   if (localStorage.getItem("dy") === null || localStorage.getItem("dy") === undefined) {
     localStorage.setItem("dy", "false");
-  }
-
-  // Theme Logic
-  const themeid = localStorage.getItem("theme");
-  const themeEle = document.createElement("link");
-  themeEle.rel = "stylesheet";
-  const themes = {
-    catppuccinMocha: "/assets/css/themes/catppuccin/mocha.css?v=00",
-    catppuccinMacchiato: "/assets/css/themes/catppuccin/macchiato.css?v=00",
-    catppuccinFrappe: "/assets/css/themes/catppuccin/frappe.css?v=00",
-    catppuccinLatte: "/assets/css/themes/catppuccin/latte.css?v=00",
-    Inverted: "/assets/css/themes/colors/inverted.css?v=00",
-    sky: "/assets/css/themes/colors/sky.css?v=00",
-  };
-
-  if (themes[themeid]) {
-    themeEle.href = themes[themeid];
-    document.body.appendChild(themeEle);
-  } else {
-    const customThemeEle = document.createElement("style");
-    customThemeEle.textContent = localStorage.getItem(`theme-${themeid}`);
-    document.head.appendChild(customThemeEle);
   }
 
   // Favicon and Name Logic
@@ -360,4 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (savedBackgroundImage) {
     document.body.style.backgroundImage = `url('${savedBackgroundImage}')`;
   }
+
+  // Update last updated date from GitHub
+  updateLastUpdated();
 });
