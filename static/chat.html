@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room</title>
+  <link rel="stylesheet" href="/assets/css/global.css?v=6">
+  <link rel="stylesheet" href="/assets/css/h.css?v=01">
+  <link rel="stylesheet" href="/assets/css/nav.css?v=01">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background-image) var(--background-color);
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      width: 90%;
+      max-width: 1000px;
+      height: 75vh;
+      padding: 20px;
+      box-sizing: border-box;
+      background: var(--background-nav);
+      border-radius: 15px;
+      box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.5);
+      -webkit-backdrop-filter: var(--backdrop-filter);
+      backdrop-filter: var(--backdrop-filter);
+      margin: 15vh auto 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chat-header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: var(--background-nav);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .chat-header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      color: var(--text-primary);
+    }
+
+    .user-setup {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .user-setup input {
+      padding: 10px;
+      border: 1px solid var(--text-dark);
+      border-radius: 5px;
+      background: var(--background-input);
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .user-setup button {
+      padding: 10px 20px;
+      background: var(--save-button);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .user-setup button:hover {
+      opacity: 0.8;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--background-settings);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+
+    .message.own {
+      background: var(--save-button);
+      color: white;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .message.other {
+      background: var(--background-nav);
+      color: var(--text-primary);
+    }
+
+    .message.system {
+      background: rgba(255, 193, 7, 0.1);
+      color: #856404;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .message img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+
+    .message .username {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .message .timestamp {
+      font-size: 0.8em;
+      opacity: 0.7;
+      margin-top: 5px;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 15px;
+      border: 1px solid var(--text-dark);
+      border-radius: 25px;
+      background: var(--background-input);
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .chat-input button {
+      padding: 15px 20px;
+      background: var(--save-button);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-input button:hover {
+      opacity: 0.8;
+    }
+
+    .image-upload {
+      position: relative;
+    }
+
+    .image-upload input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .image-upload button {
+      padding: 15px 20px;
+      background: var(--import-button);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--background-nav);
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .admin-panel button {
+      margin: 5px;
+      padding: 5px 10px;
+      background: var(--reset-button);
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .user-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .user-item {
+      padding: 5px;
+      border-bottom: 1px solid var(--text-dark);
+      cursor: pointer;
+    }
+
+    .user-item:hover {
+      background: var(--background-settings);
+    }
+
+    .context-menu {
+      position: absolute;
+      background: var(--background-nav);
+      border: 1px solid var(--text-dark);
+      border-radius: 5px;
+      padding: 5px;
+      display: none;
+      z-index: 1000;
+    }
+
+    .context-menu button {
+      display: block;
+      width: 100%;
+      padding: 5px;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .context-menu button:hover {
+      background: var(--background-settings);
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        padding: 10px;
+      }
+
+      .chat-header h1 {
+        font-size: 2em;
+      }
+
+      .message {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+<body class="center" onload="SplashT">
+  <div class="f-nav"></div>
+  <div id="particles-js">
+    <script rel="preload" src="https://cdn.jsdelivr.net/particles.js/2.0.0/"></script>
+    <div class="main">
+      <div class="chat-container">
+        <div class="chat-header">
+          <h1><i class="fas fa-comments"></i> Chat Room</h1>
+        </div>
+
+        <div class="user-setup" id="userSetup">
+          <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="20">
+          <button onclick="joinChat()">Join Chat</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="chat-input" id="chatInput" style="display: none;">
+          <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+          <div class="image-upload">
+            <button title="Upload Image"><i class="fas fa-image"></i></button>
+            <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+          </div>
+          <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-panel" id="adminPanel">
+    <h3>Admin Panel</h3>
+    <div class="user-list" id="userList"></div>
+  </div>
+
+  <div class="context-menu" id="contextMenu">
+    <button onclick="deleteMessage()">Delete Message</button>
+  </div>
+
+  <script src="assets/js/index-3.js"></script>
+  <script src="/assets/js/h1.js"></script>
+  <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
+  <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
+  <script src="/assets/js/m1.js"></script>
+  <script>
+    let ws = null;
+    let username = '';
+    let isAdmin = false;
+    let deviceFingerprint = '';
+
+    // Generate device fingerprint
+    function generateFingerprint() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('fingerprint', 2, 2);
+
+      const fingerprint = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + 'x' + screen.height,
+        new Date().getTimezoneOffset(),
+        !!window.sessionStorage,
+        !!window.localStorage,
+        !!window.indexedDB,
+        canvas.toDataURL()
+      ].join('|');
+
+      return btoa(fingerprint).substring(0, 32);
+    }
+
+    // Check if user is admin
+    function checkAdminStatus() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('admin') === 'true') {
+        isAdmin = true;
+        document.getElementById('adminPanel').style.display = 'block';
+      }
+    }
+
+    function joinChat() {
+      const input = document.getElementById('usernameInput');
+      username = input.value.trim();
+      if (!username) {
+        alert('Please enter a username');
+        return;
+      }
+
+      deviceFingerprint = generateFingerprint();
+
+      // Connect to WebSocket
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}/chat`);
+
+      ws.onopen = function() {
+        ws.send(JSON.stringify({
+          type: 'join',
+          username: username,
+          fingerprint: deviceFingerprint
+        }));
+        document.getElementById('userSetup').style.display = 'none';
+        document.getElementById('chatInput').style.display = 'flex';
+      };
+
+      ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        handleMessage(data);
+      };
+
+      ws.onclose = function() {
+        addMessage('system', 'Disconnected from chat');
+        document.getElementById('userSetup').style.display = 'flex';
+        document.getElementById('chatInput').style.display = 'none';
+      };
+    }
+
+    function handleMessage(data) {
+      switch (data.type) {
+        case 'message':
+          const messageType = data.username === username ? 'own' : data.username;
+          addMessage(messageType, data.message, data.timestamp, data.image, data.id);
+          break;
+        case 'deleteMessage':
+          deleteMessageById(data.messageId);
+          break;
+        case 'system':
+          addMessage('system', data.message);
+          break;
+        case 'userList':
+          updateUserList(data.users);
+          break;
+        case 'banned':
+          alert('You have been banned from the chat');
+          ws.close();
+          break;
+        case 'kicked':
+          alert('You have been kicked from the chat');
+          ws.close();
+          break;
+      }
+    }
+
+    function addMessage(type, content, timestamp = null, image = null, messageId = null) {
+      const messagesDiv = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+      if (messageId) messageDiv.dataset.id = messageId;
+
+      if (type !== 'system') {
+        const usernameSpan = document.createElement('div');
+        usernameSpan.className = 'username';
+        usernameSpan.textContent = type === 'own' ? 'You' : type;
+        messageDiv.appendChild(usernameSpan);
+
+        const contentSpan = document.createElement('div');
+        contentSpan.textContent = content;
+        messageDiv.appendChild(contentSpan);
+
+        if (image) {
+          const img = document.createElement('img');
+          img.src = image;
+          messageDiv.appendChild(img);
+        }
+
+        if (timestamp) {
+          const timeSpan = document.createElement('div');
+          timeSpan.className = 'timestamp';
+          timeSpan.textContent = new Date(timestamp).toLocaleTimeString();
+          messageDiv.appendChild(timeSpan);
+        }
+      } else {
+        messageDiv.textContent = content;
+      }
+
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Add context menu for admin
+      if (isAdmin && messageId) {
+        messageDiv.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          showContextMenu(e, messageId);
+        });
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      if (message && ws) {
+        ws.send(JSON.stringify({
+          type: 'message',
+          message: message
+        }));
+        input.value = '';
+      }
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (ws) {
+            ws.send(JSON.stringify({
+              type: 'image',
+              image: e.target.result
+            }));
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+      event.target.value = '';
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    function updateUserList(users) {
+      const userListDiv = document.getElementById('userList');
+      userListDiv.innerHTML = '';
+      users.forEach(user => {
+        const userDiv = document.createElement('div');
+        userDiv.className = 'user-item';
+        userDiv.textContent = user.username;
+        userDiv.onclick = () => showUserActions(user);
+        userListDiv.appendChild(userDiv);
+      });
+    }
+
+    function showUserActions(user) {
+      // Simple action menu for admin
+      const action = prompt(`Actions for ${user.username}: 1. Kick 2. Ban`);
+      if (action === '1' && ws) {
+        ws.send(JSON.stringify({
+          type: 'kick',
+          targetFingerprint: user.fingerprint
+        }));
+      } else if (action === '2' && ws) {
+        ws.send(JSON.stringify({
+          type: 'ban',
+          targetFingerprint: user.fingerprint
+        }));
+      }
+    }
+
+    function showContextMenu(e, messageId) {
+      const menu = document.getElementById('contextMenu');
+      menu.style.left = e.pageX + 'px';
+      menu.style.top = e.pageY + 'px';
+      menu.style.display = 'block';
+      menu.dataset.messageId = messageId;
+
+      // Hide menu on click elsewhere
+      document.addEventListener('click', function hideMenu() {
+        menu.style.display = 'none';
+        document.removeEventListener('click', hideMenu);
+      });
+    }
+
+    function deleteMessage() {
+      const menu = document.getElementById('contextMenu');
+      const messageId = menu.dataset.messageId;
+      if (ws && messageId) {
+        ws.send(JSON.stringify({
+          type: 'delete',
+          messageId: messageId
+        }));
+      }
+    }
+
+    function deleteMessageById(messageId) {
+      const messageElement = document.querySelector(`[data-id="${messageId}"]`);
+      if (messageElement) {
+        messageElement.remove();
+      }
+    }
+
+    // Initialize
+    checkAdminStatus();
+  </script>
+</body>
+</html>

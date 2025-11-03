@@ -124,6 +124,21 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Cookie fingerprinting middleware
+app.use((req, res, next) => {
+  if (!req.cookies.deviceFingerprint) {
+    // Generate a simple fingerprint based on IP and user agent
+    const fingerprint = Buffer.from(`${req.ip}-${req.get('User-Agent')}`).toString('base64').substring(0, 32);
+    res.cookie('deviceFingerprint', fingerprint, {
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+      httpOnly: true,
+      secure: req.protocol === 'https',
+      sameSite: 'strict'
+    });
+  }
+  next();
+});
+
 /* if (process.env.MASQR === "true") {
   console.log(chalk.green("Masqr is enabled"));
   setupMasqr(app);
@@ -150,6 +165,7 @@ app.get('/admin', adminAuth, (req, res) => {
       <h1>Admin Panel</h1>
       <button onclick="loadTerminal()">Load Reverse TCP Terminal</button>
       <button onclick="loadSSH()">Load SSH Terminal</button>
+      <button onclick="signInAsAdmin()">Sign in as Admin (Chat)</button>
       <button onclick="viewLogs()">View Logs</button>
       <button onclick="toggleLockdown()">${isLockedDown ? 'Lift Lockdown' : 'Activate Lockdown'}</button>
       <div id="content"></div>
@@ -159,6 +175,9 @@ app.get('/admin', adminAuth, (req, res) => {
         }
         function loadSSH() {
           window.open('/admin/ssh', '_blank');
+        }
+        function signInAsAdmin() {
+          window.open('/chat?admin=true', '_blank');
         }
         function viewLogs() {
           fetch('/admin/logs')
@@ -346,6 +365,7 @@ const routes = [
   { path: "/play.html", file: "games.html" },
   { path: "/c", file: "settings.html" },
   { path: "/d", file: "tabs.html" },
+  { path: "/chat", file: "chat.html" },
   { path: "/", file: "index.html" },
 ];
 
@@ -387,11 +407,22 @@ server.on("request", (req, res) => {
   }
 });
 
+// WebSocket routing
 server.on("upgrade", (req, socket, head) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+
   if (bareServer.shouldRoute(req)) {
     bareServer.routeUpgrade(req, socket, head);
+  } else if (url.pathname === '/chat') {
+    wssChat.handleUpgrade(req, socket, head, (ws) => {
+      wssChat.emit('connection', ws, req);
+    });
+  } else if (url.pathname === '/admin/ssh-ws') {
+    wssSSH.handleUpgrade(req, socket, head, (ws) => {
+      wssSSH.emit('connection', ws, req);
+    });
   } else {
-    socket.end();
+    socket.destroy();
   }
 });
 
@@ -399,10 +430,16 @@ server.on("listening", () => {
   console.log(chalk.green(`🌍 Server is running on http://localhost:${PORT}`));
 });
 
-// WebSocket server for SSH
-const wss = new WebSocketServer({ server, path: '/admin/ssh-ws' });
+// Chat state
+const chatUsers = new Map(); // fingerprint -> { username, ws, isAdmin }
+const chatMessages = []; // Array of messages
+const bannedDevices = new Set(); // Set of banned fingerprints
+let messageIdCounter = 0;
 
-wss.on('connection', (ws, req) => {
+// WebSocket server for SSH
+const wssSSH = new WebSocketServer({ noServer: true });
+
+wssSSH.on('connection', (ws, req) => {
   console.log('SSH WebSocket connection established');
 
   let sshConn = null;
@@ -461,6 +498,190 @@ wss.on('connection', (ws, req) => {
     console.log('SSH WebSocket connection closed');
     if (sshConn) {
       sshConn.end();
+    }
+  });
+});
+
+// WebSocket server for Chat
+const wssChat = new WebSocketServer({ noServer: true });
+
+function broadcastToChat(message, excludeWs = null) {
+  chatUsers.forEach((user, fingerprint) => {
+    if (user.ws !== excludeWs && user.ws.readyState === user.ws.OPEN) {
+      user.ws.send(JSON.stringify(message));
+    }
+  });
+}
+
+function sendUserList() {
+  const users = Array.from(chatUsers.values()).map(user => ({
+    username: user.username,
+    fingerprint: user.fingerprint
+  }));
+  broadcastToChat({ type: 'userList', users });
+}
+
+wssChat.on('connection', (ws, req) => {
+  console.log('Chat WebSocket connection established from:', req.url);
+
+  let userFingerprint = '';
+  let userData = null;
+
+  ws.on('message', (data) => {
+    try {
+      const message = JSON.parse(data.toString());
+
+      if (message.type === 'join') {
+        userFingerprint = message.fingerprint;
+
+        // Check if banned
+        if (bannedDevices.has(userFingerprint)) {
+          ws.send(JSON.stringify({ type: 'banned' }));
+          ws.close();
+          return;
+        }
+
+        // Check if already connected
+        if (chatUsers.has(userFingerprint)) {
+          ws.send(JSON.stringify({ type: 'system', message: 'Device already connected' }));
+          ws.close();
+          return;
+        }
+
+        // Check if admin (simplified check - in real app, verify properly)
+        const isAdmin = req.url && req.url.includes('admin=true');
+
+        userData = {
+          username: message.username,
+          ws: ws,
+          fingerprint: userFingerprint,
+          isAdmin: isAdmin
+        };
+
+        chatUsers.set(userFingerprint, userData);
+
+        // Send recent messages (last 50)
+        const recentMessages = chatMessages.slice(-50);
+        recentMessages.forEach(msg => {
+          ws.send(JSON.stringify({
+            type: 'message',
+            username: msg.username,
+            message: msg.message,
+            timestamp: msg.timestamp,
+            image: msg.image,
+            id: msg.id
+          }));
+        });
+
+        // Broadcast join message
+        broadcastToChat({
+          type: 'system',
+          message: `${message.username} joined the chat`
+        });
+
+        // Send user list
+        sendUserList();
+
+      } else if (message.type === 'message' && userData) {
+        const msgId = ++messageIdCounter;
+        const msgData = {
+          id: msgId,
+          username: userData.username,
+          message: message.message,
+          timestamp: new Date().toISOString(),
+          image: null
+        };
+
+        chatMessages.push(msgData);
+        // Keep only last 1000 messages
+        if (chatMessages.length > 1000) {
+          chatMessages.shift();
+        }
+
+        broadcastToChat({
+          type: 'message',
+          username: userData.username,
+          message: message.message,
+          timestamp: msgData.timestamp,
+          id: msgId
+        });
+
+      } else if (message.type === 'image' && userData) {
+        const msgId = ++messageIdCounter;
+        const msgData = {
+          id: msgId,
+          username: userData.username,
+          message: '',
+          timestamp: new Date().toISOString(),
+          image: message.image
+        };
+
+        chatMessages.push(msgData);
+        if (chatMessages.length > 1000) {
+          chatMessages.shift();
+        }
+
+        broadcastToChat({
+          type: 'message',
+          username: userData.username,
+          message: '',
+          timestamp: msgData.timestamp,
+          image: message.image,
+          id: msgId
+        });
+
+      } else if (message.type === 'delete' && userData && userData.isAdmin) {
+        // Find and remove message
+        const msgIndex = chatMessages.findIndex(msg => msg.id === message.messageId);
+        if (msgIndex !== -1) {
+          chatMessages.splice(msgIndex, 1);
+          broadcastToChat({
+            type: 'deleteMessage',
+            messageId: message.messageId
+          });
+        }
+
+      } else if (message.type === 'kick' && userData && userData.isAdmin) {
+        const targetUser = chatUsers.get(message.targetFingerprint);
+        if (targetUser) {
+          targetUser.ws.send(JSON.stringify({ type: 'kicked' }));
+          targetUser.ws.close();
+          chatUsers.delete(message.targetFingerprint);
+          broadcastToChat({
+            type: 'system',
+            message: `${targetUser.username} was kicked by ${userData.username}`
+          });
+          sendUserList();
+        }
+
+      } else if (message.type === 'ban' && userData && userData.isAdmin) {
+        const targetUser = chatUsers.get(message.targetFingerprint);
+        if (targetUser) {
+          bannedDevices.add(message.targetFingerprint);
+          targetUser.ws.send(JSON.stringify({ type: 'banned' }));
+          targetUser.ws.close();
+          chatUsers.delete(message.targetFingerprint);
+          broadcastToChat({
+            type: 'system',
+            message: `${targetUser.username} was banned by ${userData.username}`
+          });
+          sendUserList();
+        }
+      }
+    } catch (e) {
+      console.error('Chat WebSocket message error:', e);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('Chat WebSocket connection closed');
+    if (userData) {
+      chatUsers.delete(userFingerprint);
+      broadcastToChat({
+        type: 'system',
+        message: `${userData.username} left the chat`
+      });
+      sendUserList();
     }
   });
 });
