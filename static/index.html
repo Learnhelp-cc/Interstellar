@@ -28,13 +28,37 @@
           <input id="input" class="truncate" placeholder="Search or enter a URL" type="text" />
         </form>
       </div>
+      <div class="now-playing">
+        <span>Now Playing: morning tape - nilöwh. <button id="audio-control" class="audio-btn"><i class="fas fa-pause"></i></button></span>
+      </div>
     </div>
   </div>
+  <audio id="menu-audio" loop autoplay>
+     <source src="assets/media/audio/menu.mp3" type="audio/mpeg">
+  </audio>
   <script src="assets/js/index-3.js"></script>
   <script src="/assets/js/h1.js"></script>
   <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
   <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
   <script src="/assets/js/m1.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('menu-audio');
+      audio.volume = 0.65;
+      const audioControl = document.getElementById('audio-control');
+      const icon = audioControl.querySelector('i');
+
+      audioControl.addEventListener('click', function() {
+        if (audio.paused) {
+          audio.play();
+          icon.className = 'fas fa-pause';
+        } else {
+          audio.pause();
+          icon.className = 'fas fa-play';
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>

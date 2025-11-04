@@ -108,3 +108,35 @@ input {
    padding: 0;
    font-family: "Poppins", sans-serif;
 }
+
+.now-playing {
+   margin-top: 20px;
+   text-align: center;
+   color: var(--text-primary);
+   font-size: 16px;
+   opacity: 0.8;
+}
+
+.now-playing span {
+   background: rgba(255, 255, 255, 0.1);
+   padding: 8px 16px;
+   border-radius: 20px;
+   backdrop-filter: blur(10px);
+   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.audio-btn {
+   background: none;
+   border: none;
+   color: var(--text-primary);
+   font-size: 16px;
+   cursor: pointer;
+   margin-left: 8px;
+   padding: 2px 6px;
+   border-radius: 4px;
+   transition: background-color 0.2s;
+}
+
+.audio-btn:hover {
+   background: rgba(255, 255, 255, 0.2);
+}
