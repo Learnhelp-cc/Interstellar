@@ -59,20 +59,20 @@ document.addEventListener("DOMContentLoaded", event => {
     const particlesConfig = {
       particles: {
         number: {
-          value: 500,
+          value: 800,
           density: {
             enable: true,
-            value_area: 600,
+            value_area: 400,
           },
         },
         color: {
-          value: "#87CEEB",
+          value: "#ffffff",
         },
         shape: {
           type: "circle",
           stroke: {
             width: 0,
-            color: "#000000",
+            color: "#ffffff",
           },
           polygon: {
             nb_sides: 5,
@@ -84,22 +84,22 @@ document.addEventListener("DOMContentLoaded", event => {
           },
         },
         opacity: {
-          value: 0.8,
-          random: true,
+          value: 0.6,
+          random: false,
           anim: {
             enable: false,
             speed: 1,
-            opacity_min: 0.4,
+            opacity_min: 0.3,
             sync: false,
           },
         },
         size: {
-          value: 3,
+          value: 2,
           random: true,
           anim: {
             enable: false,
             speed: 40,
-            size_min: 1,
+            size_min: 4,
             sync: false,
           },
         },
@@ -112,9 +112,9 @@ document.addEventListener("DOMContentLoaded", event => {
         },
         move: {
           enable: true,
-          speed: 12,
+          speed: 20,
           direction: "bottom",
-          random: true,
+          random: false,
           straight: true,
           out_mode: "out",
           bounce: false,

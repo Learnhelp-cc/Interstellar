@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import http from "node:http";
+import https from "node:https";
 import path from "node:path";
 import { createBareServer } from "@nebula-services/bare-server-node";
 import chalk from "chalk";
@@ -21,7 +22,250 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 dotenv.config({ path: path.join(__dirname, "creds.env") });
 const server = http.createServer();
 const app = express();
-const bareServer = createBareServer("/ca/");
+
+// Cookie jar for session persistence
+const cookieJar = new Map();
+
+// Request throttling - track requests per domain
+const requestTracker = new Map();
+const THROTTLE_WINDOW = 60000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 30; // Max requests per domain per minute
+
+// Custom HTTP Agent with browser-like headers and throttling
+class CloudflareFriendlyHttpAgent extends http.Agent {
+  constructor(options = {}) {
+    super({
+      keepAlive: true,
+      maxSockets: 10,
+      maxFreeSockets: 5,
+      timeout: 30000,
+      ...options
+    });
+  }
+
+  createConnection(options, callback) {
+    // Add throttling check
+    const domain = options.host || options.hostname;
+    const now = Date.now();
+    const domainKey = `${domain}`;
+
+    if (!requestTracker.has(domainKey)) {
+      requestTracker.set(domainKey, { count: 0, windowStart: now });
+    }
+
+    const tracker = requestTracker.get(domainKey);
+
+    // Reset window if needed
+    if (now - tracker.windowStart > THROTTLE_WINDOW) {
+      tracker.count = 0;
+      tracker.windowStart = now;
+    }
+
+    // Check if we're over the limit
+    if (tracker.count >= MAX_REQUESTS_PER_WINDOW) {
+      const error = new Error(`Rate limit exceeded for domain: ${domain}`);
+      error.code = 'ERATE_LIMIT';
+      callback(error);
+      return;
+    }
+
+    tracker.count++;
+
+    return super.createConnection(options, callback);
+  }
+}
+
+// Custom HTTPS Agent with browser-like headers and throttling
+class CloudflareFriendlyHttpsAgent extends https.Agent {
+  constructor(options = {}) {
+    super({
+      keepAlive: true,
+      maxSockets: 10,
+      maxFreeSockets: 5,
+      timeout: 30000,
+      rejectUnauthorized: false, // Allow self-signed certificates
+      ...options
+    });
+  }
+
+  createConnection(options, callback) {
+    // Add throttling check
+    const domain = options.host || options.hostname;
+    const now = Date.now();
+    const domainKey = `${domain}`;
+
+    if (!requestTracker.has(domainKey)) {
+      requestTracker.set(domainKey, { count: 0, windowStart: now });
+    }
+
+    const tracker = requestTracker.get(domainKey);
+
+    // Reset window if needed
+    if (now - tracker.windowStart > THROTTLE_WINDOW) {
+      tracker.count = 0;
+      tracker.windowStart = now;
+    }
+
+    // Check if we're over the limit
+    if (tracker.count >= MAX_REQUESTS_PER_WINDOW) {
+      const error = new Error(`Rate limit exceeded for domain: ${domain}`);
+      error.code = 'ERATE_LIMIT';
+      callback(error);
+      return;
+    }
+
+    tracker.count++;
+
+    return super.createConnection(options, callback);
+  }
+}
+
+// Create custom agents
+const httpAgent = new CloudflareFriendlyHttpAgent();
+const httpsAgent = new CloudflareFriendlyHttpsAgent();
+
+// Browser-like headers to avoid Cloudflare detection
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'DNT': '1',
+  'Connection': 'keep-alive',
+  'Upgrade-Insecure-Requests': '1',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  'Cache-Control': 'max-age=0'
+};
+
+// Create bare server with custom agents
+const bareServer = createBareServer("/ca/", {
+  httpAgent,
+  httpsAgent,
+  // Add custom request interceptor to set headers and handle cookies
+  filterRemote: async (remote) => {
+    // Allow all remotes for now, but we could add filtering here
+  }
+});
+
+// Re-enable the V3 route handler override for Cloudflare bypass
+const originalV3Handler = bareServer.routes.get('/v3/');
+if (originalV3Handler) {
+  console.log('Re-enabling V3 handler override with Cloudflare-friendly headers');
+  bareServer.routes.set('/v3/', async (request, res, options) => {
+    console.log('V3 handler called for Cloudflare bypass');
+
+    // Get the original headers from the request
+    const headers = new Headers(request.headers);
+    const xBareURL = headers.get('x-bare-url');
+
+    if (xBareURL) {
+      console.log('Processing request for URL:', xBareURL);
+
+      // Parse the x-bare-headers to modify them
+      const xBareHeadersStr = headers.get('x-bare-headers');
+      let bareHeaders = {};
+
+      if (xBareHeadersStr) {
+        try {
+          bareHeaders = JSON.parse(xBareHeadersStr);
+          console.log('Original headers:', Object.keys(bareHeaders));
+        } catch (e) {
+          console.log('Failed to parse x-bare-headers:', e);
+          bareHeaders = {};
+        }
+      }
+
+      // Add browser-like headers if not already present
+      const headersToAdd = {
+        'User-Agent': BROWSER_HEADERS['User-Agent'],
+        'Accept': BROWSER_HEADERS['Accept'],
+        'Accept-Language': BROWSER_HEADERS['Accept-Language'],
+        'Accept-Encoding': BROWSER_HEADERS['Accept-Encoding'],
+        'DNT': BROWSER_HEADERS['DNT'],
+        'Connection': BROWSER_HEADERS['Connection'],
+        'Upgrade-Insecure-Requests': BROWSER_HEADERS['Upgrade-Insecure-Requests'],
+        'Sec-Fetch-Dest': BROWSER_HEADERS['Sec-Fetch-Dest'],
+        'Sec-Fetch-Mode': BROWSER_HEADERS['Sec-Fetch-Mode'],
+        'Sec-Fetch-Site': BROWSER_HEADERS['Sec-Fetch-Site'],
+        'Sec-Fetch-User': BROWSER_HEADERS['Sec-Fetch-User'],
+        'Cache-Control': BROWSER_HEADERS['Cache-Control']
+      };
+
+      for (const [key, value] of Object.entries(headersToAdd)) {
+        if (!bareHeaders[key]) {
+          bareHeaders[key] = value;
+          console.log(`Added header: ${key}`);
+        }
+      }
+
+      // Handle cookies for this domain
+      const url = new URL(xBareURL);
+      const domain = url.hostname;
+      const existingCookies = cookieJar.get(domain);
+      if (existingCookies && existingCookies.length > 0) {
+        console.log('Using stored cookies for domain:', domain, existingCookies.length, 'cookies');
+        if (!bareHeaders['Cookie']) {
+          bareHeaders['Cookie'] = existingCookies.join('; ');
+        }
+      }
+
+      // Update the x-bare-headers with our modifications
+      headers.set('x-bare-headers', JSON.stringify(bareHeaders));
+      console.log('Modified headers count:', Object.keys(bareHeaders).length);
+    }
+
+    // Create a new request with modified headers
+    const modifiedRequest = new Request(request.url, {
+      method: request.method,
+      headers: headers,
+      body: request.body,
+      duplex: request.duplex
+    });
+    modifiedRequest.native = request.native;
+
+    // Call the original handler
+    const response = await originalV3Handler(modifiedRequest, res, options);
+
+    // Extract and store cookies from the response
+    if (xBareURL && response.headers.has('x-bare-headers')) {
+      try {
+        const responseBareHeaders = JSON.parse(response.headers.get('x-bare-headers'));
+        const setCookie = responseBareHeaders['set-cookie'];
+        if (setCookie) {
+          const url = new URL(xBareURL);
+          const domain = url.hostname;
+          const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+
+          if (!cookieJar.has(domain)) {
+            cookieJar.set(domain, []);
+          }
+
+          const existingCookies = cookieJar.get(domain);
+          for (const cookie of cookies) {
+            // Simple cookie parsing - just store the cookie string
+            const cookieName = cookie.split('=')[0];
+            // Remove existing cookie with same name
+            const filteredCookies = existingCookies.filter(c => !c.startsWith(cookieName + '='));
+            filteredCookies.push(cookie);
+            cookieJar.set(domain, filteredCookies);
+          }
+          console.log('Stored cookies for domain:', domain, cookieJar.get(domain).length, 'cookies');
+        }
+      } catch (e) {
+        // Invalid JSON, skip cookie handling
+        console.log('Failed to parse response headers for cookies');
+      }
+    }
+
+    return response;
+  });
+} else {
+  console.log('Could not find V3 handler to override');
+}
+
 const PORT = process.env.PORT || 8080;
 const cache = new Map();
 const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // Cache for 30 Days
