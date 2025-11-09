@@ -362,11 +362,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Background Image Logic
-  const savedBackgroundImage = localStorage.getItem("backgroundImage");
-  if (savedBackgroundImage) {
-    document.body.style.backgroundImage = `url('${savedBackgroundImage}')`;
-  }
+  // Background Image Logic - Randomly pick from background images (never the same as last)
+  const backgroundImages = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg'];
+  const lastBackground = localStorage.getItem("lastBackgroundImage");
+  let randomImage;
+
+  do {
+    randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
+  } while (randomImage === lastBackground && backgroundImages.length > 1);
+
+  const backgroundUrl = `/assets/media/background/${randomImage}`;
+  document.body.style.backgroundImage = `url('${backgroundUrl}')`;
+  localStorage.setItem("backgroundImage", backgroundUrl);
+  localStorage.setItem("lastBackgroundImage", randomImage);
 
   // Update last updated date from GitHub
   updateLastUpdated();
