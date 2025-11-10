@@ -18,6 +18,7 @@
   <div class="f-nav"></div>
   <div id="particles-js">
     <div class="main">
+      <div id="notifications" class="notifications" style="display: none;"></div>
       <div id="welcome-container" class="title">
         <span id="welcome-text">Welcome</span>
       </div>
@@ -53,10 +54,56 @@
         if (!data.valid) {
           localStorage.removeItem('deviceToken');
           window.location.href = '/signin';
+        } else {
+          // Load notifications after auth check
+          loadNotifications();
         }
       } catch (error) {
         console.error('Auth check failed:', error);
         window.location.href = '/signin';
+      }
+    }
+
+    // Load and display notifications
+    async function loadNotifications() {
+      const deviceToken = localStorage.getItem('deviceToken');
+      if (!deviceToken) return;
+
+      try {
+        const response = await fetch(`/api/undismissed-messages?deviceToken=${encodeURIComponent(deviceToken)}`);
+        const messages = await response.json();
+
+        if (messages.length > 0) {
+          const notificationsDiv = document.getElementById('notifications');
+          notificationsDiv.innerHTML = messages.map(msg => `
+            <div class="notification" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 15px; position: relative;">
+              <button onclick="dismissNotification(${msg.id})" style="position: absolute; top: 5px; right: 5px; background: none; border: none; font-size: 18px; cursor: pointer; color: #666;">×</button>
+              <strong>Admin Notification:</strong><br>
+              ${msg.message}
+            </div>
+          `).join('');
+          notificationsDiv.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Failed to load notifications:', error);
+      }
+    }
+
+    // Dismiss notification
+    async function dismissNotification(messageId) {
+      const deviceToken = localStorage.getItem('deviceToken');
+      if (!deviceToken) return;
+
+      try {
+        await fetch('/api/dismiss-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken, messageId })
+        });
+        // Reload notifications
+        loadNotifications();
+      } catch (error) {
+        console.error('Failed to dismiss notification:', error);
       }
     }
 

@@ -19,6 +19,7 @@
       <div class="auth-container">
         <div class="auth-card">
           <h1 class="auth-title">Sign In</h1>
+          <div id="admin-messages" class="admin-messages" style="display: none;"></div>
           <form id="signin-form" class="auth-form">
             <div class="input-group">
               <i class="fas fa-user input-icon"></i>
@@ -42,6 +43,30 @@
   <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
   <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
   <script>
+    // Load and display admin messages
+    async function loadAdminMessages() {
+      try {
+        const response = await fetch('/api/messages');
+        const messages = await response.json();
+
+        if (messages.length > 0) {
+          const messagesDiv = document.getElementById('admin-messages');
+          messagesDiv.innerHTML = messages.map(msg => `
+            <div class="admin-message" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; margin-bottom: 10px;">
+              <strong>Admin Message:</strong><br>
+              ${msg.message}
+            </div>
+          `).join('');
+          messagesDiv.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Failed to load admin messages:', error);
+      }
+    }
+
+    // Load messages on page load
+    loadAdminMessages();
+
     document.getElementById('signin-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 

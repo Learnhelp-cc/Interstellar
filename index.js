@@ -14,18 +14,66 @@ import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
 import { Client } from "ssh2";
 import crypto from "crypto";
+import Database from 'better-sqlite3';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 dotenv.config({ path: path.join(__dirname, "creds.env") });
 
+// AES-256 encryption setup
+const MASTER_KEY = process.env.MASTER_KEY;
+if (!MASTER_KEY) {
+  console.error('MASTER_KEY environment variable is required');
+  process.exit(1);
+}
+const SALT = "fixedsaltforencryption123"; // Fixed salt for key derivation
+const AES_KEY = crypto.pbkdf2Sync(MASTER_KEY, SALT, 100000, 32, 'sha256'); // Derive 32-byte key
+
+function encryptPassword(password) {
+  const iv = crypto.randomBytes(16); // 16 bytes for AES-GCM
+  const cipher = crypto.createCipheriv('aes-256-gcm', AES_KEY, iv);
+  let encrypted = cipher.update(password, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+  // Store IV + authTag + encrypted
+  return Buffer.concat([iv, authTag, Buffer.from(encrypted, 'hex')]).toString('base64');
+}
+
+function decryptPassword(encryptedPassword) {
+  const data = Buffer.from(encryptedPassword, 'base64');
+  const iv = data.slice(0, 16);
+  const authTag = data.slice(16, 32);
+  const encrypted = data.slice(32);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', AES_KEY, iv);
+  decipher.setAuthTag(authTag);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
 // Initialize database
 initDB();
 console.log(chalk.green("📊 Database initialized"));
+
+// Migrate existing plain text passwords to encrypted
+const migrationDb = new Database(path.join(__dirname, 'users.db'));
+const users = migrationDb.prepare('SELECT id, password FROM users').all();
+for (const user of users) {
+  try {
+    // Try to decrypt - if it fails, it's plain text
+    decryptPassword(user.password);
+  } catch (error) {
+    // It's plain text, encrypt it
+    const encrypted = encryptPassword(user.password);
+    migrationDb.prepare('UPDATE users SET password = ? WHERE id = ?').run(encrypted, user.id);
+    console.log(chalk.yellow(`🔐 Migrated password for user ID ${user.id} to encrypted format`));
+  }
+}
+migrationDb.close();
 
 const server = http.createServer();
 const app = express();
@@ -538,7 +586,19 @@ app.post('/api/signin', (req, res) => {
     }
 
     const user = getUser(username);
-    if (!user || user.password !== password) {
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    let decryptedPassword;
+    try {
+      decryptedPassword = decryptPassword(user.password);
+    } catch (error) {
+      console.error('Password decryption error:', error);
+      return res.status(500).json({ message: 'Internal server error during signin' });
+    }
+
+    if (decryptedPassword !== password) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -590,7 +650,8 @@ app.post('/api/request-account', (req, res) => {
   }
 
   try {
-    createUser(username, password);
+    const encryptedPassword = encryptPassword(password);
+    createUser(username, encryptedPassword);
     res.json({ message: 'Account request submitted successfully' });
   } catch (error) {
     if (error.message.includes('UNIQUE constraint failed')) {
@@ -647,6 +708,7 @@ app.get('/admin', adminAuth, (req, res) => {
         <button onclick="signInAsAdmin()">Sign in as Admin (Chat)</button>
         <button onclick="viewLogs()">View Logs</button>
         <button onclick="manageUsers()">Manage Users</button>
+        <button onclick="manageMessages()">Manage Messages</button>
         <button onclick="toggleLockdown()">${isLockedDown ? 'Lift Lockdown' : 'Activate Lockdown'}</button>
       </div>
       <div id="content"></div>
@@ -763,6 +825,99 @@ app.get('/admin', adminAuth, (req, res) => {
             .catch(err => alert('Error deleting user: ' + err.message));
           }
         }
+        function manageMessages() {
+          fetch('/admin/messages')
+            .then(res => res.json())
+            .then(messages => {
+              const html = messages.map(msg =>
+                \`<div class="user-entry">
+                  <div class="user-info">
+                    <strong>ID:</strong> \${msg.id}<br>
+                    <strong>Message:</strong> \${msg.message}<br>
+                    <strong>Active:</strong> \${msg.active ? 'Yes' : 'No'}<br>
+                    <strong>Created:</strong> \${new Date(msg.created_at).toLocaleString()}
+                  </div>
+                  <div class="user-actions">
+                    <button onclick="editMessage(\${msg.id}, '\${msg.message.replace(/'/g, "\\'")}', \${msg.active})">Edit</button>
+                    <button onclick="deleteMessage(\${msg.id})" style="background: red; color: white;">Delete</button>
+                  </div>
+                  <div id="edit-msg-\${msg.id}" class="edit-form">
+                    <h4>Edit Message \${msg.id}</h4>
+                    <textarea id="message-\${msg.id}" rows="3" style="width: 100%;">\${msg.message}</textarea>
+                    <label><input type="checkbox" id="active-\${msg.id}" \${msg.active ? 'checked' : ''}> Active</label>
+                    <button onclick="saveMessage(\${msg.id})">Save</button>
+                    <button onclick="cancelEditMessage(\${msg.id})">Cancel</button>
+                  </div>
+                </div>\`
+              ).join('');
+              const createForm = \`<div class="user-entry">
+                <h3>Create New Message</h3>
+                <textarea id="new-message" rows="3" placeholder="Enter message" style="width: 100%;"></textarea>
+                <label><input type="checkbox" id="new-active" checked> Active</label>
+                <button onclick="createMessage()">Create Message</button>
+              </div>\`;
+              document.getElementById('content').innerHTML = '<h2>Message Management</h2>' + createForm + html;
+            });
+        }
+        function editMessage(id, message, active) {
+          document.getElementById(\`edit-msg-\${id}\`).style.display = 'block';
+        }
+        function cancelEditMessage(id) {
+          document.getElementById(\`edit-msg-\${id}\`).style.display = 'none';
+        }
+        function saveMessage(id) {
+          const message = document.getElementById(\`message-\${id}\`).value;
+          const active = document.getElementById(\`active-\${id}\`).checked;
+
+          fetch(\`/admin/messages/\${id}\`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, active }),
+            credentials: 'include'
+          })
+          .then(res => res.json())
+          .then(result => {
+            alert(result.message);
+            manageMessages();
+          })
+          .catch(err => alert('Error updating message: ' + err.message));
+        }
+        function deleteMessage(id) {
+          if (confirm('Are you sure you want to delete this message?')) {
+            fetch(\`/admin/messages/\${id}\`, {
+              method: 'DELETE',
+              credentials: 'include'
+            })
+            .then(res => res.json())
+            .then(result => {
+              alert(result.message);
+              manageMessages();
+            })
+            .catch(err => alert('Error deleting message: ' + err.message));
+          }
+        }
+        function createMessage() {
+          const message = document.getElementById('new-message').value;
+          const active = document.getElementById('new-active').checked;
+
+          if (!message.trim()) {
+            alert('Message cannot be empty');
+            return;
+          }
+
+          fetch('/admin/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, active }),
+            credentials: 'include'
+          })
+          .then(res => res.json())
+          .then(result => {
+            alert(result.message);
+            manageMessages();
+          })
+          .catch(err => alert('Error creating message: ' + err.message));
+        }
         function toggleLockdown() {
           const action = '${isLockedDown ? 'unlock' : 'lockdown'}';
           fetch('/admin/' + action, { method: 'POST' })
@@ -803,6 +958,9 @@ app.put('/admin/users/:id', adminAuth, (req, res) => {
   const updates = req.body;
 
   try {
+    if (updates.password) {
+      updates.password = encryptPassword(updates.password);
+    }
     updateUser(parseInt(id), updates);
     res.json({ message: 'User updated successfully' });
   } catch (error) {
@@ -818,6 +976,107 @@ app.delete('/admin/users/:id', adminAuth, (req, res) => {
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete user' });
+  }
+});
+
+// Admin message management endpoints
+app.get('/admin/messages', adminAuth, (req, res) => {
+  try {
+    const messages = getAllMessages();
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch messages' });
+  }
+});
+
+app.post('/admin/messages', adminAuth, (req, res) => {
+  const { message, active } = req.body;
+
+  if (!message || message.trim() === '') {
+    return res.status(400).json({ message: 'Message is required' });
+  }
+
+  try {
+    const msg = createMessage(message.trim());
+    // Broadcast notification to all connected users
+    const newMessage = { id: msg.lastInsertRowid, message: message.trim(), created_at: new Date().toISOString() };
+    broadcastNotification(newMessage);
+    res.json({ message: 'Message created successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to create message' });
+  }
+});
+
+app.put('/admin/messages/:id', adminAuth, (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  try {
+    updateMessage(parseInt(id), updates);
+    res.json({ message: 'Message updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update message' });
+  }
+});
+
+app.delete('/admin/messages/:id', adminAuth, (req, res) => {
+  const { id } = req.params;
+
+  try {
+    deleteMessage(parseInt(id));
+    res.json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete message' });
+  }
+});
+
+// Public API endpoints for messages
+app.get('/api/messages', (req, res) => {
+  try {
+    const messages = getActiveMessages();
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch messages' });
+  }
+});
+
+app.post('/api/dismiss-message', (req, res) => {
+  const { deviceToken, messageId } = req.body;
+
+  if (!deviceToken || !messageId) {
+    return res.status(400).json({ message: 'Device token and message ID required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    dismissMessage(user.id, parseInt(messageId));
+    res.json({ message: 'Message dismissed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to dismiss message' });
+  }
+});
+
+app.get('/api/undismissed-messages', (req, res) => {
+  const { deviceToken } = req.query;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const messages = getUndismissedMessages(user.id);
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch undismissed messages' });
   }
 });
 
@@ -1162,6 +1421,16 @@ function broadcastToChat(message, excludeWs = null) {
     if (user.ws !== excludeWs && user.ws.readyState === user.ws.OPEN) {
       user.ws.send(JSON.stringify(message));
     }
+  });
+}
+
+function broadcastNotification(message) {
+  // Broadcast to all connected chat users
+  broadcastToChat({
+    type: 'notification',
+    message: message.message,
+    id: message.id,
+    timestamp: message.created_at
   });
 }
 

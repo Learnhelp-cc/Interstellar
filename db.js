@@ -35,6 +35,29 @@ export function initDB() {
     }
   }
 
+  // Create messages table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message TEXT NOT NULL,
+      active BOOLEAN DEFAULT TRUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create dismissals table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS dismissals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      message_id INTEGER NOT NULL,
+      dismissed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id),
+      FOREIGN KEY (message_id) REFERENCES messages (id),
+      UNIQUE(user_id, message_id)
+    )
+  `);
+
   return db;
 }
 
@@ -87,4 +110,54 @@ export function getUserByDeviceToken(token) {
 export function updateDeviceToken(id, token) {
   const stmt = db.prepare('UPDATE users SET device_token = ? WHERE id = ?');
   return stmt.run(token, id);
+}
+
+// Message functions
+export function createMessage(message) {
+  const stmt = db.prepare('INSERT INTO messages (message) VALUES (?)');
+  return stmt.run(message);
+}
+
+export function getActiveMessages() {
+  const stmt = db.prepare('SELECT * FROM messages WHERE active = 1 ORDER BY created_at DESC');
+  return stmt.all();
+}
+
+export function getAllMessages() {
+  const stmt = db.prepare('SELECT * FROM messages ORDER BY created_at DESC');
+  return stmt.all();
+}
+
+export function updateMessage(id, updates) {
+  if (updates.message !== undefined) {
+    const stmt = db.prepare('UPDATE messages SET message = ? WHERE id = ?');
+    stmt.run(updates.message, id);
+  }
+  if (updates.active !== undefined) {
+    const stmt = db.prepare('UPDATE messages SET active = ? WHERE id = ?');
+    stmt.run(updates.active ? 1 : 0, id);
+  }
+  return { changes: 1 };
+}
+
+export function deleteMessage(id) {
+  const stmt = db.prepare('DELETE FROM messages WHERE id = ?');
+  return stmt.run(id);
+}
+
+// Dismissal functions
+export function dismissMessage(userId, messageId) {
+  const stmt = db.prepare('INSERT OR IGNORE INTO dismissals (user_id, message_id) VALUES (?, ?)');
+  return stmt.run(userId, messageId);
+}
+
+export function getDismissedMessages(userId) {
+  const stmt = db.prepare('SELECT message_id FROM dismissals WHERE user_id = ?');
+  return stmt.all().map(row => row.message_id);
+}
+
+export function getUndismissedMessages(userId) {
+  const dismissed = getDismissedMessages(userId);
+  const activeMessages = getActiveMessages();
+  return activeMessages.filter(msg => !dismissed.includes(msg.id));
 }
