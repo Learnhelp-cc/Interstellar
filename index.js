@@ -17,7 +17,7 @@ import crypto from "crypto";
 import Database from 'better-sqlite3';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
@@ -1077,6 +1077,93 @@ app.get('/api/undismissed-messages', (req, res) => {
     res.json(messages);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch undismissed messages' });
+  }
+});
+
+// Search history API endpoints
+app.post('/api/search-history', (req, res) => {
+  const { deviceToken, url, title } = req.body;
+
+  if (!deviceToken || !url) {
+    return res.status(400).json({ message: 'Device token and URL required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    addSearchHistory(user.id, url, title);
+    res.json({ message: 'Search history entry added successfully' });
+  } catch (error) {
+    console.error('Error adding search history:', error);
+    res.status(500).json({ message: 'Failed to add search history entry' });
+  }
+});
+
+app.get('/api/search-history', (req, res) => {
+  const { deviceToken, limit } = req.query;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const limitNum = limit ? parseInt(limit) : 50;
+    const history = getSearchHistory(user.id, limitNum);
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching search history:', error);
+    res.status(500).json({ message: 'Failed to fetch search history' });
+  }
+});
+
+app.delete('/api/search-history/:id', (req, res) => {
+  const { id } = req.params;
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    deleteSearchHistory(user.id, parseInt(id));
+    res.json({ message: 'Search history entry deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting search history:', error);
+    res.status(500).json({ message: 'Failed to delete search history entry' });
+  }
+});
+
+app.delete('/api/search-history', (req, res) => {
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    clearSearchHistory(user.id);
+    res.json({ message: 'Search history cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing search history:', error);
+    res.status(500).json({ message: 'Failed to clear search history' });
   }
 });
 

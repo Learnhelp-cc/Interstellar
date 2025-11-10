@@ -31,7 +31,7 @@ if (form && input) {
     }
   });
 }
-function processUrl(value, path) {
+async function processUrl(value, path) {
   let url = value.trim();
   const engine = localStorage.getItem("engine");
   const searchUrl = engine ? engine : "https://duckduckgo.com/?q=";
@@ -40,6 +40,24 @@ function processUrl(value, path) {
     url = searchUrl + url;
   } else if (!(url.startsWith("https://") || url.startsWith("http://"))) {
     url = `https://${url}`;
+  }
+
+  // Log to search history
+  try {
+    const deviceToken = localStorage.getItem('deviceToken');
+    if (deviceToken) {
+      await fetch('/api/search-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceToken: deviceToken,
+          url: url,
+          title: value.trim() // Use original input as title
+        })
+      });
+    }
+  } catch (error) {
+    console.error('Failed to log search history:', error);
   }
 
   sessionStorage.setItem("GoUrl", __uv$config.encodeUrl(url));

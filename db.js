@@ -58,6 +58,18 @@ export function initDB() {
     )
   `);
 
+  // Create search_history table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS search_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      url TEXT NOT NULL,
+      title TEXT,
+      visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+  `);
+
   return db;
 }
 
@@ -160,4 +172,25 @@ export function getUndismissedMessages(userId) {
   const dismissed = getDismissedMessages(userId);
   const activeMessages = getActiveMessages();
   return activeMessages.filter(msg => !dismissed.includes(msg.id));
+}
+
+// Search history functions
+export function addSearchHistory(userId, url, title = null) {
+  const stmt = db.prepare('INSERT INTO search_history (user_id, url, title) VALUES (?, ?, ?)');
+  return stmt.run(userId, url, title);
+}
+
+export function getSearchHistory(userId, limit = 50) {
+  const stmt = db.prepare('SELECT * FROM search_history WHERE user_id = ? ORDER BY visited_at DESC LIMIT ?');
+  return stmt.all(userId, limit);
+}
+
+export function deleteSearchHistory(userId, historyId) {
+  const stmt = db.prepare('DELETE FROM search_history WHERE id = ? AND user_id = ?');
+  return stmt.run(historyId, userId);
+}
+
+export function clearSearchHistory(userId) {
+  const stmt = db.prepare('DELETE FROM search_history WHERE user_id = ?');
+  return stmt.run(userId);
 }

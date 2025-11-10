@@ -45,6 +45,9 @@
           </form>
         </div>
         <div class="nav-right">
+          <button title="Search History" id="search-history-btn" class="nav-button nav-btn-right" onclick="showSearchHistory()">
+            <i class="fas fa-history"></i>
+          </button>
           <button title="Fullscreen" id="fullscreen-button" class="nav-button nav-btn-right" onclick="FS()">
             <i class="fa-solid fa-expand"></i>
           </button>
@@ -91,6 +94,215 @@
 
     // Check auth immediately
     checkAuth();
+
+    // Search history functionality
+    async function showSearchHistory() {
+      const deviceToken = localStorage.getItem('deviceToken');
+      if (!deviceToken) return;
+
+      try {
+        const response = await fetch(`/api/search-history?deviceToken=${encodeURIComponent(deviceToken)}`);
+        const history = await response.json();
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'search-history-modal';
+        modal.innerHTML = `
+          <div class="modal-overlay" onclick="closeSearchHistoryModal()"></div>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Search History</h2>
+              <button onclick="closeSearchHistoryModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+              ${history.length === 0 ? '<p>No search history found.</p>' :
+                history.map(item => `
+                  <div class="history-item">
+                    <div class="history-info">
+                      <div class="history-title">${item.title || item.url}</div>
+                      <div class="history-url">${item.url}</div>
+                      <div class="history-date">${new Date(item.visited_at).toLocaleString()}</div>
+                    </div>
+                    <div class="history-actions">
+                      <button onclick="visitHistoryItem('${item.url}')" class="visit-btn">Visit</button>
+                      <button onclick="deleteHistoryItem(${item.id})" class="delete-btn">Delete</button>
+                    </div>
+                  </div>
+                `).join('')
+              }
+            </div>
+            <div class="modal-footer">
+              <button onclick="clearAllHistory()" class="clear-btn">Clear All History</button>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Add modal styles
+        const style = document.createElement('style');
+        style.textContent = `
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+          }
+          .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-c);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1001;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          }
+          .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+          }
+          .modal-header h2 {
+            margin: 0;
+            color: var(--text-primary);
+          }
+          .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-primary);
+          }
+          .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+          }
+          .history-info {
+            flex: 1;
+          }
+          .history-title {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+          }
+          .history-url {
+            color: var(--text-secondary, #888);
+            font-size: 14px;
+            margin-bottom: 5px;
+            word-break: break-all;
+          }
+          .history-date {
+            color: var(--text-secondary, #666);
+            font-size: 12px;
+          }
+          .history-actions {
+            display: flex;
+            gap: 10px;
+          }
+          .visit-btn, .delete-btn, .clear-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+          }
+          .visit-btn {
+            background: #007bff;
+            color: white;
+          }
+          .delete-btn {
+            background: #dc3545;
+            color: white;
+          }
+          .clear-btn {
+            background: #ffc107;
+            color: black;
+            padding: 8px 16px;
+          }
+          .modal-footer {
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 15px;
+          }
+        `;
+        document.head.appendChild(style);
+
+      } catch (error) {
+        console.error('Failed to load search history:', error);
+        alert('Failed to load search history');
+      }
+    }
+
+    function closeSearchHistoryModal() {
+      const modal = document.getElementById('search-history-modal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    function visitHistoryItem(url) {
+      closeSearchHistoryModal();
+      // Use the existing processUrl function from t3.js
+      processUrl(url);
+    }
+
+    async function deleteHistoryItem(id) {
+      const deviceToken = localStorage.getItem('deviceToken');
+      if (!deviceToken) return;
+
+      try {
+        await fetch(`/api/search-history/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+        // Refresh the modal
+        closeSearchHistoryModal();
+        showSearchHistory();
+      } catch (error) {
+        console.error('Failed to delete history item:', error);
+        alert('Failed to delete history item');
+      }
+    }
+
+    async function clearAllHistory() {
+      if (!confirm('Are you sure you want to clear all search history?')) return;
+
+      const deviceToken = localStorage.getItem('deviceToken');
+      if (!deviceToken) return;
+
+      try {
+        await fetch('/api/search-history', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+        closeSearchHistoryModal();
+        showSearchHistory();
+      } catch (error) {
+        console.error('Failed to clear history:', error);
+        alert('Failed to clear history');
+      }
+    }
   </script>
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script src="assets/js/t3.js"></script>
