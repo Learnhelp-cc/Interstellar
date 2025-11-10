@@ -16,27 +16,31 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
-<body>
-  <div class="f-nav"></div>
-  <div class="input-c">
-    <input type="text" id="search" onkeyup="bar()" placeholder="Search" />
-    <select id="category" name="category" onchange="category()">
-      <option value="all">&#65;&#108;&#108;</option>
-      <option value="android">
-        &#65;&#110;&#100;&#114;&#111;&#105;&#100;&#32;&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
-      <option value="2P">&#77;&#117;&#108;&#116;&#105;&#112;&#108;&#97;&#121;&#101;&#114;</option>
-      <option value="sports">&#83;&#112;&#111;&#114;&#116;&#115;</option>
-      <option value="flash">&#70;&#108;&#97;&#115;&#104;</option>
-      <option value="emu">&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
-      <option value="local">&#76;&#111;&#99;&#97;&#108;</option>
-    </select>
+<body class="center" onload="SplashT">
+  <div id="particles-js">
+    <div class="f-nav"></div>
+    <div class="input-c">
+      <input type="text" id="search" onkeyup="bar()" placeholder="Search" />
+      <select id="category" name="category" onchange="category()">
+        <option value="all">&#65;&#108;&#108;</option>
+        <option value="android">
+          &#65;&#110;&#100;&#114;&#111;&#105;&#100;&#32;&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
+        <option value="2P">&#77;&#117;&#108;&#116;&#105;&#112;&#108;&#97;&#121;&#101;&#114;</option>
+        <option value="sports">&#83;&#112;&#111;&#114;&#116;&#115;</option>
+        <option value="flash">&#70;&#108;&#97;&#115;&#104;</option>
+        <option value="emu">&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
+        <option value="local">&#76;&#111;&#99;&#97;&#108;</option>
+      </select>
+    </div>
+    <div class="pinned"></div>
+    <div class="apps"></div>
   </div>
-  <div class="pinned"></div>
-  <div class="apps"></div>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script src="/assets/js/c1.js?v=001"></script>
   <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
   <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
   <script src="/assets/js/m1.js"></script>
+  <script src="/assets/js/h1.js"></script>
 </body>
 
 </html>
