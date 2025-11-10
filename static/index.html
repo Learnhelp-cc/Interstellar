@@ -121,10 +121,17 @@
   <script src="/assets/js/m1.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const audioFiles = ['Bliss.mp3', 'Broken Attachment.mp3', 'Frank Saint.mp3', 'Goodnight Dad I Love You.mp3', 'hide the pain.mp3', 'menu.mp3', 'milk cassette x.mp3', 'old memories of you.mp3', 'pointless.mp3', 'sakura zxc.mp3', 'see you in heaven.mp3', 'Song For Those Who Keep Silent.mp3', 'The Lobotomy.mp3', 'thought you were sweet.mp3'];
-      const randomIndex = Math.floor(Math.random() * audioFiles.length);
-      const selectedSong = audioFiles[randomIndex];
-      const songName = selectedSong.replace(/\.mp3$/, '');
+      let selectedSong;
+      let songName;
+      if (Math.random() < 0.0033) {
+        selectedSong = ' - Armed _ Dangerous - King Von.mp3';
+        songName = ' - Armed _ Dangerous - King Von';
+      } else {
+        const audioFiles = ['Bliss.mp3', 'Broken Attachment.mp3', 'Frank Saint.mp3', 'Goodnight Dad I Love You.mp3', 'hide the pain.mp3', 'menu.mp3', 'milk cassette x.mp3', 'old memories of you.mp3', 'pointless.mp3', 'sakura zxc.mp3', 'see you in heaven.mp3', 'Song For Those Who Keep Silent.mp3', 'The Lobotomy.mp3', 'thought you were sweet.mp3'];
+        const randomIndex = Math.floor(Math.random() * audioFiles.length);
+        selectedSong = audioFiles[randomIndex];
+        songName = selectedSong.replace(/\.mp3$/, '');
+      }
 
       const audio = document.getElementById('menu-audio');
       audio.querySelector('source').src = `assets/media/audio/${selectedSong}`;
