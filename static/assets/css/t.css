@@ -210,7 +210,7 @@ ul {
 
 li {
    padding: 0.4rem;
-   background-color: var(--background-settings);
+   background-color: transparent;
    margin-right: 0.5rem;
    cursor: pointer;
    border-radius: 5px;

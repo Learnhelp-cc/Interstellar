@@ -51,11 +51,11 @@ if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem
 }
 // Particles
 document.addEventListener("DOMContentLoaded", event => {
-  // Enable particles by default for rain effect
+  // Enable particles by default for rain effect (except on tabs page)
   if (!window.localStorage.getItem("particles")) {
     window.localStorage.setItem("particles", "true");
   }
-  if (window.localStorage.getItem("particles") === "true") {
+  if (window.localStorage.getItem("particles") === "true" && window.location.pathname !== '/d') {
     const particlesConfig = {
       particles: {
         number: {

@@ -378,8 +378,10 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("lastBackgroundImage", randomImage);
   }
 
-  // Background Image Logic - Set initial random background
-  changeWallpaper();
+  // Background Image Logic - Set initial random background (except on tabs page)
+  if (window.location.pathname !== '/d') {
+    changeWallpaper();
+  }
 
   // Wallpaper shuffle logic
   if (document.getElementById('menu-audio')) {
@@ -402,8 +404,8 @@ document.addEventListener("DOMContentLoaded", () => {
       audio.load();
       audio.play();
     });
-  } else {
-    // Other pages: change wallpaper every 2 minutes
+  } else if (window.location.pathname !== '/d') {
+    // Other pages: change wallpaper every 2 minutes (except tabs page)
     setInterval(changeWallpaper, 2 * 60 * 1000);
   }
 

@@ -59,6 +59,10 @@ class CloudflareFriendlyHttpAgent extends http.Agent {
     const now = Date.now();
     const domainKey = `${domain}`;
 
+    // Higher limits for Discord domains
+    const isDiscord = domain.includes('discord.com') || domain.includes('discordapp.com');
+    const maxRequests = isDiscord ? 200 : MAX_REQUESTS_PER_WINDOW; // 200 requests per minute for Discord
+
     if (!requestTracker.has(domainKey)) {
       requestTracker.set(domainKey, { count: 0, windowStart: now });
     }
@@ -72,7 +76,7 @@ class CloudflareFriendlyHttpAgent extends http.Agent {
     }
 
     // Check if we're over the limit
-    if (tracker.count >= MAX_REQUESTS_PER_WINDOW) {
+    if (tracker.count >= maxRequests) {
       const error = new Error(`Rate limit exceeded for domain: ${domain}`);
       error.code = 'ERATE_LIMIT';
       callback(error);
@@ -104,6 +108,10 @@ class CloudflareFriendlyHttpsAgent extends https.Agent {
     const now = Date.now();
     const domainKey = `${domain}`;
 
+    // Higher limits for Discord domains
+    const isDiscord = domain.includes('discord.com') || domain.includes('discordapp.com');
+    const maxRequests = isDiscord ? 200 : MAX_REQUESTS_PER_WINDOW; // 200 requests per minute for Discord
+
     if (!requestTracker.has(domainKey)) {
       requestTracker.set(domainKey, { count: 0, windowStart: now });
     }
@@ -117,7 +125,7 @@ class CloudflareFriendlyHttpsAgent extends https.Agent {
     }
 
     // Check if we're over the limit
-    if (tracker.count >= MAX_REQUESTS_PER_WINDOW) {
+    if (tracker.count >= maxRequests) {
       const error = new Error(`Rate limit exceeded for domain: ${domain}`);
       error.code = 'ERATE_LIMIT';
       callback(error);
@@ -136,7 +144,7 @@ const httpsAgent = new CloudflareFriendlyHttpsAgent();
 
 // Browser-like headers to avoid Cloudflare detection
 const BROWSER_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
   'Accept-Language': 'en-US,en;q=0.9',
   'Accept-Encoding': 'gzip, deflate, br',
@@ -147,7 +155,10 @@ const BROWSER_HEADERS = {
   'Sec-Fetch-Mode': 'navigate',
   'Sec-Fetch-Site': 'none',
   'Sec-Fetch-User': '?1',
-  'Cache-Control': 'max-age=0'
+  'Cache-Control': 'max-age=0',
+  'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+  'Sec-Ch-Ua-Mobile': '?0',
+  'Sec-Ch-Ua-Platform': '"Windows"'
 };
 
 // Create bare server with custom agents
@@ -201,8 +212,36 @@ if (originalV3Handler) {
         'Sec-Fetch-Mode': BROWSER_HEADERS['Sec-Fetch-Mode'],
         'Sec-Fetch-Site': BROWSER_HEADERS['Sec-Fetch-Site'],
         'Sec-Fetch-User': BROWSER_HEADERS['Sec-Fetch-User'],
-        'Cache-Control': BROWSER_HEADERS['Cache-Control']
+        'Cache-Control': BROWSER_HEADERS['Cache-Control'],
+        'Sec-Ch-Ua': BROWSER_HEADERS['Sec-Ch-Ua'],
+        'Sec-Ch-Ua-Mobile': BROWSER_HEADERS['Sec-Ch-Ua-Mobile'],
+        'Sec-Ch-Ua-Platform': BROWSER_HEADERS['Sec-Ch-Ua-Platform']
       };
+
+      // Discord-specific headers
+      if (xBareURL.includes('discord.com') || xBareURL.includes('discordapp.com')) {
+        headersToAdd['X-Super-Properties'] = 'eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6ImVuLVVTIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEzMS4wLjAuMCBTYWZhcmkvNTM3LjM2IiwiYnJvd3Nlcl92ZXJzaW9uIjoiMTMxLjAuMC4wIiwib3NfdmVyc2lvbiI6IjEwIiwicmVmZXJyZXIiOiJodHRwczovL2Rpc2NvcmQuY29tLyIsInJlZmVycmluZ19kb21haW4iOiJkaXNjb3JkLmNvbSIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoxODc5NTIsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGx9';
+        headersToAdd['X-Discord-Locale'] = 'en-US';
+        headersToAdd['X-Debug-Options'] = 'bugReporterEnabled';
+        headersToAdd['Authorization'] = bareHeaders['Authorization'] || '';
+        headersToAdd['X-Discord-Timezone'] = 'America/New_York';
+        headersToAdd['X-Context-Properties'] = 'eyJsb2NhdGlvbiI6IkpvaW4gR3VpbGQiLCJsb2NhdGlvbl9ndWlsZF9pZCI6bnVsbCwibG9jYXRpb25fY2hhbm5lbF9pZCI6bnVsbCwibG9jYXRpb25fY2hhbm5lbF90eXBlIjpudWxsfQ==';
+
+        // Add Origin and Referer for Discord API calls
+        if (!bareHeaders['Origin'] && xBareURL.includes('/api/')) {
+          headersToAdd['Origin'] = 'https://discord.com';
+        }
+        if (!bareHeaders['Referer']) {
+          headersToAdd['Referer'] = 'https://discord.com/login';
+        }
+
+        // Additional headers for 2FA/MFA verification
+        if (xBareURL.includes('/mfa/') || xBareURL.includes('/verify') || xBareURL.includes('/totp')) {
+          headersToAdd['X-Fingerprint'] = bareHeaders['X-Fingerprint'] || '';
+          headersToAdd['X-Captcha-Key'] = bareHeaders['X-Captcha-Key'] || '';
+          headersToAdd['X-Captcha-Rqtoken'] = bareHeaders['X-Captcha-Rqtoken'] || '';
+        }
+      }
 
       for (const [key, value] of Object.entries(headersToAdd)) {
         if (!bareHeaders[key]) {

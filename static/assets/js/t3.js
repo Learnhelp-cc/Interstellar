@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", event => {
           newIframe.src = `${window.location.origin}/a/${goUrl}`;
         }
       } else {
-        newIframe.src = "/";
+        newIframe.src = `/a/${__uv$config.encodeUrl("https://duckduckgo.nl")}`;
       }
     } else if (tabCounter > 1) {
       if (url !== null) {
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", event => {
           newIframe.src = `${window.location.origin}/a/${goUrl}`;
         }
       } else {
-        newIframe.src = "/";
+        newIframe.src = `/a/${__uv$config.encodeUrl("https://duckduckgo.nl")}`;
       }
     }
 
