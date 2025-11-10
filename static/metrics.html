@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
+    <title>Metrics</title>
+    <link rel="stylesheet" href="/assets/css/global.css?v=6" />
+    <link rel="stylesheet" href="/assets/css/container.css?v=2" />
+    <link rel="stylesheet" href="/assets/css/nav.css?v=01" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metrics-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .metrics-card {
+            background: var(--background-settings);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            -webkit-backdrop-filter: var(--backdrop-filter);
+            backdrop-filter: var(--backdrop-filter);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .metrics-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metrics-card h3 {
+            color: var(--text-primary);
+            margin: 0 0 20px 0;
+            font-size: 1.5em;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            background: var(--background-column);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-placeholder);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--text-placeholder);
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: var(--reset-button);
+            color: var(--text-primary);
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            margin: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .metrics-title {
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 3em;
+            margin: 40px 0 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .metrics-subtitle {
+            text-align: center;
+            color: var(--text-placeholder);
+            font-size: 1.1em;
+            margin-bottom: 40px;
+            font-family: "Poppins", sans-serif;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-container {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+
+            .metrics-title {
+                font-size: 2em;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div id="loading" class="loading">
+            <i class="fas fa-chart-line"></i><br>
+            Loading metrics data...
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            Failed to load metrics data. Please check your authentication.
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <h1 class="metrics-title">Metrics</h1>
+            <p class="metrics-subtitle">Real-time analytics for network traffic and user activity</p>
+
+            <div class="metrics-container">
+                <div class="metrics-card">
+                    <h3><i class="fas fa-users"></i> Overview</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="activeUsers">0</span>
+                            <span class="stat-label">Active Users</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="totalRequests">0</span>
+                            <span class="stat-label">Total Requests (24h)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="uniqueSites">0</span>
+                            <span class="stat-label">Unique Sites</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="avgSessionTime">0m</span>
+                            <span class="stat-label">Avg Session Time</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <h3><i class="fas fa-chart-line"></i> Network Traffic</h3>
+                    <div class="chart-container">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <h3><i class="fas fa-globe"></i> Top Websites</h3>
+                    <div class="chart-container">
+                        <canvas id="sitesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <h3><i class="fas fa-clock"></i> Time Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trafficChart, sitesChart, timeChart;
+        let updateInterval;
+
+        async function fetchMetrics() {
+            try {
+                const response = await fetch('/api/metrics');
+                if (!response.ok) {
+                    throw new Error('Authentication required');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Failed to fetch metrics:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                return null;
+            }
+        }
+
+        function formatDuration(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const hours = Math.floor(minutes / 60);
+            if (hours > 0) {
+                return `${hours}h ${minutes % 60}m`;
+            }
+            return `${minutes}m`;
+        }
+
+        function updateStats(data) {
+            document.getElementById('activeUsers').textContent = data.activeUsers;
+            document.getElementById('totalRequests').textContent = data.totalRequests.toLocaleString();
+
+            const uniqueSites = Object.keys(data.networkTraffic).length;
+            document.getElementById('uniqueSites').textContent = uniqueSites;
+
+            // Calculate average session time
+            if (data.timeSpent.length > 0) {
+                const avgDuration = data.timeSpent.reduce((sum, session) => sum + session.duration, 0) / data.timeSpent.length;
+                document.getElementById('avgSessionTime').textContent = formatDuration(avgDuration);
+            }
+        }
+
+        function updateTrafficChart(data) {
+            const labels = [];
+            const values = [];
+
+            // Group traffic history by hour
+            const hourlyData = {};
+            data.trafficHistory.forEach(entry => {
+                const hour = new Date(entry.timestamp).getHours();
+                if (!hourlyData[hour]) {
+                    hourlyData[hour] = 0;
+                }
+                hourlyData[hour] += entry.requests;
+            });
+
+            // Create labels for last 24 hours
+            for (let i = 23; i >= 0; i--) {
+                const hour = (new Date().getHours() - i + 24) % 24;
+                labels.push(`${hour}:00`);
+                values.push(hourlyData[hour] || 0);
+            }
+
+            if (trafficChart) {
+                trafficChart.data.labels = labels;
+                trafficChart.data.datasets[0].data = values;
+                trafficChart.update();
+            } else {
+                const ctx = document.getElementById('trafficChart').getContext('2d');
+                trafficChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Requests per Hour',
+                            data: values,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateSitesChart(data) {
+            const topSites = data.topVisitedSites.slice(0, 10);
+            const labels = topSites.map(site => site.domain.length > 20 ? site.domain.substring(0, 20) + '...' : site.domain);
+            const values = topSites.map(site => site.count);
+
+            if (sitesChart) {
+                sitesChart.data.labels = labels;
+                sitesChart.data.datasets[0].data = values;
+                sitesChart.update();
+            } else {
+                const ctx = document.getElementById('sitesChart').getContext('2d');
+                sitesChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Visit Count',
+                            data: values,
+                            backgroundColor: 'rgba(46, 204, 113, 0.6)',
+                            borderColor: '#27ae60',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value.toLocaleString();
+                                    }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateTimeChart(data) {
+            const timeData = data.timeSpent.slice(0, 10);
+            const labels = timeData.map(session => session.domain.length > 15 ? session.domain.substring(0, 15) + '...' : session.domain);
+            const values = timeData.map(session => session.duration / 60000); // Convert to minutes
+
+            if (timeChart) {
+                timeChart.data.labels = labels;
+                timeChart.data.datasets[0].data = values;
+                timeChart.update();
+            } else {
+                const ctx = document.getElementById('timeChart').getContext('2d');
+                timeChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
+                                '#9b59b6', '#1abc9c', '#34495e', '#e67e22',
+                                '#95a5a6', '#f1c40f'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return `${context.label}: ${formatDuration(context.raw * 60000)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        async function updateDashboard() {
+            const data = await fetchMetrics();
+            if (!data) return;
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+
+            updateStats(data);
+            updateTrafficChart(data);
+            updateSitesChart(data);
+            updateTimeChart(data);
+        }
+
+        // Initial load
+        updateDashboard();
+
+        // Update every 30 seconds
+        updateInterval = setInterval(updateDashboard, 30000);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
+    </script>
+</body>
+
+</html>

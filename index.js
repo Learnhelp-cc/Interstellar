@@ -272,6 +272,92 @@ const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // Cache for 30 Days
 let isLockedDown = false;
 const suspectLogs = [];
 
+// Metrics data structures
+const metrics = {
+  networkTraffic: new Map(), // domain -> { timestamps: [], counts: [] }
+  visitedSites: new Map(), // domain -> visit count
+  activeSessions: new Map(), // ip_domain -> { startTime, lastActivity, requestCount }
+  trafficHistory: [] // { timestamp, requests, dataTransferred }
+};
+
+// Clean up old metrics data periodically
+setInterval(() => {
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+  const oneDay = 24 * oneHour;
+
+  // Clean up old network traffic data (keep last 24 hours)
+  for (const [domain, data] of metrics.networkTraffic) {
+    const recentData = data.timestamps.filter(ts => now - ts < oneDay);
+    if (recentData.length === 0) {
+      metrics.networkTraffic.delete(domain);
+    } else {
+      data.timestamps = recentData;
+      data.counts = data.counts.slice(-recentData.length);
+    }
+  }
+
+  // Clean up old active sessions (inactive for 30 minutes)
+  for (const [key, session] of metrics.activeSessions) {
+    if (now - session.lastActivity > 30 * 60 * 1000) {
+      metrics.activeSessions.delete(key);
+    }
+  }
+
+  // Keep only last 24 hours of traffic history
+  metrics.trafficHistory = metrics.trafficHistory.filter(entry => now - entry.timestamp < oneDay);
+}, 5 * 60 * 1000); // Clean up every 5 minutes
+
+// Function to collect metrics
+const collectMetrics = (ip, domain, dataTransferred = 0) => {
+  const now = Date.now();
+
+  // Update network traffic per domain
+  if (!metrics.networkTraffic.has(domain)) {
+    metrics.networkTraffic.set(domain, { timestamps: [], counts: [] });
+  }
+  const domainData = metrics.networkTraffic.get(domain);
+  domainData.timestamps.push(now);
+  domainData.counts.push((domainData.counts[domainData.counts.length - 1] || 0) + 1);
+
+  // Keep only last 100 data points per domain
+  if (domainData.timestamps.length > 100) {
+    domainData.timestamps.shift();
+    domainData.counts.shift();
+  }
+
+  // Update visited sites count
+  metrics.visitedSites.set(domain, (metrics.visitedSites.get(domain) || 0) + 1);
+
+  // Update active sessions
+  const sessionKey = `${ip}_${domain}`;
+  if (!metrics.activeSessions.has(sessionKey)) {
+    metrics.activeSessions.set(sessionKey, {
+      startTime: now,
+      lastActivity: now,
+      requestCount: 0,
+      domain: domain
+    });
+  }
+  const session = metrics.activeSessions.get(sessionKey);
+  session.lastActivity = now;
+  session.requestCount++;
+
+  // Update traffic history (aggregate per minute)
+  const minuteTimestamp = Math.floor(now / 60000) * 60000; // Round to nearest minute
+  let lastEntry = metrics.trafficHistory[metrics.trafficHistory.length - 1];
+  if (!lastEntry || lastEntry.timestamp !== minuteTimestamp) {
+    lastEntry = { timestamp: minuteTimestamp, requests: 0, dataTransferred: 0 };
+    metrics.trafficHistory.push(lastEntry);
+    // Keep only last 24 hours (1440 minutes)
+    if (metrics.trafficHistory.length > 1440) {
+      metrics.trafficHistory.shift();
+    }
+  }
+  lastEntry.requests++;
+  lastEntry.dataTransferred += dataTransferred;
+};
+
 // Function to log suspect activity
 const logSuspectActivity = (ip, domain) => {
   suspectLogs.push({
@@ -610,6 +696,7 @@ const routes = [
   { path: "/c", file: "settings.html" },
   { path: "/d", file: "tabs.html" },
   { path: "/chat", file: "chat.html" },
+  { path: "/metrics", file: "metrics.html" },
   { path: "/", file: "index.html" },
 ];
 
@@ -630,6 +717,50 @@ app.get('/api/server-info', (req, res) => {
   });
 });
 
+app.get('/api/metrics', adminAuth, (req, res) => {
+  // Prepare metrics data for the frontend
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+
+  // Network traffic data (last hour)
+  const networkTrafficData = {};
+  for (const [domain, data] of metrics.networkTraffic) {
+    const recentData = data.timestamps.map((ts, i) => ({
+      timestamp: ts,
+      count: data.counts[i]
+    })).filter(entry => now - entry.timestamp < oneHour);
+    if (recentData.length > 0) {
+      networkTrafficData[domain] = recentData;
+    }
+  }
+
+  // Top visited sites
+  const topVisitedSites = Array.from(metrics.visitedSites.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([domain, count]) => ({ domain, count }));
+
+  // Active sessions and time spent
+  const activeSessions = Array.from(metrics.activeSessions.values());
+  const timeSpentData = activeSessions.map(session => ({
+    domain: session.domain || 'unknown',
+    duration: now - session.startTime,
+    requestCount: session.requestCount
+  }));
+
+  // Traffic history (last 24 hours)
+  const trafficHistory = metrics.trafficHistory.slice(-1440); // Last 24 hours
+
+  res.json({
+    networkTraffic: networkTrafficData,
+    topVisitedSites,
+    timeSpent: timeSpentData,
+    trafficHistory,
+    activeUsers: activeSessions.length,
+    totalRequests: trafficHistory.reduce((sum, entry) => sum + entry.requests, 0)
+  });
+});
+
 app.use((req, res, next) => {
   res.status(404).sendFile(path.join(__dirname, "static", "404.html"));
 });
@@ -645,6 +776,10 @@ server.on("request", (req, res) => {
     const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
     const url = new URL(req.url, `http://${req.headers.host}`);
     logSuspectActivity(clientIP, url.hostname);
+
+    // Collect metrics for proxy requests
+    collectMetrics(clientIP, url.hostname);
+
     bareServer.routeRequest(req, res);
   } else {
     app(req, res);
