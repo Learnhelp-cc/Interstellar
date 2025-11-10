@@ -147,6 +147,36 @@
 </head>
 
 <body class="center" onload="SplashT">
+    <script>
+        // Check device token on page load
+        async function checkAuth() {
+          const deviceToken = localStorage.getItem('deviceToken');
+          if (!deviceToken) {
+            window.location.href = '/signin';
+            return;
+          }
+
+          try {
+            const response = await fetch('/api/validate-token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ deviceToken })
+            });
+
+            const data = await response.json();
+            if (!data.valid) {
+              localStorage.removeItem('deviceToken');
+              window.location.href = '/signin';
+            }
+          } catch (error) {
+            console.error('Auth check failed:', error);
+            window.location.href = '/signin';
+          }
+        }
+
+        // Check auth immediately
+        checkAuth();
+    </script>
     <div id="particles-js">
         <div class="main">
         <div id="loading" class="loading">

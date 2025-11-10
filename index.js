@@ -13,15 +13,25 @@ import fetch from "node-fetch";
 import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
 import { Client } from "ssh2";
+import crypto from "crypto";
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 dotenv.config({ path: path.join(__dirname, "creds.env") });
+
+// Initialize database
+initDB();
+console.log(chalk.green("📊 Database initialized"));
+
 const server = http.createServer();
 const app = express();
+
+// Session store for user authentication
+const sessions = new Map();
 
 // Cookie jar for session persistence
 const cookieJar = new Map();
@@ -477,6 +487,98 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, "static")));
 app.use("/ca", cors({ origin: true }));
 
+// Authentication is handled client-side
+
+// Auth API endpoints
+app.post('/api/signin', (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password required' });
+    }
+
+    const user = getUser(username);
+    if (!user || user.password !== password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (user.pending) {
+      return res.status(403).json({ message: 'Account is pending approval. Please wait for admin approval.' });
+    }
+
+    // Generate device token
+    const deviceToken = crypto.randomBytes(32).toString('hex');
+
+    // Store device token in database
+    updateDeviceToken(user.id, deviceToken);
+
+    res.json({
+      message: 'Sign in successful',
+      deviceToken: deviceToken
+    });
+  } catch (error) {
+    console.error('Signin error:', error);
+    res.status(500).json({ message: 'Internal server error during signin' });
+  }
+});
+
+// Device token validation endpoint
+app.post('/api/validate-token', (req, res) => {
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ valid: false });
+  }
+
+  const user = getUserByDeviceToken(deviceToken);
+  if (!user || user.pending) {
+    return res.json({ valid: false });
+  }
+
+  res.json({ valid: true, user: { username: user.username } });
+});
+
+app.post('/api/request-account', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Username and password required' });
+  }
+
+  if (username.length < 3 || password.length < 6) {
+    return res.status(400).json({ message: 'Username must be at least 3 characters, password at least 6 characters' });
+  }
+
+  try {
+    createUser(username, password);
+    res.json({ message: 'Account request submitted successfully' });
+  } catch (error) {
+    if (error.message.includes('UNIQUE constraint failed')) {
+      return res.status(409).json({ message: 'Username already exists' });
+    }
+    res.status(500).json({ message: 'Failed to create account request' });
+  }
+});
+
+app.post('/api/signout', (req, res) => {
+  const sessionId = req.cookies.sessionId;
+  if (sessionId) {
+    sessions.delete(sessionId);
+    res.clearCookie('sessionId');
+  }
+  res.json({ message: 'Signed out successfully' });
+});
+
+// Routes for auth pages
+app.get('/signin', (req, res) => {
+  res.sendFile(path.join(__dirname, "static", "signin.html"));
+});
+
+app.get('/request', (req, res) => {
+  res.sendFile(path.join(__dirname, "static", "request.html"));
+});
+
 // Admin routes
 app.get('/admin', adminAuth, (req, res) => {
   res.send(`
@@ -489,15 +591,25 @@ app.get('/admin', adminAuth, (req, res) => {
         button { padding: 10px 20px; margin: 10px; cursor: pointer; }
         .logs { margin-top: 20px; }
         .log-entry { border: 1px solid #ccc; padding: 10px; margin: 5px 0; }
+        .user-entry { border: 1px solid #ddd; padding: 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
+        .user-info { flex-grow: 1; }
+        .user-actions { display: flex; gap: 10px; }
+        .pending { color: orange; font-weight: bold; }
+        .approved { color: green; font-weight: bold; }
+        input, select { padding: 5px; margin: 5px; }
+        .edit-form { display: none; margin-top: 10px; padding: 10px; background: #f9f9f9; }
       </style>
     </head>
     <body>
       <h1>Admin Panel</h1>
-      <button onclick="loadTerminal()">Load Reverse TCP Terminal</button>
-      <button onclick="loadSSH()">Load SSH Terminal</button>
-      <button onclick="signInAsAdmin()">Sign in as Admin (Chat)</button>
-      <button onclick="viewLogs()">View Logs</button>
-      <button onclick="toggleLockdown()">${isLockedDown ? 'Lift Lockdown' : 'Activate Lockdown'}</button>
+      <div>
+        <button onclick="loadTerminal()">Load Reverse TCP Terminal</button>
+        <button onclick="loadSSH()">Load SSH Terminal</button>
+        <button onclick="signInAsAdmin()">Sign in as Admin (Chat)</button>
+        <button onclick="viewLogs()">View Logs</button>
+        <button onclick="manageUsers()">Manage Users</button>
+        <button onclick="toggleLockdown()">${isLockedDown ? 'Lift Lockdown' : 'Activate Lockdown'}</button>
+      </div>
       <div id="content"></div>
       <script>
         function loadTerminal() {
@@ -513,7 +625,7 @@ app.get('/admin', adminAuth, (req, res) => {
           fetch('/admin/logs')
             .then(res => res.json())
             .then(logs => {
-              const html = logs.map(log => 
+              const html = logs.map(log =>
                 \`<div class="log-entry">
                   <strong>IP:</strong> \${log.ip}<br>
                   <strong>Domain:</strong> \${log.domain}<br>
@@ -522,6 +634,95 @@ app.get('/admin', adminAuth, (req, res) => {
               ).join('');
               document.getElementById('content').innerHTML = '<h2>Suspect Logs</h2>' + html;
             });
+        }
+        function manageUsers() {
+          fetch('/admin/users')
+            .then(res => res.json())
+            .then(users => {
+              const html = users.map(user =>
+                \`<div class="user-entry">
+                  <div class="user-info">
+                    <strong>ID:</strong> \${user.id}<br>
+                    <strong>Username:</strong> \${user.username}<br>
+                    <strong>Status:</strong> <span class="\${user.pending ? 'pending' : 'approved'}">\${user.pending ? 'PENDING' : 'APPROVED'}</span><br>
+                    <strong>Created:</strong> \${new Date(user.created_at).toLocaleString()}
+                  </div>
+                  <div class="user-actions">
+                    <button onclick="editUser(\${user.id}, '\${user.username}', \${user.pending})">Edit</button>
+                    <button onclick="deleteUser(\${user.id})" style="background: red; color: white;">Delete</button>
+                  </div>
+                  <div id="edit-\${user.id}" class="edit-form">
+                    <h4>Edit User \${user.id}</h4>
+                    <input type="text" id="username-\${user.id}" value="\${user.username}" placeholder="Username">
+                    <input type="password" id="password-\${user.id}" placeholder="New Password (leave empty to keep current)">
+                    <select id="pending-\${user.id}">
+                      <option value="false" \${!user.pending ? 'selected' : ''}>Approved</option>
+                      <option value="true" \${user.pending ? 'selected' : ''}>Pending</option>
+                    </select>
+                    <button onclick="saveUser(\${user.id})">Save</button>
+                    <button onclick="cancelEdit(\${user.id})">Cancel</button>
+                  </div>
+                </div>\`
+              ).join('');
+              document.getElementById('content').innerHTML = '<h2>User Management</h2>' + html;
+            });
+        }
+        function editUser(id, username, pending) {
+          document.getElementById(\`edit-\${id}\`).style.display = 'block';
+        }
+        function cancelEdit(id) {
+          document.getElementById(\`edit-\${id}\`).style.display = 'none';
+        }
+        function saveUser(id) {
+          const username = document.getElementById(\`username-\${id}\`).value;
+          const password = document.getElementById(\`password-\${id}\`).value;
+          const pending = document.getElementById(\`pending-\${id}\`).value === 'true';
+
+          const updates = { username, pending };
+          if (password) updates.password = password;
+
+          fetch(\`/admin/users/\${id}\`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+            credentials: 'include'
+          })
+          .then(res => {
+            if (res.status === 401) {
+              alert('Admin authentication required');
+              return;
+            }
+            return res.json();
+          })
+          .then(result => {
+            if (result) {
+              alert(result.message);
+              manageUsers();
+            }
+          })
+          .catch(err => alert('Error updating user: ' + err.message));
+        }
+        function deleteUser(id) {
+          if (confirm('Are you sure you want to delete this user?')) {
+            fetch(\`/admin/users/\${id}\`, {
+              method: 'DELETE',
+              credentials: 'include'
+            })
+            .then(res => {
+              if (res.status === 401) {
+                alert('Admin authentication required');
+                return;
+              }
+              return res.json();
+            })
+            .then(result => {
+              if (result) {
+                alert(result.message);
+                manageUsers();
+              }
+            })
+            .catch(err => alert('Error deleting user: ' + err.message));
+          }
         }
         function toggleLockdown() {
           const action = '${isLockedDown ? 'unlock' : 'lockdown'}';
@@ -546,6 +747,39 @@ app.post('/admin/lockdown', adminAuth, (req, res) => {
 app.post('/admin/unlock', adminAuth, (req, res) => {
   isLockedDown = false;
   res.json({ status: 'unlocked' });
+});
+
+// Admin user management endpoints
+app.get('/admin/users', adminAuth, (req, res) => {
+  try {
+    const users = getAllUsers();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
+app.put('/admin/users/:id', adminAuth, (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  try {
+    updateUser(parseInt(id), updates);
+    res.json({ message: 'User updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update user' });
+  }
+});
+
+app.delete('/admin/users/:id', adminAuth, (req, res) => {
+  const { id } = req.params;
+
+  try {
+    deleteUser(parseInt(id));
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete user' });
+  }
 });
 
 app.get('/admin/terminal', adminAuth, (req, res) => {
@@ -702,7 +936,7 @@ const routes = [
 
 // biome-ignore lint: idk
 routes.forEach(route => {
-  app.get(route.path, (_req, res) => {
+  app.get(route.path, (req, res) => {
     res.sendFile(path.join(__dirname, "static", route.file));
   });
 });

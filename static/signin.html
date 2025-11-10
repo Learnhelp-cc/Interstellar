@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
+  <title>Sign In</title>
+  <link rel="stylesheet" href="/assets/css/global.css?v=6" />
+  <link rel="stylesheet" href="/assets/css/auth.css?v=01" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="center">
+  <div id="particles-js">
+    <div class="main">
+      <div class="auth-container">
+        <div class="auth-card">
+          <h1 class="auth-title">Sign In</h1>
+          <form id="signin-form" class="auth-form">
+            <div class="input-group">
+              <i class="fas fa-user input-icon"></i>
+              <input type="text" id="username" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+              <i class="fas fa-lock input-icon"></i>
+              <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="auth-btn">Sign In</button>
+          </form>
+          <div class="auth-links">
+            <a href="/request" class="auth-link">Request Account</a>
+          </div>
+          <div id="message" class="message"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
+  <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
+  <script>
+    document.getElementById('signin-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const messageDiv = document.getElementById('message');
+
+      try {
+        const response = await fetch('/api/signin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Store device token in localStorage
+          if (data.deviceToken) {
+            localStorage.setItem('deviceToken', data.deviceToken);
+          }
+          messageDiv.style.color = 'var(--save-button)';
+          messageDiv.textContent = 'Sign in successful! Redirecting...';
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        } else {
+          messageDiv.style.color = 'var(--reset-button)';
+          messageDiv.textContent = data.message || 'Sign in failed';
+        }
+      } catch (error) {
+        messageDiv.style.color = 'var(--reset-button)';
+        messageDiv.textContent = 'Network error. Please try again.';
+      }
+    });
+  </script>
+</body>
+
+</html>

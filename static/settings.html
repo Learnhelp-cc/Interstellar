@@ -220,6 +220,36 @@
     </div>
   </div>
   </div>
+  <script>
+    // Check device token on page load
+    async function checkAuth() {
+      const deviceToken = localStorage.getItem('deviceToken');
+      if (!deviceToken) {
+        window.location.href = '/signin';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/validate-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+
+        const data = await response.json();
+        if (!data.valid) {
+          localStorage.removeItem('deviceToken');
+          window.location.href = '/signin';
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/signin';
+      }
+    }
+
+    // Check auth immediately
+    checkAuth();
+  </script>
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
   <script src="./assets/mathematics/config.js?v=2025-04-15"></script>

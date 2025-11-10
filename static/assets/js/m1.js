@@ -362,19 +362,50 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Background Image Logic - Randomly pick from background images (never the same as last)
-  const backgroundImages = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg'];
-  const lastBackground = localStorage.getItem("lastBackgroundImage");
-  let randomImage;
+  // Function to change wallpaper randomly
+  function changeWallpaper() {
+    const backgroundImages = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg'];
+    const lastBackground = localStorage.getItem("lastBackgroundImage");
+    let randomImage;
 
-  do {
-    randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
-  } while (randomImage === lastBackground && backgroundImages.length > 1);
+    do {
+      randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
+    } while (randomImage === lastBackground && backgroundImages.length > 1);
 
-  const backgroundUrl = `/assets/media/background/${randomImage}`;
-  document.body.style.backgroundImage = `url('${backgroundUrl}')`;
-  localStorage.setItem("backgroundImage", backgroundUrl);
-  localStorage.setItem("lastBackgroundImage", randomImage);
+    const backgroundUrl = `/assets/media/background/${randomImage}`;
+    document.body.style.backgroundImage = `url('${backgroundUrl}')`;
+    localStorage.setItem("backgroundImage", backgroundUrl);
+    localStorage.setItem("lastBackgroundImage", randomImage);
+  }
+
+  // Background Image Logic - Set initial random background
+  changeWallpaper();
+
+  // Wallpaper shuffle logic
+  if (document.getElementById('menu-audio')) {
+    // Index page: change wallpaper when song ends
+    const audio = document.getElementById('menu-audio');
+    audio.loop = false;
+    const audioFiles = ['Bliss.mp3', 'Broken Attachment.mp3', 'Frank Saint.mp3', 'Goodnight Dad I Love You.mp3', 'hide the pain.mp3', 'menu.mp3', 'milk cassette x.mp3', 'old memories of you.mp3', 'pointless.mp3', 'sakura zxc.mp3', 'see you in heaven.mp3', 'Song For Those Who Keep Silent.mp3', 'The Lobotomy.mp3', 'thought you were sweet.mp3'];
+
+    audio.addEventListener('ended', () => {
+      changeWallpaper();
+      // Select next song
+      let currentSrc = audio.querySelector('source').src;
+      let currentFile = currentSrc.split('/').pop();
+      let currentIndex = audioFiles.indexOf(currentFile);
+      let nextIndex = (currentIndex + 1) % audioFiles.length;
+      const nextSong = audioFiles[nextIndex];
+      const songName = nextSong.replace(/\.mp3$/, '');
+      audio.querySelector('source').src = `assets/media/audio/${nextSong}`;
+      document.getElementById('song-title').textContent = songName;
+      audio.load();
+      audio.play();
+    });
+  } else {
+    // Other pages: change wallpaper every 2 minutes
+    setInterval(changeWallpaper, 2 * 60 * 1000);
+  }
 
   // Update last updated date from GitHub
   updateLastUpdated();
