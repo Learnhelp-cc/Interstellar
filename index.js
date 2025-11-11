@@ -134,7 +134,15 @@ class CloudflareFriendlyHttpAgent extends http.Agent {
 
     tracker.count++;
 
-    return super.createConnection(options, callback);
+    super.createConnection(options, (err, socket) => {
+      if (socket) {
+        // Add error handler to prevent unhandled 'error' events
+        socket.on('error', () => {
+          // Silently handle socket errors to prevent unhandled exceptions
+        });
+      }
+      callback(err, socket);
+    });
   }
 }
 
@@ -183,7 +191,15 @@ class CloudflareFriendlyHttpsAgent extends https.Agent {
 
     tracker.count++;
 
-    return super.createConnection(options, callback);
+    super.createConnection(options, (err, socket) => {
+      if (socket) {
+        // Add error handler to prevent unhandled 'error' events
+        socket.on('error', () => {
+          // Silently handle socket errors to prevent unhandled exceptions
+        });
+      }
+      callback(err, socket);
+    });
   }
 }
 
