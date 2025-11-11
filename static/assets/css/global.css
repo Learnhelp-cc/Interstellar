@@ -7,6 +7,7 @@
    --backdrop-filter: blur(20px) brightness(80%) saturate(1.25); /* Nav Backdrop filter */
    --background-nav: rgba(255, 255, 255, 0.02); /* Nav Background */
    --background-color: #2b2a33; /* Main Background Color */
+   --bg-c: rgba(43, 42, 51, 0.8); /* Background color with alpha for particles */
    --background-input: #42414d; /* Input Field Background Color */
    --background-column: #2b2a33; /* Background for Apps Container */
    --background-settings: #2b2a33; /* Settings Card Background */
@@ -18,6 +19,7 @@
    --nav-image: url("/./assets/media/favicon/main.png"); /* Nav Logo */
    /* Text Variables */
    --text-primary: #fff; /* Primary Text Color */
+   --text-secondary: #888; /* Secondary Text Color */
    --text-dark: #555; /* Dark Text Color for Error Page, Scrollbar, and Particles */
    --text-placeholder: #aaa; /* Placeholder Text Color */
    /* Other Variables */

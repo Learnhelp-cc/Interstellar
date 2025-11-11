@@ -12,6 +12,7 @@
    --text-secondary: var(--ctp-frappe-subtext1) /*subtext1*/;
    --text-placeholder: var(--ctp-frappe-subtext0) /*subtext0*/;
    --background-color: var(--ctp-frappe-base) /* base */;
+   --bg-c: rgba(48, 52, 70, 0.8); /* Background color with alpha for particles */
    --tab-active-background: var(--ctp-frappe-mantle) /* mantle */;
 }
 

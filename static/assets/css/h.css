@@ -88,7 +88,7 @@ input {
    background-color: var(--bg-c);
    background-repeat: no-repeat;
    background-size: cover;
-   background-position: 50% 50%;
+   background-position: center;
    overflow: hidden;
 }
 

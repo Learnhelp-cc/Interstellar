@@ -70,6 +70,32 @@ export function initDB() {
     )
   `);
 
+  // Create emails table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS emails (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      to_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+  `);
+
+  // Create received_emails table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS received_emails (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recipient_username TEXT NOT NULL,
+      from_email TEXT NOT NULL,
+      to_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      received_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   return db;
 }
 
@@ -193,4 +219,36 @@ export function deleteSearchHistory(userId, historyId) {
 export function clearSearchHistory(userId) {
   const stmt = db.prepare('DELETE FROM search_history WHERE user_id = ?');
   return stmt.run(userId);
+}
+
+// Email functions
+export function createEmail(userId, toEmail, subject, body) {
+  const stmt = db.prepare('INSERT INTO emails (user_id, to_email, subject, body) VALUES (?, ?, ?, ?)');
+  return stmt.run(userId, toEmail, subject, body);
+}
+
+export function getEmails(userId, limit = 50) {
+  const stmt = db.prepare('SELECT * FROM emails WHERE user_id = ? ORDER BY sent_at DESC LIMIT ?');
+  return stmt.all(userId, limit);
+}
+
+export function deleteEmail(userId, emailId) {
+  const stmt = db.prepare('DELETE FROM emails WHERE id = ? AND user_id = ?');
+  return stmt.run(emailId, userId);
+}
+
+// Received email functions
+export function createReceivedEmail(recipientUsername, fromEmail, toEmail, subject, body) {
+  const stmt = db.prepare('INSERT INTO received_emails (recipient_username, from_email, to_email, subject, body) VALUES (?, ?, ?, ?, ?)');
+  return stmt.run(recipientUsername, fromEmail, toEmail, subject, body);
+}
+
+export function getReceivedEmails(username, limit = 50) {
+  const stmt = db.prepare('SELECT * FROM received_emails WHERE recipient_username = ? ORDER BY received_at DESC LIMIT ?');
+  return stmt.all(username, limit);
+}
+
+export function deleteReceivedEmail(username, emailId) {
+  const stmt = db.prepare('DELETE FROM received_emails WHERE id = ? AND recipient_username = ?');
+  return stmt.run(emailId, username);
 }
