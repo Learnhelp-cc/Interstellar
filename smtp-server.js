@@ -1,6 +1,9 @@
 import { SMTPServer } from 'smtp-server';
 import { simpleParser } from 'mailparser';
-import { createReceivedEmail } from './db.js';
+import { createReceivedEmail, initMailDB } from './mail.js';
+
+// Initialize mail database
+initMailDB();
 
 const smtpServer = new SMTPServer({
   onData(stream, session, callback) {

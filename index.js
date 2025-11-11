@@ -21,7 +21,8 @@ import { SMTPServer } from 'smtp-server';
 import { simpleParser } from 'mailparser';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createEmail, getEmails, deleteEmail, createReceivedEmail, getReceivedEmails, deleteReceivedEmail } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory } from "./db.js";
+import { createEmail, getEmails, deleteEmail, createReceivedEmail, getReceivedEmails, deleteReceivedEmail, initMailDB } from "./mail.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
@@ -62,6 +63,10 @@ function decryptPassword(encryptedPassword) {
 // Initialize database
 initDB();
 console.log(chalk.green("📊 Database initialized"));
+
+// Initialize mail database
+initMailDB();
+console.log(chalk.green("📧 Mail database initialized"));
 
 // Start SMTP server process
 const smtpProcess = spawn('node', ['smtp-server.js'], {
