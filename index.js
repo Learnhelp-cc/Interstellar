@@ -547,6 +547,77 @@ app.get("/e/*", async (req, res, next) => {
   }
 });
 
+// SQL Injection Detection Middleware
+function detectSQLInjection(obj, path = '') {
+  const sqlPatterns = [
+    /(\bUNION\b\s+\bSELECT\b)/i,
+    /(\bDROP\b\s+\bTABLE\b)/i,
+    /(\bINSERT\b\s+\bINTO\b)/i,
+    /(\bUPDATE\b.*?\bSET\b)/i,
+    /(\bDELETE\b\s+\bFROM\b)/i,
+    /(\bSELECT\b.*?\bFROM\b)/i,
+    /(\bALTER\b\s+\bTABLE\b)/i,
+    /(\bCREATE\b\s+\bTABLE\b)/i,
+    /(\bEXEC\b)/i,
+    /(\bEXECUTE\b)/i,
+    /['";\\*?+{}[\]()]/,  // Common SQL injection characters
+    /(\bor\b\s+1\s*=\s*1)/i,
+    /(\band\b\s+1\s*=\s*1)/i,
+    /(--)/,
+    /(\/\*.*?\*\/)/,
+    /(\#)/,
+    /(\\x[0-9a-f]{2})/i,
+    /(\\u[0-9a-f]{4})/i
+  ];
+
+  function checkValue(value, currentPath) {
+    if (typeof value === 'string') {
+      for (const pattern of sqlPatterns) {
+        if (pattern.test(value)) {
+          console.log(`SQL Injection detected in ${currentPath}: ${value}`);
+          return true;
+        }
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          if (checkValue(value[i], `${currentPath}[${i}]`)) {
+            return true;
+          }
+        }
+      } else {
+        for (const [key, val] of Object.entries(value)) {
+          if (checkValue(val, `${currentPath}.${key}`)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  return checkValue(obj, path);
+}
+
+app.use((req, res, next) => {
+  // Check request body
+  if (req.body && detectSQLInjection(req.body, 'body')) {
+    return res.status(500).send('Internal Server Error');
+  }
+
+  // Check query parameters
+  if (req.query && detectSQLInjection(req.query, 'query')) {
+    return res.status(500).send('Internal Server Error');
+  }
+
+  // Check route parameters
+  if (req.params && detectSQLInjection(req.params, 'params')) {
+    return res.status(500).send('Internal Server Error');
+  }
+
+  next();
+});
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
