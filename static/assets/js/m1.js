@@ -11,6 +11,24 @@ try {
   }
 }
 
+// Version fetch function
+async function updateVersion() {
+  const versionElement = document.getElementById('version-info');
+  if (!versionElement) return;
+
+  try {
+    const response = await fetch('/api/version');
+    if (!response.ok) {
+      throw new Error('Failed to fetch version data');
+    }
+    const data = await response.json();
+    versionElement.textContent = `Version: ${data.version}`;
+  } catch (error) {
+    console.error('Failed to fetch version:', error);
+    versionElement.textContent = 'Version: Unable to fetch';
+  }
+}
+
 // Last updated fetch function
 async function updateLastUpdated() {
   const lastUpdatedElement = document.getElementById('last-updated');
@@ -409,6 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(changeWallpaper, 2 * 60 * 1000);
   }
 
-  // Update last updated date from GitHub
+  // Update version and last updated date
+  updateVersion();
   updateLastUpdated();
 });

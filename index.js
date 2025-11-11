@@ -14,6 +14,7 @@ import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
 import { Client } from "ssh2";
 import crypto from "crypto";
+import { execSync } from "child_process";
 import Database from 'better-sqlite3';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
@@ -1399,12 +1400,33 @@ routes.forEach(route => {
 
 app.get('/api/server-info', (req, res) => {
   // Get server IP (this might be the local IP, not the public one behind tunnel)
-  const serverIP = req.socket.localAddress || req.connection.localAddress || 'unknown';
+  const serverIP = req.socket.localAddress || req.connection.localAddress || req.socket.remoteAddress || 'unknown';
   const domain = req.headers.host;
   res.json({
     serverIP: serverIP.replace(/^::ffff:/, ''), // Remove IPv6 prefix if present
     domain: domain
   });
+});
+
+app.get('/api/version', (req, res) => {
+  try {
+    // Get total commit count
+    const commitCount = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim());
+
+    // Format version as v{major}.{minor}.{patch}
+    // Major: floor(commit_count / 1000)
+    // Minor: floor((commit_count % 1000) / 100)
+    // Patch: commit_count % 100
+    const major = Math.floor(commitCount / 1000);
+    const minor = Math.floor((commitCount % 1000) / 100);
+    const patch = commitCount % 100;
+
+    const version = `v${major}.${minor}.${patch}`;
+    res.json({ version, commitCount });
+  } catch (error) {
+    console.error('Failed to get version:', error);
+    res.status(500).json({ version: 'v0.0.0', commitCount: 0 });
+  }
 });
 
 app.get('/api/metrics', adminAuth, (req, res) => {
