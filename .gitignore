@@ -5,5 +5,4 @@ node_modules
 .gitpod.yml 
 creds.env
 *.db
-users.db
-mail.db
+
