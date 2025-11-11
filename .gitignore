@@ -3,7 +3,7 @@ node_modules
 .DS_Store
 .hintrc
 .gitpod.yml 
-.env
+creds.env
 *.db
 users.db
 mail.db
