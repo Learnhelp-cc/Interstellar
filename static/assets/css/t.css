@@ -171,12 +171,22 @@ h1 {
    color: var(--text-primary);
    font-size: 50px;
    white-space: nowrap;
+   transition: color 0.3s ease, transform 0.3s ease;
+}
+
+h1:hover {
+   transform: scale(1.05);
 }
 
 p {
    text-align: center;
    color: var(--text-primary);
    font-size: 25px;
+   transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+p:hover {
+   opacity: 0.8;
 }
 
 .frame-container iframe {
