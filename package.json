@@ -24,6 +24,7 @@
     "express": "^4.21.2",
     "express-basic-auth": "^1.2.1",
     "mime": "^4.1.0",
+    "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "ssh2": "^1.17.0",
     "ws": "^8.18.3"

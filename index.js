@@ -16,9 +16,10 @@ import { Client } from "ssh2";
 import crypto from "crypto";
 import { execSync } from "child_process";
 import Database from 'better-sqlite3';
+import multer from 'multer';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128 } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
@@ -54,6 +55,28 @@ function decryptPassword(encryptedPassword) {
   let decrypted = decipher.update(encrypted, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;
+}
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: path.join(__dirname, 'uploads'),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow images only
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Initialize database
@@ -1255,6 +1278,329 @@ app.get('/admin/ssh', adminAuth, (req, res) => {
   `);
 });
 
+// File upload endpoint for AI
+app.post('/api/ai/upload', upload.single('image'), (req, res) => {
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'No image file provided' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Read the file and convert to base64
+    const imageBuffer = fs.readFileSync(req.file.path);
+    const base64Image = imageBuffer.toString('base64');
+    const mimeType = req.file.mimetype;
+
+    // Clean up the uploaded file
+    fs.unlinkSync(req.file.path);
+
+    // Return base64 data for the AI to use
+    res.json({
+      imageData: `data:${mimeType};base64,${base64Image}`,
+      mimeType
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ message: 'Failed to upload file' });
+  }
+});
+
+// Serve uploaded files
+app.use('/uploads', express.static(uploadsDir));
+
+// DuckDuckGo search function
+async function searchDuckDuckGo(query) {
+  try {
+    const searchUrl = `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Search request failed');
+    }
+
+    const html = await response.text();
+
+    // Simple parsing of DuckDuckGo results (this is basic - in production you'd want better parsing)
+    const results = [];
+    const resultRegex = /<a class="result__a" href="([^"]*)"[^>]*>([^<]*)<\/a>/g;
+    let match;
+
+    while ((match = resultRegex.exec(html)) && results.length < 5) {
+      const url = match[1];
+      const title = match[2].replace(/<[^>]*>/g, ''); // Remove any remaining HTML tags
+      if (url && title) {
+        results.push({ title, url });
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('DuckDuckGo search error:', error);
+    return [];
+  }
+}
+
+// AI Chat API endpoints
+app.get('/api/ai/chats', (req, res) => {
+  const { deviceToken } = req.query;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const chats = getAIChats(user.id);
+    res.json(chats);
+  } catch (error) {
+    console.error('Error fetching AI chats:', error);
+    res.status(500).json({ message: 'Failed to fetch AI chats' });
+  }
+});
+
+app.post('/api/ai/chats', (req, res) => {
+  const { deviceToken, title } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const chatId = createAIChat(user.id, title);
+    res.json({ chatId });
+  } catch (error) {
+    console.error('Error creating AI chat:', error);
+    res.status(500).json({ message: 'Failed to create AI chat' });
+  }
+});
+
+app.get('/api/ai/chats/:chatId/messages', (req, res) => {
+  const { chatId } = req.params;
+  const { deviceToken } = req.query;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const chat = getAIChat(parseInt(chatId), user.id);
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
+
+    // Get or create AES key for this user
+    const aesKey = ensureUserAESKey(user.id);
+
+    const messages = getAIMessages(parseInt(chatId));
+
+    // Decrypt messages before returning (handle legacy unencrypted messages)
+    const decryptedMessages = messages.map(msg => {
+      try {
+        return {
+          ...msg,
+          content: decryptAES128(msg.content, aesKey)
+        };
+      } catch (error) {
+        // If decryption fails, assume it's not encrypted (legacy data)
+        return msg;
+      }
+    });
+
+    res.json(decryptedMessages);
+  } catch (error) {
+    console.error('Error fetching AI messages:', error);
+    res.status(500).json({ message: 'Failed to fetch AI messages' });
+  }
+});
+
+app.post('/api/ai/chats/:chatId/messages', async (req, res) => {
+  const { chatId } = req.params;
+  const { deviceToken, message, imageData } = req.body;
+
+  if (!deviceToken || !message) {
+    return res.status(400).json({ message: 'Device token and message required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const chat = getAIChat(parseInt(chatId), user.id);
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
+
+    // Get or create AES key for this user
+    const aesKey = ensureUserAESKey(user.id);
+
+    // Encrypt the user message
+    let messageContent = message;
+    if (imageData) {
+      messageContent = `Image: ${imageData}\n\n${message}`;
+    }
+    const encryptedMessage = encryptAES128(messageContent, aesKey);
+    addAIMessage(parseInt(chatId), 'user', encryptedMessage);
+
+    // Get conversation history
+    const messages = getAIMessages(parseInt(chatId));
+    const conversation = [
+      {
+        role: 'system',
+        content: 'You are a helpful AI assistant. When users ask questions that require current information, real-time data, or web searches, use the format [SEARCH:query] in your response to search DuckDuckGo. For example, if asked "What is the current weather in New York?", respond with [SEARCH:current weather in New York]. The search results will be provided to you automatically. You can also analyze images when provided.'
+      },
+      ...messages.map(msg => {
+        // Decrypt message content for API call
+        let decryptedContent;
+        try {
+          decryptedContent = decryptAES128(msg.content, aesKey);
+        } catch (error) {
+          // If decryption fails, assume it's not encrypted (legacy data)
+          decryptedContent = msg.content;
+        }
+
+        // Handle image messages for vision models
+        if (decryptedContent.startsWith('Image: ')) {
+          const imageMatch = decryptedContent.match(/^Image: (data:[^;]+;base64,[^\s]+)\n\n(.+)$/);
+          if (imageMatch) {
+            return {
+              role: msg.role,
+              content: [
+                {
+                  type: 'image_url',
+                  image_url: { url: imageMatch[1] }
+                },
+                {
+                  type: 'text',
+                  text: imageMatch[2]
+                }
+              ]
+            };
+          }
+        }
+        return {
+          role: msg.role,
+          content: decryptedContent
+        };
+      })
+    ];
+
+    // Call OpenRouter API
+    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+    if (!OPENROUTER_API_KEY) {
+      return res.status(500).json({ message: 'AI service not configured' });
+    }
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': req.headers.referer || req.headers.origin || 'http://localhost',
+        'X-Title': 'Interstellar AI Chat'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: conversation,
+        max_tokens: 4096,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('OpenRouter API error:', error);
+      return res.status(500).json({ message: 'AI service error' });
+    }
+
+    const data = await response.json();
+    let aiResponse = data.choices[0]?.message?.content;
+
+    if (!aiResponse) {
+      return res.status(500).json({ message: 'No response from AI' });
+    }
+
+    // Check if AI wants to search DuckDuckGo
+    const searchMatch = aiResponse.match(/\[SEARCH:(.+?)\]/);
+    if (searchMatch) {
+      const searchQuery = searchMatch[1].trim();
+      const searchResults = await searchDuckDuckGo(searchQuery);
+
+      if (searchResults.length > 0) {
+        const searchSummary = `Search results for "${searchQuery}":\n\n` +
+          searchResults.map((result, index) =>
+            `${index + 1}. ${result.title}\n   ${result.url}`
+          ).join('\n\n');
+
+        // Add search results to AI response
+        aiResponse = aiResponse.replace(/\[SEARCH:.+?\]/, searchSummary);
+      } else {
+        aiResponse = aiResponse.replace(/\[SEARCH:.+?\]/, `No search results found for "${searchQuery}".`);
+      }
+    }
+
+    // Encrypt the AI response
+    const encryptedResponse = encryptAES128(aiResponse, aesKey);
+    addAIMessage(parseInt(chatId), 'assistant', encryptedResponse);
+
+    res.json({ response: aiResponse });
+  } catch (error) {
+    console.error('Error sending AI message:', error);
+    res.status(500).json({ message: 'Failed to send AI message' });
+  }
+});
+
+app.delete('/api/ai/chats/:chatId', (req, res) => {
+  const { chatId } = req.params;
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    deleteAIChat(parseInt(chatId), user.id);
+    res.json({ message: 'Chat deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting AI chat:', error);
+    res.status(500).json({ message: 'Failed to delete AI chat' });
+  }
+});
+
 const routes = [
   { path: "/b", file: "apps.html" },
   { path: "/a", file: "games.html" },
@@ -1262,6 +1608,7 @@ const routes = [
   { path: "/c", file: "settings.html" },
   { path: "/d", file: "tabs.html" },
   { path: "/chat", file: "chat.html" },
+  { path: "/ai", file: "ai.html" },
   { path: "/metrics", file: "metrics.html" },
   { path: "/", file: "index.html" },
 ];

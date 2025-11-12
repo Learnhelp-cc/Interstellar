@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
+  <title id="t">AI Chat</title>
+  <link rel="stylesheet" href="/assets/css/global.css?v=6" />
+  <link rel="stylesheet" href="/assets/css/h.css?v=01" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=01" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .ai-container {
+      display: flex;
+      height: calc(100vh - 10vh - 30px); /* Account for nav margin */
+      margin-top: 10vh;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .chat-sidebar {
+      width: 30%;
+      background: var(--background-color);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .chat-item {
+      padding: 15px;
+      margin-bottom: 10px;
+      background: var(--background-input);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .chat-item:hover {
+      background: var(--tab-active-background);
+      border-color: var(--text-primary);
+    }
+
+    .chat-item.active {
+      background: var(--tab-active-background);
+      border-color: var(--text-primary);
+    }
+
+    .chat-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-date {
+      font-size: 12px;
+      color: var(--text-placeholder);
+    }
+
+    .new-chat-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--save-button);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      font-size: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .new-chat-btn:hover {
+      transform: translateX(-50%) scale(1.1);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .chat-main {
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+      background: var(--background-color);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--save-button);
+      color: white;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: var(--background-input);
+      color: var(--text-primary);
+    }
+
+    .chat-input-container {
+      padding: 20px;
+      background: var(--background-color);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid var(--text-placeholder);
+      border-radius: 25px;
+      background: var(--background-input);
+      color: var(--text-primary);
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      min-height: 20px;
+      max-height: 120px;
+    }
+
+    .chat-input:focus {
+      border-color: var(--save-button);
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--save-button);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-placeholder);
+      text-align: center;
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      margin: 0 0 10px 0;
+      color: var(--text-primary);
+    }
+
+    .empty-state p {
+      margin: 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body class="center" onload="initAI()">
+  <div class="f-nav"></div>
+
+  <div class="ai-container">
+    <div class="chat-sidebar">
+      <div class="chat-list" id="chat-list">
+        <!-- Chat items will be populated here -->
+      </div>
+      <button class="new-chat-btn" onclick="createNewChat()" title="New Chat">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+
+    <div class="chat-main">
+      <div class="chat-messages" id="chat-messages">
+        <div class="empty-state" id="empty-state">
+          <i class="fas fa-robot"></i>
+          <h3>Welcome to AI Chat</h3>
+          <p>Select a chat from the sidebar or create a new one to get started.</p>
+        </div>
+      </div>
+
+      <div class="chat-input-container">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <input
+            type="file"
+            id="image-input"
+            accept="image/*"
+            style="display: none;"
+            onchange="handleImageSelect(event)"
+          />
+          <button
+            onclick="document.getElementById('image-input').click()"
+            style="background: var(--save-button); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center;"
+            title="Upload Image"
+          >
+            <i class="fas fa-camera"></i>
+          </button>
+          <div id="image-preview" style="display: none; max-width: 100px; max-height: 100px;">
+            <img id="preview-img" style="max-width: 100%; max-height: 100%; border-radius: 8px;" />
+            <button onclick="removeImage()" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px;">×</button>
+          </div>
+        </div>
+        <textarea
+          id="chat-input"
+          class="chat-input"
+          placeholder="Type your message here..."
+          onkeydown="handleKeyPress(event)"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentChatId = null;
+    let deviceToken = localStorage.getItem('deviceToken');
+    let isLoading = false;
+    let selectedImageData = null;
+
+    async function initAI() {
+      if (!deviceToken) {
+        window.location.href = '/signin';
+        return;
+      }
+
+      // Check auth
+      try {
+        const response = await fetch('/api/validate-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+
+        const data = await response.json();
+        if (!data.valid) {
+          localStorage.removeItem('deviceToken');
+          window.location.href = '/signin';
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/signin';
+        return;
+      }
+
+      loadChats();
+    }
+
+    async function loadChats(autoSelect = true) {
+      try {
+        const response = await fetch(`/api/ai/chats?deviceToken=${encodeURIComponent(deviceToken)}`);
+        const chats = await response.json();
+
+        const chatList = document.getElementById('chat-list');
+        chatList.innerHTML = '';
+
+        if (chats.length === 0) {
+          chatList.innerHTML = '<div style="padding: 20px; color: var(--text-placeholder); text-align: center;">No chats yet</div>';
+          return;
+        }
+
+        // Sort chats by updated_at (most recent first)
+        chats.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+        let firstChatId = null;
+        chats.forEach((chat, index) => {
+          const chatItem = document.createElement('div');
+          chatItem.className = 'chat-item';
+          chatItem.setAttribute('data-chat-id', chat.id);
+          // Add a more robust click handler
+          chatItem.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            selectChat(chat.id, event);
+          });
+
+          const title = chat.title || `Chat ${new Date(chat.created_at).toLocaleDateString()}`;
+          const date = new Date(chat.updated_at).toLocaleDateString();
+
+          chatItem.innerHTML = `
+            <div class="chat-title">${title}</div>
+            <div class="chat-date">${date}</div>
+          `;
+
+          chatList.appendChild(chatItem);
+
+          // Remember the first chat ID for auto-selection
+          if (index === 0) {
+            firstChatId = chat.id;
+          }
+        });
+
+        // Auto-select the most recent chat if no chat is currently selected
+        if (autoSelect && firstChatId && !currentChatId) {
+          // Use setTimeout to ensure DOM is fully updated
+          setTimeout(() => selectChat(firstChatId), 10);
+        }
+      } catch (error) {
+        console.error('Failed to load chats:', error);
+      }
+    }
+
+    async function createNewChat() {
+      try {
+        const response = await fetch('/api/ai/chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+
+        const data = await response.json();
+
+        // Add the new chat to the UI immediately
+        await loadChats();
+
+        // Auto-select the new chat
+        setTimeout(() => selectChat(data.chatId), 10);
+      } catch (error) {
+        console.error('Failed to create chat:', error);
+        alert('Failed to create new chat');
+      }
+    }
+
+    async function selectChat(chatId, event = null) {
+      currentChatId = chatId;
+
+      // Update UI - remove active class from all items
+      document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+
+      // Add active class to the selected item
+      let targetElement;
+      if (event) {
+        targetElement = event.target.closest('.chat-item');
+      } else {
+        // Find the chat item by chatId using data attribute
+        targetElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+      }
+
+      if (targetElement) {
+        targetElement.classList.add('active');
+      }
+
+      // Load messages
+      await loadMessages(chatId);
+
+      // Enable input
+      document.getElementById('chat-input').disabled = false;
+      document.getElementById('chat-input').focus();
+    }
+
+    async function loadMessages(chatId) {
+      try {
+        const response = await fetch(`/api/ai/chats/${chatId}/messages?deviceToken=${encodeURIComponent(deviceToken)}`);
+        const messages = await response.json();
+
+        const messagesContainer = document.getElementById('chat-messages');
+
+        if (messages.length === 0) {
+          // Create or show empty state
+          let emptyState = document.getElementById('empty-state');
+          if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'empty-state';
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+              <i class="fas fa-robot"></i>
+              <h3>Welcome to AI Chat</h3>
+              <p>Select a chat from the sidebar or create a new one to get started.</p>
+            `;
+          }
+          messagesContainer.innerHTML = '';
+          messagesContainer.appendChild(emptyState);
+          return;
+        }
+
+        messagesContainer.innerHTML = '';
+
+        messages.forEach((msg) => {
+          // Parse image data from message content if present
+          let imageData = null;
+          let textContent = msg.content;
+
+          if (msg.content.startsWith('Image: ')) {
+            const imageMatch = msg.content.match(/^Image: (data:[^;]+;base64,[^\s]+)\n\n(.+)$/);
+            if (imageMatch) {
+              imageData = imageMatch[1];
+              textContent = imageMatch[2];
+            }
+          }
+
+          addMessageToUI(msg.role, textContent, imageData);
+        });
+
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      }
+    }
+
+    async function sendMessage() {
+      if (isLoading) return;
+
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      input.value = '';
+      isLoading = true;
+
+      // If no chat is selected, create a new one
+      if (!currentChatId) {
+        try {
+          const createResponse = await fetch('/api/ai/chats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deviceToken })
+          });
+          const createData = await createResponse.json();
+          currentChatId = createData.chatId;
+          // Reload chats and select the new one
+          await loadChats();
+          setTimeout(() => selectChat(currentChatId), 10);
+        } catch (error) {
+          console.error('Failed to create chat:', error);
+          alert('Failed to create new chat');
+          isLoading = false;
+          return;
+        }
+      }
+
+      // Clear empty state
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+
+      // Add user message to UI
+      addMessageToUI('user', message, selectedImageData);
+
+      // Show loading
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message assistant';
+      loadingDiv.innerHTML = '<div class="loading"></div>';
+      document.getElementById('chat-messages').appendChild(loadingDiv);
+
+      try {
+        const requestBody = { deviceToken, message };
+        if (selectedImageData) {
+          requestBody.imageData = selectedImageData;
+        }
+
+        const response = await fetch(`/api/ai/chats/${currentChatId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+
+        // Remove loading
+        loadingDiv.remove();
+
+        // Add AI response
+        addMessageToUI('assistant', data.response);
+
+        // Clear image after sending
+        if (selectedImageData) {
+          removeImage();
+        }
+
+        // Update chat list (don't auto-select)
+        loadChats(false);
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        loadingDiv.remove();
+        addMessageToUI('assistant', 'Sorry, I encountered an error. Please try again.');
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    function addMessageToUI(role, content, imageData = null) {
+      const messagesContainer = document.getElementById('chat-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}`;
+
+      // Handle image display for user messages
+      if (role === 'user' && imageData) {
+        const imageContainer = document.createElement('div');
+        imageContainer.style.cssText = `
+          margin-bottom: 8px;
+          max-width: 200px;
+          border-radius: 8px;
+          overflow: hidden;
+        `;
+        const img = document.createElement('img');
+        img.src = imageData;
+        img.style.cssText = `
+          width: 100%;
+          height: auto;
+          display: block;
+        `;
+        imageContainer.appendChild(img);
+        messageDiv.appendChild(imageContainer);
+      }
+
+      // Handle content display
+      if (role === 'assistant') {
+        // Render markdown for assistant messages
+        messageDiv.innerHTML = marked.parse(content);
+      } else {
+        messageDiv.textContent = content;
+      }
+
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // Image handling functions
+    async function handleImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+
+      try {
+        // Upload the image
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('deviceToken', deviceToken);
+
+        const response = await fetch('/api/ai/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const data = await response.json();
+        selectedImageData = data.imageData;
+
+        // Show preview
+        const preview = document.getElementById('image-preview');
+        const img = document.getElementById('preview-img');
+        img.src = selectedImageData;
+        preview.style.display = 'block';
+
+      } catch (error) {
+        console.error('Image upload failed:', error);
+        alert('Failed to upload image');
+      }
+    }
+
+    function removeImage() {
+      selectedImageData = null;
+      document.getElementById('image-preview').style.display = 'none';
+      document.getElementById('image-input').value = '';
+    }
+
+    // Auto-resize textarea
+    document.getElementById('chat-input').addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+  </script>
+
+  <script src="/assets/js/h1.js"></script>
+  <script src="/assets/js/m1.js"></script>
+</body>
+
+</html>
