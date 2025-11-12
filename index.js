@@ -19,7 +19,7 @@ import Database from 'better-sqlite3';
 import multer from 'multer';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128 } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
@@ -259,8 +259,7 @@ const bareServer = createBareServer("/ca/", {
   }
 });
 
-// Remove the V3 handler override for now - let's test with default bare server
-console.log('Using default bare server without custom headers');
+
 
 const PORT = process.env.PORT || 8080;
 const cache = new Map();
@@ -609,7 +608,7 @@ app.post('/api/validate-token', (req, res) => {
 });
 
 app.post('/api/request-account', (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, referralCode } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password required' });
@@ -621,7 +620,11 @@ app.post('/api/request-account', (req, res) => {
 
   try {
     const encryptedPassword = encryptPassword(password);
-    createUser(username, encryptedPassword);
+    const userId = createUserWithReferral(username, encryptedPassword, referralCode);
+
+    // Generate referral code for the new user
+    setUserReferralCode(userId);
+
     res.json({ message: 'Account request submitted successfully' });
   } catch (error) {
     if (error.message.includes('UNIQUE constraint failed')) {
@@ -679,6 +682,7 @@ app.get('/admin', adminAuth, (req, res) => {
         <button onclick="viewLogs()">View Logs</button>
         <button onclick="manageUsers()">Manage Users</button>
         <button onclick="manageMessages()">Manage Messages</button>
+        <button onclick="viewReferrals()">View Referrals</button>
         <button onclick="toggleLockdown()">${isLockedDown ? 'Lift Lockdown' : 'Activate Lockdown'}</button>
       </div>
       <div id="content"></div>
@@ -716,7 +720,10 @@ app.get('/admin', adminAuth, (req, res) => {
                     <strong>ID:</strong> \${user.id}<br>
                     <strong>Username:</strong> \${user.username}<br>
                     <strong>Status:</strong> <span class="\${user.pending ? 'pending' : 'approved'}">\${user.pending ? 'PENDING' : 'APPROVED'}</span><br>
-                    <strong>Created:</strong> \${new Date(user.created_at).toLocaleString()}
+                    <strong>Created:</strong> \${new Date(user.created_at).toLocaleString()}<br>
+                    \${user.referral_code_used ? \`<strong>Referral Code Used:</strong> \${user.referral_code_used}<br>\` : ''}
+                    \${user.referrer_username ? \`<strong>Referred By:</strong> \${user.referrer_username} (ID: \${user.referrer_user_id})<br>\` : ''}
+                    \${user.referral_used_at ? \`<strong>Referral Used:</strong> \${new Date(user.referral_used_at).toLocaleString()}<br>\` : ''}
                   </div>
                   <div class="user-actions">
                     <button onclick="editUser(\${user.id}, '\${user.username}', \${user.pending})">Edit</button>
@@ -888,6 +895,22 @@ app.get('/admin', adminAuth, (req, res) => {
           })
           .catch(err => alert('Error creating message: ' + err.message));
         }
+        function viewReferrals() {
+          fetch('/admin/referrals')
+            .then(res => res.json())
+            .then(referrals => {
+              const html = referrals.map(ref =>
+                \`<div class="user-entry">
+                  <div class="user-info">
+                    <strong>Referrer:</strong> \${ref.referrer_username}<br>
+                    <strong>Referred User:</strong> \${ref.referred_username}<br>
+                    <strong>Referred Date:</strong> \${new Date(ref.referred_at).toLocaleString()}
+                  </div>
+                </div>\`
+              ).join('');
+              document.getElementById('content').innerHTML = '<h2>Referral Information</h2>' + html;
+            });
+        }
         function toggleLockdown() {
           const action = '${isLockedDown ? 'unlock' : 'lockdown'}';
           fetch('/admin/' + action, { method: 'POST' })
@@ -946,6 +969,31 @@ app.delete('/admin/users/:id', adminAuth, (req, res) => {
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete user' });
+  }
+});
+
+// Admin referrals endpoint
+app.get('/admin/referrals', adminAuth, (req, res) => {
+  try {
+    // Get all users and their referrals
+    const allUsers = getAllUsers();
+    const referrals = [];
+
+    for (const user of allUsers) {
+      const userReferrals = getUserReferrals(user.id);
+      for (const referral of userReferrals) {
+        referrals.push({
+          referrer_username: user.username,
+          referred_username: referral.username,
+          referred_at: referral.created_at
+        });
+      }
+    }
+
+    res.json(referrals);
+  } catch (error) {
+    console.error('Error fetching referrals:', error);
+    res.status(500).json({ message: 'Failed to fetch referrals' });
   }
 });
 
@@ -1601,6 +1649,163 @@ app.delete('/api/ai/chats/:chatId', (req, res) => {
   }
 });
 
+// Account management API endpoints
+app.post('/api/account-info', (req, res) => {
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Get referral code from separate database
+    let referralCode = null;
+
+    if (referDb) {
+      try {
+        const stmt = referDb.prepare('SELECT code FROM referral_codes WHERE user_id = ?');
+        const result = stmt.get(user.id);
+        if (result) {
+          referralCode = result.code;
+        }
+      } catch (error) {
+        // Table might not exist yet
+        console.log('Referral codes table not ready');
+      }
+    }
+
+    // Generate new referral code if none exists
+    if (!referralCode) {
+      referralCode = setUserReferralCode(user.id);
+    }
+
+    res.json({
+      success: true,
+      username: user.username,
+      created_at: user.created_at,
+      referral_code: referralCode
+    });
+  } catch (error) {
+    console.error('Error fetching account info:', error);
+    res.status(500).json({ message: 'Failed to fetch account info' });
+  }
+});
+
+app.post('/api/change-password', (req, res) => {
+  const { deviceToken, currentPassword, newPassword } = req.body;
+
+  if (!deviceToken || !currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'All fields required' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: 'New password must be at least 6 characters' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Verify current password
+    let decryptedPassword;
+    try {
+      decryptedPassword = decryptPassword(user.password);
+    } catch (error) {
+      console.error('Password decryption error:', error);
+      return res.status(500).json({ message: 'Internal server error during password verification' });
+    }
+
+    if (decryptedPassword !== currentPassword) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    // Update password
+    const encryptedNewPassword = encryptPassword(newPassword);
+    updateUser(user.id, { password: encryptedNewPassword });
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ message: 'Failed to change password' });
+  }
+});
+
+app.post('/api/change-username', (req, res) => {
+  const { deviceToken, newUsername, password } = req.body;
+
+  if (!deviceToken || !newUsername || !password) {
+    return res.status(400).json({ message: 'All fields required' });
+  }
+
+  if (newUsername.length < 3) {
+    return res.status(400).json({ message: 'Username must be at least 3 characters' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Verify password
+    let decryptedPassword;
+    try {
+      decryptedPassword = decryptPassword(user.password);
+    } catch (error) {
+      console.error('Password decryption error:', error);
+      return res.status(500).json({ message: 'Internal server error during password verification' });
+    }
+
+    if (decryptedPassword !== password) {
+      return res.status(401).json({ message: 'Password is incorrect' });
+    }
+
+    // Check if new username already exists
+    const existingUser = getUser(newUsername);
+    if (existingUser && existingUser.id !== user.id) {
+      return res.status(409).json({ message: 'Username already exists' });
+    }
+
+    // Update username
+    updateUser(user.id, { username: newUsername });
+
+    res.json({ success: true, message: 'Username changed successfully' });
+  } catch (error) {
+    console.error('Error changing username:', error);
+    res.status(500).json({ message: 'Failed to change username' });
+  }
+});
+
+app.post('/api/delete-account', (req, res) => {
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Delete the user
+    deleteUser(user.id);
+
+    res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ message: 'Failed to delete account' });
+  }
+});
+
 const routes = [
   { path: "/b", file: "apps.html" },
   { path: "/a", file: "games.html" },
@@ -1609,6 +1814,7 @@ const routes = [
   { path: "/d", file: "tabs.html" },
   { path: "/chat", file: "chat.html" },
   { path: "/ai", file: "ai.html" },
+  { path: "/account", file: "account.html" },
   { path: "/metrics", file: "metrics.html" },
   { path: "/", file: "index.html" },
 ];

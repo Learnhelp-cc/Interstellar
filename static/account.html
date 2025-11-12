@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
+  <title id="t">Account</title>
+  <link rel="stylesheet" id="global" href="/assets/css/global.css?v=6" />
+  <link rel="stylesheet" href="/assets/css/container.css?v=2" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=01" />
+  <link rel="stylesheet" href="/assets/css/settings.css?v=06" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="center" onload="SplashT">
+  <div id="particles-js">
+    <div class="f-nav"></div>
+    <div class="main">
+      <div class="settings-container">
+        <div class="settings-card">
+          <h3>Account Information</h3>
+          <div id="account-info">
+            <p><strong>Username:</strong> <span id="username"></span></p>
+            <p><strong>Created:</strong> <span id="created-date"></span></p>
+            <p><strong>Referral Code:</strong> <span id="referral-code"></span>
+              <button class="key-button" onclick="copyReferralCode()" style="width: 30%; margin-left: 10px;">Copy</button>
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Change Password</h3>
+          <input type="password" id="current-password" placeholder="Current Password" class="key-form" />
+          <input type="password" id="new-password" placeholder="New Password" class="key-form" />
+          <input type="password" id="confirm-password" placeholder="Confirm New Password" class="key-form" />
+          <button class="key-button" onclick="changePassword()" style="width: 100%;">Change Password</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>Change Username</h3>
+          <input type="text" id="new-username" placeholder="New Username" class="key-form" />
+          <input type="password" id="username-password" placeholder="Current Password" class="key-form" />
+          <button class="key-button" onclick="changeUsername()" style="width: 100%;">Change Username</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>Danger Zone</h3>
+          <p style="color: #f44336;">Warning: This action cannot be undone!</p>
+          <button class="key-button" onclick="deleteAccount()" style="width: 100%; background: #f44336; color: white;">Delete Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check device token on page load
+    async function checkAuth() {
+      const deviceToken = localStorage.getItem('deviceToken');
+      if (!deviceToken) {
+        window.location.href = '/signin';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/validate-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+
+        const data = await response.json();
+        if (!data.valid) {
+          localStorage.removeItem('deviceToken');
+          window.location.href = '/signin';
+        } else {
+          loadAccountInfo();
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/signin';
+      }
+    }
+
+    async function loadAccountInfo() {
+      const deviceToken = localStorage.getItem('deviceToken');
+      try {
+        const response = await fetch('/api/account-info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('username').textContent = data.username;
+          document.getElementById('created-date').textContent = new Date(data.created_at).toLocaleDateString();
+          document.getElementById('referral-code').textContent = data.referral_code;
+        } else {
+          alert('Failed to load account info');
+        }
+      } catch (error) {
+        console.error('Failed to load account info:', error);
+        alert('Failed to load account info');
+      }
+    }
+
+    async function changePassword() {
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const deviceToken = localStorage.getItem('deviceToken');
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        alert('All fields are required');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        alert('New passwords do not match');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        alert('New password must be at least 6 characters');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken, currentPassword, newPassword })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert('Password changed successfully');
+          document.getElementById('current-password').value = '';
+          document.getElementById('new-password').value = '';
+          document.getElementById('confirm-password').value = '';
+        } else {
+          alert(data.message || 'Failed to change password');
+        }
+      } catch (error) {
+        console.error('Failed to change password:', error);
+        alert('Failed to change password');
+      }
+    }
+
+    async function changeUsername() {
+      const newUsername = document.getElementById('new-username').value;
+      const password = document.getElementById('username-password').value;
+      const deviceToken = localStorage.getItem('deviceToken');
+
+      if (!newUsername || !password) {
+        alert('All fields are required');
+        return;
+      }
+
+      if (newUsername.length < 3) {
+        alert('Username must be at least 3 characters');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/change-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken, newUsername, password })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert('Username changed successfully. Please sign in again.');
+          localStorage.removeItem('deviceToken');
+          window.location.href = '/signin';
+        } else {
+          alert(data.message || 'Failed to change username');
+        }
+      } catch (error) {
+        console.error('Failed to change username:', error);
+        alert('Failed to change username');
+      }
+    }
+
+    async function deleteAccount() {
+      if (!confirm('Are you sure you want to delete your account? This action cannot be undone!')) {
+        return;
+      }
+
+      const deviceToken = localStorage.getItem('deviceToken');
+
+      try {
+        const response = await fetch('/api/delete-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceToken })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert('Account deleted successfully');
+          localStorage.removeItem('deviceToken');
+          window.location.href = '/signin';
+        } else {
+          alert(data.message || 'Failed to delete account');
+        }
+      } catch (error) {
+        console.error('Failed to delete account:', error);
+        alert('Failed to delete account');
+      }
+    }
+
+    function copyReferralCode() {
+      const referralCode = document.getElementById('referral-code').textContent;
+      navigator.clipboard.writeText(referralCode).then(() => {
+        alert('Referral code copied to clipboard!');
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = referralCode;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Referral code copied to clipboard!');
+      });
+    }
+
+    // Check auth immediately
+    checkAuth();
+  </script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
+  <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
+  <script src="/assets/js/m1.js"></script>
+  <script src="/assets/js/s1.js"></script>
+  <script src="/assets/js/h1.js"></script>
+</body>
+
+</html>

@@ -32,6 +32,10 @@
               <i class="fas fa-lock input-icon"></i>
               <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" required>
             </div>
+            <div class="input-group">
+              <i class="fas fa-gift input-icon"></i>
+              <input type="text" id="referral-code" name="referral-code" placeholder="Referral Code (Optional)">
+            </div>
             <button type="submit" class="auth-btn">Request Account</button>
           </form>
           <div class="auth-links">
@@ -52,6 +56,7 @@
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirm-password').value;
+      const referralCode = document.getElementById('referral-code').value.trim();
       const messageDiv = document.getElementById('message');
 
       if (password !== confirmPassword) {
@@ -61,12 +66,17 @@
       }
 
       try {
+        const requestData = { username, password };
+        if (referralCode) {
+          requestData.referralCode = referralCode;
+        }
+
         const response = await fetch('/api/request-account', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify(requestData),
         });
 
         const data = await response.json();

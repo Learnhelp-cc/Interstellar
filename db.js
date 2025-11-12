@@ -4,13 +4,17 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, 'users.db');
-const aiDbPath = path.join(__dirname, 'ai.db');
-const keysDbPath = path.join(__dirname, 'keys.db');
+const dbPath = path.resolve(process.cwd(), 'users.db');
+const referDbPath = path.resolve(process.cwd(), 'referrals.db');
+const aiDbPath = path.resolve(process.cwd(), 'ai.db');
+const keysDbPath = path.resolve(process.cwd(), 'keys.db');
 
 let db;
+let referDb;
 let aiDb;
 let keysDb;
+
+export { db, referDb, aiDb, keysDb };
 
 export function initDB() {
   db = new Database(dbPath);
@@ -133,6 +137,52 @@ export function initDB() {
     console.error('Failed to initialize AI database:', error);
   }
 
+  // Initialize referral database
+  try {
+    referDb = new Database(referDbPath);
+    console.log('Referral database initialized at:', referDbPath);
+
+    // Create referral_codes table
+    referDb.exec(`
+      CREATE TABLE IF NOT EXISTS referral_codes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        code TEXT UNIQUE NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create referrals table
+    referDb.exec(`
+      CREATE TABLE IF NOT EXISTS referrals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        referrer_id INTEGER NOT NULL,
+        referred_user_id INTEGER NOT NULL,
+        referral_code_used TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(referred_user_id)
+      )
+    `);
+
+    // Create used_by table to track which users used which referral codes
+    referDb.exec(`
+      CREATE TABLE IF NOT EXISTS used_by (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        referral_code TEXT NOT NULL,
+        referrer_user_id INTEGER,
+        referrer_username TEXT,
+        used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id)
+      )
+    `);
+
+    console.log('Referral database tables created successfully');
+  } catch (error) {
+    console.error('Failed to initialize referral database:', error);
+    referDb = null; // Ensure it's null if initialization fails
+  }
+
   // Initialize keys database for AES-128 encryption
   try {
     keysDb = new Database(keysDbPath);
@@ -189,7 +239,19 @@ export function updateUser(id, updates) {
 
 export function getAllUsers() {
   const stmt = db.prepare('SELECT id, username, pending, created_at FROM users ORDER BY created_at DESC');
-  return stmt.all();
+  const users = stmt.all();
+
+  // Add referral information to each user
+  return users.map(user => {
+    const referralInfo = getUserReferralInfo(user.id);
+    return {
+      ...user,
+      referral_code_used: referralInfo?.referral_code || null,
+      referrer_user_id: referralInfo?.referrer_user_id || null,
+      referrer_username: referralInfo?.referrer_username || null,
+      referral_used_at: referralInfo?.used_at || null
+    };
+  });
 }
 
 export function deleteUser(id) {
@@ -205,6 +267,133 @@ export function getUserByDeviceToken(token) {
 export function updateDeviceToken(id, token) {
   const stmt = db.prepare('UPDATE users SET device_token = ? WHERE id = ?');
   return stmt.run(token, id);
+}
+
+// Referral functions
+export function generateReferralCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+export function setUserReferralCode(userId) {
+  if (!referDb) {
+    throw new Error('Referral database not initialized');
+  }
+
+  let code;
+  let attempts = 0;
+  let existing;
+  do {
+    code = generateReferralCode();
+    attempts++;
+    if (attempts > 10) {
+      throw new Error('Failed to generate unique referral code');
+    }
+    // Check if code already exists in referral_codes table
+    const checkStmt = referDb.prepare('SELECT id FROM referral_codes WHERE code = ?');
+    existing = checkStmt.get(code);
+  } while (existing);
+
+  const stmt = referDb.prepare('INSERT INTO referral_codes (user_id, code) VALUES (?, ?)');
+  stmt.run(userId, code);
+  return code;
+}
+
+export function getUserByReferralCode(code) {
+  if (!referDb) {
+    throw new Error('Referral database not initialized');
+  }
+
+  // First get the user_id from referral_codes table
+  const referralStmt = referDb.prepare('SELECT user_id FROM referral_codes WHERE code = ?');
+  const referralResult = referralStmt.get(code);
+
+  if (!referralResult) {
+    return null;
+  }
+
+  // Then get the user data from the main users table
+  const userStmt = db.prepare('SELECT * FROM users WHERE id = ?');
+  const user = userStmt.get(referralResult.user_id);
+
+  if (user) {
+    user.referral_code = code;
+  }
+
+  return user;
+}
+
+export function getUserReferrals(userId) {
+  if (!referDb) {
+    throw new Error('Referral database not initialized');
+  }
+
+  // First get the referral data
+  const referralStmt = referDb.prepare(`
+    SELECT referred_user_id, referral_code_used, created_at
+    FROM referrals
+    WHERE referrer_id = ?
+    ORDER BY created_at DESC
+  `);
+  const referrals = referralStmt.all(userId);
+
+  // Then get user data for each referral
+  const result = [];
+  for (const referral of referrals) {
+    const userStmt = db.prepare('SELECT id, username, created_at FROM users WHERE id = ?');
+    const user = userStmt.get(referral.referred_user_id);
+    if (user) {
+      result.push({
+        id: user.id,
+        username: user.username,
+        created_at: user.created_at,
+        referral_code_used: referral.referral_code_used
+      });
+    }
+  }
+
+  return result;
+}
+
+export function getUserReferralInfo(userId) {
+  if (!referDb) {
+    return null;
+  }
+
+  const stmt = referDb.prepare('SELECT referral_code, referrer_user_id, referrer_username, used_at FROM used_by WHERE user_id = ?');
+  return stmt.get(userId);
+}
+
+export function createUserWithReferral(username, password, referralCode = null) {
+  // First create the user
+  const stmt = db.prepare(
+    'INSERT INTO users (username, password, pending) VALUES (?, ?, TRUE)'
+  );
+  const result = stmt.run(username, password);
+  const userId = result.lastInsertRowid;
+
+  // Handle referral if provided
+  if (referralCode && referDb) {
+    const referrer = getUserByReferralCode(referralCode);
+    if (referrer) {
+      const referralStmt = referDb.prepare(
+        'INSERT INTO referrals (referrer_id, referred_user_id, referral_code_used) VALUES (?, ?, ?)'
+      );
+      referralStmt.run(referrer.id, userId, referralCode);
+
+      // Also track in used_by table
+      const usedByStmt = referDb.prepare(
+        'INSERT INTO used_by (user_id, referral_code, referrer_user_id, referrer_username) VALUES (?, ?, ?, ?)'
+      );
+      usedByStmt.run(userId, referralCode, referrer.id, referrer.username);
+    }
+  }
+
+  return userId;
 }
 
 // Message functions
