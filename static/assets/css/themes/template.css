@@ -1,7 +1,6 @@
 :root {
    /* Background Variables */
    --background-color: #ddd; /* Main Background Color */
-   --bg-c: rgba(221, 221, 221, 0.8); /* Background color with alpha for particles */
    --background-input: #cccccc; /* Input Field Background Color */
    --background-column: #cacaca; /* Background for Apps Container */
    --background-settings: #d5d5d5; /* Settings Card Background */
@@ -14,7 +13,6 @@
    --save-button: #a6d189; /* Save Button, Normally Green */
    /* Text Variables */
    --text-primary: #000; /* Primary Text Color */
-   --text-secondary: #666; /* Secondary Text Color */
    --text-dark: #aaa; /* Dark Text Color for Error Page, Scrollbar, and Particles */
    --text-placeholder: #555; /* Placeholder Text Color */
    /* Other Variables */

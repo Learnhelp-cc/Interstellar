@@ -14,15 +14,11 @@ import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
 import { Client } from "ssh2";
 import crypto from "crypto";
-import { execSync, spawn } from "child_process";
+import { execSync } from "child_process";
 import Database from 'better-sqlite3';
-import nodemailer from 'nodemailer';
-import { SMTPServer } from 'smtp-server';
-import { simpleParser } from 'mailparser';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
 import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory } from "./db.js";
-import { createEmail, getEmails, deleteEmail, createReceivedEmail, getReceivedEmails, deleteReceivedEmail, initMailDB } from "./mail.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
@@ -63,99 +59,6 @@ function decryptPassword(encryptedPassword) {
 // Initialize database
 initDB();
 console.log(chalk.green("📊 Database initialized"));
-
-// Initialize mail database
-initMailDB();
-console.log(chalk.green("📧 Mail database initialized"));
-
-// Start SMTP server process
-const smtpProcess = spawn('node', ['smtp-server.js'], {
-  stdio: 'inherit',
-  cwd: __dirname
-});
-
-smtpProcess.on('error', (err) => {
-  console.error('Failed to start SMTP server:', err);
-});
-
-smtpProcess.on('exit', (code) => {
-  console.log(`SMTP server process exited with code ${code}`);
-});
-
-// Handle main process termination to clean up SMTP server
-process.on('SIGINT', () => {
-  console.log('Received SIGINT, shutting down...');
-  smtpProcess.kill('SIGINT');
-  process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down...');
-  smtpProcess.kill('SIGTERM');
-  process.exit(0);
-});
-
-process.on('exit', () => {
-  console.log('Main process exiting, killing SMTP server...');
-  smtpProcess.kill();
-});
-
-// Setup nodemailer transporter to use local SMTP server
-// Try to find the SMTP server port (it might be on 2525 or higher if port was busy)
-let smtpPort = 2525;
-const maxPortAttempts = 10;
-
-function findSMTPPort(attempt = 0) {
-  if (attempt >= maxPortAttempts) {
-    console.error('Could not find available SMTP port after', maxPortAttempts, 'attempts');
-    return;
-  }
-
-  const testTransporter = nodemailer.createTransport({
-    host: 'localhost',
-    port: smtpPort,
-    secure: false,
-    ignoreTLS: true,
-    connectionTimeout: 5000, // 5 second timeout
-    greetingTimeout: 5000
-  });
-
-  testTransporter.verify((error, success) => {
-    if (success) {
-      console.log(`✅ Found SMTP server on port ${smtpPort}`);
-      // Update the main transporter to use the correct port
-      emailTransporter.options.port = smtpPort;
-      // Test the main transporter
-      emailTransporter.verify((error, success) => {
-        if (error) {
-          console.error(chalk.red('❌ Email configuration error:'), error);
-        } else {
-          console.log(chalk.green('✅ Email server is ready to send messages'));
-        }
-      });
-    } else {
-      console.log(`Port ${smtpPort} not ready, trying ${smtpPort + 1}...`);
-      smtpPort++;
-      // Wait a bit before trying next port
-      setTimeout(() => findSMTPPort(attempt + 1), 1000);
-    }
-  });
-}
-
-const emailTransporter = nodemailer.createTransport({
-  host: 'localhost',
-  port: smtpPort,
-  secure: false,
-  ignoreTLS: true,
-  connectionTimeout: 5000,
-  greetingTimeout: 5000
-});
-
-// Wait for SMTP server to start, then find the port
-setTimeout(() => {
-  console.log('🔍 Looking for SMTP server...');
-  findSMTPPort();
-}, 3000);
 
 // Migrate existing plain text passwords to encrypted
 const migrationDb = new Database(path.join(__dirname, 'users.db'));
@@ -1352,133 +1255,6 @@ app.delete('/api/search-history', (req, res) => {
   }
 });
 
-// Email API endpoints
-app.post('/api/send-email', (req, res) => {
-  const { deviceToken, to, subject, body } = req.body;
-
-  if (!deviceToken || !to || !subject || !body) {
-    return res.status(400).json({ message: 'Device token, to, subject, and body are required' });
-  }
-
-  try {
-    const user = getUserByDeviceToken(deviceToken);
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid device token' });
-    }
-
-    const domain = req.headers.host;
-    const fromEmail = `${user.username}@${domain}`;
-
-    // Send email using nodemailer
-    const mailOptions = {
-      from: fromEmail,
-      to: to,
-      subject: subject,
-      text: body
-    };
-
-    emailTransporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Email send error:', error);
-        return res.status(500).json({ message: 'Failed to send email' });
-      }
-
-      // Store email in database
-      createEmail(user.id, to, subject, body);
-      res.json({ message: 'Email sent successfully' });
-    });
-  } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).json({ message: 'Failed to send email' });
-  }
-});
-
-app.get('/api/emails', (req, res) => {
-  const { deviceToken } = req.query;
-
-  if (!deviceToken) {
-    return res.status(400).json({ message: 'Device token required' });
-  }
-
-  try {
-    const user = getUserByDeviceToken(deviceToken);
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid device token' });
-    }
-
-    const emails = getEmails(user.id);
-    res.json(emails);
-  } catch (error) {
-    console.error('Error fetching emails:', error);
-    res.status(500).json({ message: 'Failed to fetch emails' });
-  }
-});
-
-app.get('/api/received-emails', (req, res) => {
-  const { deviceToken } = req.query;
-
-  if (!deviceToken) {
-    return res.status(400).json({ message: 'Device token required' });
-  }
-
-  try {
-    const user = getUserByDeviceToken(deviceToken);
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid device token' });
-    }
-
-    const emails = getReceivedEmails(user.username);
-    res.json(emails);
-  } catch (error) {
-    console.error('Error fetching received emails:', error);
-    res.status(500).json({ message: 'Failed to fetch received emails' });
-  }
-});
-
-app.delete('/api/received-emails/:id', (req, res) => {
-  const { id } = req.params;
-  const { deviceToken } = req.body;
-
-  if (!deviceToken) {
-    return res.status(400).json({ message: 'Device token required' });
-  }
-
-  try {
-    const user = getUserByDeviceToken(deviceToken);
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid device token' });
-    }
-
-    deleteReceivedEmail(user.username, parseInt(id));
-    res.json({ message: 'Received email deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting received email:', error);
-    res.status(500).json({ message: 'Failed to delete received email' });
-  }
-});
-
-app.delete('/api/emails/:id', (req, res) => {
-  const { id } = req.params;
-  const { deviceToken } = req.body;
-
-  if (!deviceToken) {
-    return res.status(400).json({ message: 'Device token required' });
-  }
-
-  try {
-    const user = getUserByDeviceToken(deviceToken);
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid device token' });
-    }
-
-    deleteEmail(user.id, parseInt(id));
-    res.json({ message: 'Email deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting email:', error);
-    res.status(500).json({ message: 'Failed to delete email' });
-  }
-});
-
 app.get('/admin/terminal', adminAuth, (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -1628,7 +1404,6 @@ const routes = [
   { path: "/d", file: "tabs.html" },
   { path: "/chat", file: "chat.html" },
   { path: "/metrics", file: "metrics.html" },
-  { path: "/mail", file: "mail.html" },
   { path: "/", file: "index.html" },
 ];
 

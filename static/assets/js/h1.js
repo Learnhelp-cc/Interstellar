@@ -187,16 +187,13 @@ let SplashI = Math.floor(Math.random() * SplashT.length);
 const SplashE = document.getElementById("splash");
 
 function US() {
-  if (SplashE) {
-    SplashI = (SplashI + 1) % SplashT.length;
-    SplashE.innerText = SplashT[SplashI];
-  }
+  SplashI = (SplashI + 1) % SplashT.length;
+  SplashE.innerText = SplashT[SplashI];
 }
 
-if (SplashE) {
-  SplashE.innerText = SplashT[SplashI];
-  SplashE.addEventListener("click", US);
-}
+SplashE.innerText = SplashT[SplashI];
+
+SplashE.addEventListener("click", US);
 
 // Rotating Welcome Messages
 const welcomeMessages = [
@@ -215,28 +212,24 @@ let currentMessageIndex = 0;
 const welcomeText = document.getElementById("welcome-text");
 
 function rotateWelcomeMessage() {
-  if (welcomeText) {
-    // Fade out
-    welcomeText.classList.add("fade-out");
+  // Fade out
+  welcomeText.classList.add("fade-out");
 
-    setTimeout(() => {
-      // Change text
-      currentMessageIndex = (currentMessageIndex + 1) % welcomeMessages.length;
-      welcomeText.textContent = welcomeMessages[currentMessageIndex];
+  setTimeout(() => {
+    // Change text
+    currentMessageIndex = (currentMessageIndex + 1) % welcomeMessages.length;
+    welcomeText.textContent = welcomeMessages[currentMessageIndex];
 
-      // Fade in
-      welcomeText.classList.remove("fade-out");
-    }, 1000); // Half of transition time
-  }
+    // Fade in
+    welcomeText.classList.remove("fade-out");
+  }, 1000); // Half of transition time
 }
 
 // Start rotating after page load
-if (welcomeText) {
-  setTimeout(() => {
-    rotateWelcomeMessage();
-    setInterval(rotateWelcomeMessage, 3000); // Change every 3 seconds
-  }, 2000); // Start after 2 seconds
-}
+setTimeout(() => {
+  rotateWelcomeMessage();
+  setInterval(rotateWelcomeMessage, 3000); // Change every 3 seconds
+}, 2000); // Start after 2 seconds
 
 // Random URL
 function getRandomUrl() {
