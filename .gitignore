@@ -6,4 +6,5 @@ node_modules
 creds.env
 *.db
 /uploads
-
+package-lock.json
+.vscode/
