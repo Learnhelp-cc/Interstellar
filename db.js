@@ -7,22 +7,6 @@ const dbPath = path.join(__dirname, 'users.db');
 
 let db;
 
-function addMissingColumns(tableName, expectedColumns) {
-  const tableInfo = db.prepare(`PRAGMA table_info(${tableName})`).all();
-  const existingColumns = tableInfo.map(col => col.name);
-
-  for (const col of expectedColumns) {
-    if (!existingColumns.includes(col.name)) {
-      try {
-        db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${col.definition}`);
-        console.log(`Added missing column ${col.name} to ${tableName}`);
-      } catch (error) {
-        console.error(`Failed to add column ${col.name} to ${tableName}:`, error);
-      }
-    }
-  }
-}
-
 export function initDB() {
   db = new Database(dbPath);
 
@@ -37,20 +21,19 @@ export function initDB() {
     )
   `);
 
-  // Expected columns for users table
-  const usersExpectedColumns = [
-    { name: 'id', definition: 'id INTEGER PRIMARY KEY AUTOINCREMENT' },
-    { name: 'username', definition: 'username TEXT UNIQUE NOT NULL' },
-    { name: 'password', definition: 'password TEXT NOT NULL' },
-    { name: 'pending', definition: 'pending BOOLEAN DEFAULT TRUE' },
-    { name: 'created_at', definition: 'created_at DATETIME DEFAULT CURRENT_TIMESTAMP' },
-    { name: 'device_token', definition: 'device_token TEXT' }
-  ];
+  // Add device_token column if it doesn't exist
+  const tableInfo = db.prepare("PRAGMA table_info(users)").all();
+  const hasDeviceToken = tableInfo.some(column => column.name === 'device_token');
 
-  addMissingColumns('users', usersExpectedColumns);
-
-  // Add unique index for device_token if not exists
-  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_device_token ON users(device_token)`);
+  if (!hasDeviceToken) {
+    try {
+      db.exec(`ALTER TABLE users ADD COLUMN device_token TEXT`);
+      // Note: UNIQUE constraint added separately to avoid issues with existing NULL values
+      db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_device_token ON users(device_token)`);
+    } catch (error) {
+      console.error('Failed to add device_token column:', error);
+    }
+  }
 
   // Create messages table
   db.exec(`
@@ -61,16 +44,6 @@ export function initDB() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-
-  // Expected columns for messages table
-  const messagesExpectedColumns = [
-    { name: 'id', definition: 'id INTEGER PRIMARY KEY AUTOINCREMENT' },
-    { name: 'message', definition: 'message TEXT NOT NULL' },
-    { name: 'active', definition: 'active BOOLEAN DEFAULT TRUE' },
-    { name: 'created_at', definition: 'created_at DATETIME DEFAULT CURRENT_TIMESTAMP' }
-  ];
-
-  addMissingColumns('messages', messagesExpectedColumns);
 
   // Create dismissals table
   db.exec(`
@@ -85,16 +58,6 @@ export function initDB() {
     )
   `);
 
-  // Expected columns for dismissals table
-  const dismissalsExpectedColumns = [
-    { name: 'id', definition: 'id INTEGER PRIMARY KEY AUTOINCREMENT' },
-    { name: 'user_id', definition: 'user_id INTEGER NOT NULL' },
-    { name: 'message_id', definition: 'message_id INTEGER NOT NULL' },
-    { name: 'dismissed_at', definition: 'dismissed_at DATETIME DEFAULT CURRENT_TIMESTAMP' }
-  ];
-
-  addMissingColumns('dismissals', dismissalsExpectedColumns);
-
   // Create search_history table
   db.exec(`
     CREATE TABLE IF NOT EXISTS search_history (
@@ -107,18 +70,31 @@ export function initDB() {
     )
   `);
 
-  // Expected columns for search_history table
-  const searchHistoryExpectedColumns = [
-    { name: 'id', definition: 'id INTEGER PRIMARY KEY AUTOINCREMENT' },
-    { name: 'user_id', definition: 'user_id INTEGER NOT NULL' },
-    { name: 'url', definition: 'url TEXT NOT NULL' },
-    { name: 'title', definition: 'title TEXT' },
-    { name: 'visited_at', definition: 'visited_at DATETIME DEFAULT CURRENT_TIMESTAMP' }
-  ];
+  // Create emails table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS emails (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      to_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+  `);
 
-  addMissingColumns('search_history', searchHistoryExpectedColumns);
-
-
+  // Create received_emails table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS received_emails (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recipient_username TEXT NOT NULL,
+      from_email TEXT NOT NULL,
+      to_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      received_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
   return db;
 }
@@ -243,4 +219,36 @@ export function deleteSearchHistory(userId, historyId) {
 export function clearSearchHistory(userId) {
   const stmt = db.prepare('DELETE FROM search_history WHERE user_id = ?');
   return stmt.run(userId);
+}
+
+// Email functions
+export function createEmail(userId, toEmail, subject, body) {
+  const stmt = db.prepare('INSERT INTO emails (user_id, to_email, subject, body) VALUES (?, ?, ?, ?)');
+  return stmt.run(userId, toEmail, subject, body);
+}
+
+export function getEmails(userId, limit = 50) {
+  const stmt = db.prepare('SELECT * FROM emails WHERE user_id = ? ORDER BY sent_at DESC LIMIT ?');
+  return stmt.all(userId, limit);
+}
+
+export function deleteEmail(userId, emailId) {
+  const stmt = db.prepare('DELETE FROM emails WHERE id = ? AND user_id = ?');
+  return stmt.run(emailId, userId);
+}
+
+// Received email functions
+export function createReceivedEmail(recipientUsername, fromEmail, toEmail, subject, body) {
+  const stmt = db.prepare('INSERT INTO received_emails (recipient_username, from_email, to_email, subject, body) VALUES (?, ?, ?, ?, ?)');
+  return stmt.run(recipientUsername, fromEmail, toEmail, subject, body);
+}
+
+export function getReceivedEmails(username, limit = 50) {
+  const stmt = db.prepare('SELECT * FROM received_emails WHERE recipient_username = ? ORDER BY received_at DESC LIMIT ?');
+  return stmt.all(username, limit);
+}
+
+export function deleteReceivedEmail(username, emailId) {
+  const stmt = db.prepare('DELETE FROM received_emails WHERE id = ? AND recipient_username = ?');
+  return stmt.run(emailId, username);
 }
