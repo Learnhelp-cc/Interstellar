@@ -226,159 +226,18 @@ const BROWSER_HEADERS = {
   'Sec-Ch-Ua-Platform': '"Windows"'
 };
 
-// Create bare server with custom agents
+// Create bare server with default agents (temporarily disable custom agents to test)
 const bareServer = createBareServer("/ca/", {
-  httpAgent,
-  httpsAgent,
+  // httpAgent,
+  // httpsAgent,
   // Add custom request interceptor to set headers and handle cookies
   filterRemote: async (remote) => {
     // Allow all remotes for now, but we could add filtering here
   }
 });
 
-// Re-enable the V3 route handler override for Cloudflare bypass
-const originalV3Handler = bareServer.routes.get('/v3/');
-if (originalV3Handler) {
-  console.log('Re-enabling V3 handler override with Cloudflare-friendly headers');
-  bareServer.routes.set('/v3/', async (request, res, options) => {
-    console.log('V3 handler called for Cloudflare bypass');
-
-    // Get the original headers from the request
-    const headers = new Headers(request.headers);
-    const xBareURL = headers.get('x-bare-url');
-
-    if (xBareURL) {
-      console.log('Processing request for URL:', xBareURL);
-
-      // Parse the x-bare-headers to modify them
-      const xBareHeadersStr = headers.get('x-bare-headers');
-      let bareHeaders = {};
-
-      if (xBareHeadersStr) {
-        try {
-          bareHeaders = JSON.parse(xBareHeadersStr);
-          console.log('Original headers:', Object.keys(bareHeaders));
-        } catch (e) {
-          console.log('Failed to parse x-bare-headers:', e);
-          bareHeaders = {};
-        }
-      }
-
-      // Add browser-like headers if not already present
-      const headersToAdd = {
-        'User-Agent': BROWSER_HEADERS['User-Agent'],
-        'Accept': BROWSER_HEADERS['Accept'],
-        'Accept-Language': BROWSER_HEADERS['Accept-Language'],
-        'Accept-Encoding': BROWSER_HEADERS['Accept-Encoding'],
-        'DNT': BROWSER_HEADERS['DNT'],
-        'Connection': BROWSER_HEADERS['Connection'],
-        'Upgrade-Insecure-Requests': BROWSER_HEADERS['Upgrade-Insecure-Requests'],
-        'Sec-Fetch-Dest': BROWSER_HEADERS['Sec-Fetch-Dest'],
-        'Sec-Fetch-Mode': BROWSER_HEADERS['Sec-Fetch-Mode'],
-        'Sec-Fetch-Site': BROWSER_HEADERS['Sec-Fetch-Site'],
-        'Sec-Fetch-User': BROWSER_HEADERS['Sec-Fetch-User'],
-        'Cache-Control': BROWSER_HEADERS['Cache-Control'],
-        'Sec-Ch-Ua': BROWSER_HEADERS['Sec-Ch-Ua'],
-        'Sec-Ch-Ua-Mobile': BROWSER_HEADERS['Sec-Ch-Ua-Mobile'],
-        'Sec-Ch-Ua-Platform': BROWSER_HEADERS['Sec-Ch-Ua-Platform']
-      };
-
-      // Discord-specific headers
-      if (xBareURL.includes('discord.com') || xBareURL.includes('discordapp.com')) {
-        headersToAdd['X-Super-Properties'] = 'eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6ImVuLVVTIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEzMS4wLjAuMCBTYWZhcmkvNTM3LjM2IiwiYnJvd3Nlcl92ZXJzaW9uIjoiMTMxLjAuMC4wIiwib3NfdmVyc2lvbiI6IjEwIiwicmVmZXJyZXIiOiJodHRwczovL2Rpc2NvcmQuY29tLyIsInJlZmVycmluZ19kb21haW4iOiJkaXNjb3JkLmNvbSIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoxODc5NTIsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGx9';
-        headersToAdd['X-Discord-Locale'] = 'en-US';
-        headersToAdd['X-Debug-Options'] = 'bugReporterEnabled';
-        headersToAdd['Authorization'] = bareHeaders['Authorization'] || '';
-        headersToAdd['X-Discord-Timezone'] = 'America/New_York';
-        headersToAdd['X-Context-Properties'] = 'eyJsb2NhdGlvbiI6IkpvaW4gR3VpbGQiLCJsb2NhdGlvbl9ndWlsZF9pZCI6bnVsbCwibG9jYXRpb25fY2hhbm5lbF9pZCI6bnVsbCwibG9jYXRpb25fY2hhbm5lbF90eXBlIjpudWxsfQ==';
-
-        // Add Origin and Referer for Discord API calls
-        if (!bareHeaders['Origin'] && xBareURL.includes('/api/')) {
-          headersToAdd['Origin'] = 'https://discord.com';
-        }
-        if (!bareHeaders['Referer']) {
-          headersToAdd['Referer'] = 'https://discord.com/login';
-        }
-
-        // Additional headers for 2FA/MFA verification
-        if (xBareURL.includes('/mfa/') || xBareURL.includes('/verify') || xBareURL.includes('/totp')) {
-          headersToAdd['X-Fingerprint'] = bareHeaders['X-Fingerprint'] || '';
-          headersToAdd['X-Captcha-Key'] = bareHeaders['X-Captcha-Key'] || '';
-          headersToAdd['X-Captcha-Rqtoken'] = bareHeaders['X-Captcha-Rqtoken'] || '';
-        }
-      }
-
-      for (const [key, value] of Object.entries(headersToAdd)) {
-        if (!bareHeaders[key]) {
-          bareHeaders[key] = value;
-          console.log(`Added header: ${key}`);
-        }
-      }
-
-      // Handle cookies for this domain
-      const url = new URL(xBareURL);
-      const domain = url.hostname;
-      const existingCookies = cookieJar.get(domain);
-      if (existingCookies && existingCookies.length > 0) {
-        console.log('Using stored cookies for domain:', domain, existingCookies.length, 'cookies');
-        if (!bareHeaders['Cookie']) {
-          bareHeaders['Cookie'] = existingCookies.join('; ');
-        }
-      }
-
-      // Update the x-bare-headers with our modifications
-      headers.set('x-bare-headers', JSON.stringify(bareHeaders));
-      console.log('Modified headers count:', Object.keys(bareHeaders).length);
-    }
-
-    // Create a new request with modified headers
-    const modifiedRequest = new Request(request.url, {
-      method: request.method,
-      headers: headers,
-      body: request.body,
-      duplex: request.duplex
-    });
-    modifiedRequest.native = request.native;
-
-    // Call the original handler
-    const response = await originalV3Handler(modifiedRequest, res, options);
-
-    // Extract and store cookies from the response
-    if (xBareURL && response.headers.has('x-bare-headers')) {
-      try {
-        const responseBareHeaders = JSON.parse(response.headers.get('x-bare-headers'));
-        const setCookie = responseBareHeaders['set-cookie'];
-        if (setCookie) {
-          const url = new URL(xBareURL);
-          const domain = url.hostname;
-          const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
-
-          if (!cookieJar.has(domain)) {
-            cookieJar.set(domain, []);
-          }
-
-          const existingCookies = cookieJar.get(domain);
-          for (const cookie of cookies) {
-            // Simple cookie parsing - just store the cookie string
-            const cookieName = cookie.split('=')[0];
-            // Remove existing cookie with same name
-            const filteredCookies = existingCookies.filter(c => !c.startsWith(cookieName + '='));
-            filteredCookies.push(cookie);
-            cookieJar.set(domain, filteredCookies);
-          }
-          console.log('Stored cookies for domain:', domain, cookieJar.get(domain).length, 'cookies');
-        }
-      } catch (e) {
-        // Invalid JSON, skip cookie handling
-        console.log('Failed to parse response headers for cookies');
-      }
-    }
-
-    return response;
-  });
-} else {
-  console.log('Could not find V3 handler to override');
-}
+// Remove the V3 handler override for now - let's test with default bare server
+console.log('Using default bare server without custom headers');
 
 const PORT = process.env.PORT || 8080;
 const cache = new Map();
