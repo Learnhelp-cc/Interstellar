@@ -1,37 +1,26 @@
 # Security Policy
 
-## Supported Versions
+## Reporting Vulnerabilities
 
-Only current versions of the site are being updated, if you are using an older version of the site, consider upgrading to the latest version.
+If you discover a security vulnerability in this project, please report it responsibly. We take security seriously and appreciate your help in keeping our users safe.
 
-| Version | Supported |
-| ------- | --------- |
-| V5.2.x  | ✔️        |
-| V5.1.x  | :x:       |
-| V5.0.x  | :x:       |
-| V4.x.x  | :x:       |
-| < V4.0  | :x:       |
+### How to Report
 
-## Reporting a Vulnerability
+- **Do not** create public issues for security vulnerabilities.
+- Email us at [security@learnhelp.cc](mailto:security@learnhelp.cc) with details of the vulnerability.
+- Include as much information as possible, such as:
+  - Description of the vulnerability
+  - Steps to reproduce
+  - Potential impact
+  - Any suggested fixes
 
-You can privately report a vulnerability [here](https://github.com/InterstellarNetwork/Interstellar/security/advisories/new).
+We will acknowledge your report within 48 hours and provide a more detailed response within 7 days indicating our next steps.
 
-Alternatively, you can join our [Discord server](https://discord.gg/Interstellar), and open a ticket and let us know what the vulnerability is.
+### Our Commitment
 
-### Upgrading to the Latest Version
+- We will investigate all legitimate reports.
+- We will keep you informed about our progress.
+- We will credit you (if desired) once the issue is resolved.
+- We follow responsible disclosure practices.
 
-If you are using an older version of the site, we strongly recommend upgrading to the latest version to ensure that you benefit from the latest security updates and enhancements. Only the current versions of the site receive regular updates and support.
-
-### How to Update
-
-If you have a fork of the repository:
-Then [sync your fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork).
-
-If you have interstellar installed locally:
-Run `git pull`, and `npm i`.
-
-By keeping your site up to date, you not only enjoy the latest features but also enhance the security of your experience.
-
-If you encounter any challenges while updating, feel free to reach out to our [support team](https://discord.gg/interstellar) for assistance.
-
-Thank you for prioritizing the security and performance of your experience with our site.
+Thank you for helping keep Interstellar secure!
