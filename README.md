@@ -4,7 +4,6 @@
     <p>Interstellar is a web proxy with a Clean and Sleek UI and easy to use menus. Our goal is to provide the best user experience to everyone.</p>
 </div>
 
-![inpreview](https://github.com/Learnhelp-cc/Interstellar/docs/image.png)
 
 > [!IMPORTANT]
 > This is a fork of the original Interstellar project. Consider giving it a star if you find it useful!
@@ -122,8 +121,6 @@ As of January 1st, 2024, Replit is [no longer free](https://blog.replit.com/host
 3. Go to the ports tab, Click Forward A Port, And type the port number.
 4. Right-click Visibility and set Port Visibility to Public.
 
-> [!NOTE]
-> We are committed to making Interstellar easy and personalized however, as of now we need your support in making it ad-free. Consider keeping ads so Interstellar can run freely or contribute by being a supporter.
 
 ## Report Issues
 
