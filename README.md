@@ -24,6 +24,10 @@
 - Now.gg Support
 - Fast Speeds
 - Geforce NOW Support
+- accounts
+- admin panel
+- ai 
+- ...and more!
 
 ## Deployment
 
@@ -82,7 +86,7 @@ npm run start
 
 ```bash
 cd Interstellar
-git pull  # This may overwrite your local changes
+git pull  
 ```
 
 <a target="_blank" href="https://heroku.com/deploy/?template=https://github.com/Learnhelp-cc/Interstellar"><img alt="Deploy to Heroku" src="https://binbashbanana.github.io/deploy-buttons/buttons/remade/heroku.svg"></a>
