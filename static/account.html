@@ -48,6 +48,12 @@
         </div>
 
         <div class="settings-card">
+          <h3>Logout</h3>
+          <p>Sign out of your account on this device.</p>
+          <button class="key-button" onclick="logout()" style="width: 100%;">Logout</button>
+        </div>
+
+        <div class="settings-card">
           <h3>Danger Zone</h3>
           <p style="color: #f44336;">Warning: This action cannot be undone!</p>
           <button class="key-button" onclick="deleteAccount()" style="width: 100%; background: #f44336; color: white;">Delete Account</button>
@@ -213,6 +219,11 @@
         console.error('Failed to delete account:', error);
         alert('Failed to delete account');
       }
+    }
+
+    function logout() {
+      localStorage.removeItem('deviceToken');
+      window.location.reload();
     }
 
     function copyReferralCode() {
