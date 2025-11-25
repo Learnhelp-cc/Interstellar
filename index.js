@@ -275,6 +275,120 @@ const metrics = {
   trafficHistory: [] // { timestamp, requests, dataTransferred }
 };
 
+// Rate limiting for API endpoints
+const apiRateLimit = new Map();
+const API_RATE_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_API_REQUESTS = 100; // 100 requests per 15 minutes per IP
+
+function checkApiRateLimit(ip) {
+  const now = Date.now();
+  const key = ip;
+
+  if (!apiRateLimit.has(key)) {
+    apiRateLimit.set(key, { count: 0, windowStart: now });
+  }
+
+  const rateData = apiRateLimit.get(key);
+
+  // Reset window if needed
+  if (now - rateData.windowStart > API_RATE_WINDOW) {
+    rateData.count = 0;
+    rateData.windowStart = now;
+  }
+
+  if (rateData.count >= MAX_API_REQUESTS) {
+    return false; // Rate limit exceeded
+  }
+
+  rateData.count++;
+  return true;
+}
+
+// CSRF protection middleware for API endpoints
+const csrfTokens = new Map();
+const CSRF_TOKEN_CLEANUP_TIME = 60 * 60 * 1000; // 1 hour
+
+function generateCsrfToken(sessionId) {
+  const token = crypto.randomBytes(32).toString('hex');
+  csrfTokens.set(sessionId, { token, timestamp: Date.now() });
+  return token;
+}
+
+function validateCsrfToken(sessionId, token) {
+  const stored = csrfTokens.get(sessionId);
+  if (!stored || stored.token !== token) {
+    return false;
+  }
+
+  // Clean up old tokens
+  if (Date.now() - stored.timestamp > CSRF_TOKEN_CLEANUP_TIME) {
+    csrfTokens.delete(sessionId);
+    return false;
+  }
+
+  return true;
+}
+
+// Security middleware
+function securityMiddleware(req, res, next) {
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+
+  // CSP header (restrictive)
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://particlesjs.com https://*.particlesjs.com; " +
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
+    "img-src 'self' data: https: blob:; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "connect-src 'self' wss: ws: https:; " +
+    "media-src 'self' data: blob:; " +
+    "object-src 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self';"
+  );
+
+  // Generate and set CSRF token for API routes
+  if (req.path.startsWith('/api/') && req.method !== 'GET') {
+    const clientIP = req.ip || req.connection.remoteAddress;
+    const sessionId = `csrf_${clientIP}_${Date.now()}`;
+    const csrfToken = generateCsrfToken(sessionId);
+
+    // Return CSRF token in response header
+    res.setHeader('X-CSRF-Token', csrfToken);
+  }
+
+  next();
+}
+
+// CORS configuration (more restrictive)
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // For now, allow localhost and any domain that matches our host
+    const allowedOrigins = [
+      'http://localhost:8080',
+      'http://127.0.0.1:8080',
+      'https://localhost:8080',
+      'https://127.0.0.1:8080'
+    ];
+
+    // Allow if origin is in allowed list or if it's served from the same host
+    if (allowedOrigins.includes(origin) || origin.includes(req.headers.host)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
 // Clean up old metrics data periodically
 setInterval(() => {
   const now = Date.now();
@@ -519,6 +633,18 @@ app.use((req, res, next) => {
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Security middleware
+app.use(securityMiddleware);
+
+// Rate limiting for API endpoints
+app.use('/api/', (req, res, next) => {
+  const clientIP = req.ip || req.connection.remoteAddress;
+  if (!checkApiRateLimit(clientIP)) {
+    return res.status(429).json({ message: 'Too many requests. Please try again later.' });
+  }
+  next();
+});
 
 // Cookie fingerprinting middleware
 app.use((req, res, next) => {
