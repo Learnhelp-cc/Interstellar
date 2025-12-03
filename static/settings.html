@@ -205,6 +205,25 @@
         <button class="key-button" value="Import" onclick="importSaveData();">Import Save</button>
       </div>
       <div class="settings-card">
+        <h3>Music Queue</h3>
+        <p>Manage your custom music files and queue.</p>
+        <div id="music-settings">
+          <div id="music-upload-section">
+            <input type="file" id="music-file-input" accept="audio/*" style="display: none;">
+            <button class="key-button" onclick="document.getElementById('music-file-input').click()">Upload Music</button>
+          </div>
+          <div id="music-files-list">
+            <h4>Your Music Files:</h4>
+            <div id="music-files-container"></div>
+          </div>
+          <div id="music-queue-section">
+            <h4>Music Queue:</h4>
+            <button class="key-button" onclick="clearMusicQueue()">Clear Queue</button>
+            <div id="music-queue-container"></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-card">
         <h3>Information</h3>
         <p id="version-info">Version: Loading...</p>
         <p id="last-updated">Last Updated: Loading...</p>

@@ -2,19 +2,22 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import * as openpgp from 'openpgp';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dbPath = path.resolve(process.cwd(), 'users.db');
 const referDbPath = path.resolve(process.cwd(), 'referrals.db');
 const aiDbPath = path.resolve(process.cwd(), 'ai.db');
 const keysDbPath = path.resolve(process.cwd(), 'keys.db');
+const musicDbPath = path.resolve(process.cwd(), 'music.db');
 
 let db;
 let referDb;
 let aiDb;
 let keysDb;
+let musicDb;
 
-export { db, referDb, aiDb, keysDb };
+export { db, referDb, aiDb, keysDb, musicDb };
 
 export function initDB() {
   db = new Database(dbPath);
@@ -201,6 +204,57 @@ export function initDB() {
   } catch (error) {
     console.error('Failed to initialize keys database:', error);
     keysDb = null; // Ensure it's null if initialization fails
+  }
+
+  // Initialize music database
+  try {
+    musicDb = new Database(musicDbPath);
+    console.log('Music database initialized at:', musicDbPath);
+
+    // Create music_files table
+    musicDb.exec(`
+      CREATE TABLE IF NOT EXISTS music_files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        filename TEXT NOT NULL,
+        filepath TEXT NOT NULL,
+        file_hash TEXT NOT NULL,
+        gpg_signature TEXT,
+        uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `);
+
+    // Create music_queues table for user queues
+    musicDb.exec(`
+      CREATE TABLE IF NOT EXISTS music_queues (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        music_file_id INTEGER NOT NULL,
+        position INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (music_file_id) REFERENCES music_files (id),
+        UNIQUE(user_id, music_file_id)
+      )
+    `);
+
+    // Create user_gpg_keys table
+    musicDb.exec(`
+      CREATE TABLE IF NOT EXISTS user_gpg_keys (
+        user_id INTEGER PRIMARY KEY,
+        public_key TEXT NOT NULL,
+        private_key TEXT NOT NULL,
+        key_id TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `);
+
+    console.log('Music database tables created successfully');
+  } catch (error) {
+    console.error('Failed to initialize music database:', error);
+    musicDb = null; // Ensure it's null if initialization fails
   }
 
   return db;
@@ -537,6 +591,123 @@ export function addAIMessage(chatId, role, content) {
 export function getAIMessages(chatId) {
   const stmt = aiDb.prepare('SELECT * FROM ai_messages WHERE chat_id = ? ORDER BY created_at ASC');
   return stmt.all(chatId);
+}
+
+// GPG functions
+export function getUserGPGKey(userId) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('SELECT * FROM user_gpg_keys WHERE user_id = ?');
+  return stmt.get(userId);
+}
+
+export function createUserGPGKey(userId, publicKey, privateKey, keyId) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('INSERT INTO user_gpg_keys (user_id, public_key, private_key, key_id) VALUES (?, ?, ?, ?)');
+  stmt.run(userId, publicKey, privateKey, keyId);
+  return { publicKey, privateKey, keyId };
+}
+
+export async function ensureUserGPGKey(userId) {
+  let keyData = getUserGPGKey(userId);
+  if (!keyData) {
+    // Generate new GPG key pair using OpenPGP
+    const { privateKey, publicKey } = await openpgp.generateKey({
+      type: 'ecc',
+      curve: 'curve25519',
+      userIDs: [{ name: `User ${userId}`, email: `user${userId}@interstellar.local` }],
+      passphrase: '', // No passphrase for simplicity
+    });
+
+    const keyId = privateKey.getKeyID().toHex();
+
+    // Store in database
+    createUserGPGKey(userId, publicKey.armor(), privateKey.armor(), keyId);
+
+    keyData = { publicKey: publicKey.armor(), privateKey: privateKey.armor(), keyId };
+  }
+  return keyData;
+}
+
+// Music functions
+export function addMusicFile(userId, filename, filepath, fileHash, gpgSignature = null) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('INSERT INTO music_files (user_id, filename, filepath, file_hash, gpg_signature) VALUES (?, ?, ?, ?, ?)');
+  const result = stmt.run(userId, filename, filepath, fileHash, gpgSignature);
+  return result.lastInsertRowid;
+}
+
+export function getMusicFiles(userId) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('SELECT * FROM music_files WHERE user_id = ? ORDER BY uploaded_at DESC');
+  return stmt.all(userId);
+}
+
+export function getMusicFileByHash(userId, fileHash) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('SELECT * FROM music_files WHERE user_id = ? AND file_hash = ?');
+  return stmt.get(userId, fileHash);
+}
+
+export function deleteMusicFile(userId, fileId) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('DELETE FROM music_files WHERE id = ? AND user_id = ?');
+  return stmt.run(fileId, userId);
+}
+
+export function addToQueue(userId, musicFileId, position = null) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  // If no position specified, add to end
+  if (position === null) {
+    const countStmt = musicDb.prepare('SELECT COUNT(*) as count FROM music_queues WHERE user_id = ?');
+    const count = countStmt.get(userId).count;
+    position = count;
+  }
+  const stmt = musicDb.prepare('INSERT OR REPLACE INTO music_queues (user_id, music_file_id, position) VALUES (?, ?, ?)');
+  return stmt.run(userId, musicFileId, position);
+}
+
+export function getMusicQueue(userId) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare(`
+    SELECT mq.*, mf.filename, mf.filepath
+    FROM music_queues mq
+    JOIN music_files mf ON mq.music_file_id = mf.id
+    WHERE mq.user_id = ?
+    ORDER BY mq.position ASC
+  `);
+  return stmt.all(userId);
+}
+
+export function removeFromQueue(userId, musicFileId) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('DELETE FROM music_queues WHERE user_id = ? AND music_file_id = ?');
+  return stmt.run(userId, musicFileId);
+}
+
+export function clearMusicQueue(userId) {
+  if (!musicDb) {
+    throw new Error('Music database not initialized');
+  }
+  const stmt = musicDb.prepare('DELETE FROM music_queues WHERE user_id = ?');
+  return stmt.run(userId);
 }
 
 // AES-128 Encryption functions

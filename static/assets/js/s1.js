@@ -432,3 +432,226 @@ function importSaveData() {
   };
   input.click();
 }
+
+// Music functions
+document.addEventListener("DOMContentLoaded", () => {
+  // Load music files and queue on page load
+  loadMusicFiles();
+  loadMusicQueue();
+
+  // Handle file upload
+  document.getElementById('music-file-input').addEventListener('change', handleMusicUpload);
+});
+
+async function getDeviceToken() {
+  return localStorage.getItem('deviceToken');
+}
+
+async function handleMusicUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const deviceToken = await getDeviceToken();
+  if (!deviceToken) {
+    alert('Please sign in first');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('musicFile', file);
+  formData.append('deviceToken', deviceToken);
+
+  try {
+    const response = await fetch('/api/music/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (response.status === 409) {
+      // File already exists
+      alert('This music file already exists. Using existing file.');
+      await addToQueue(result.existingFile.id);
+    } else if (response.ok) {
+      alert('Music file uploaded successfully!');
+      loadMusicFiles();
+    } else {
+      alert('Error uploading music file: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert('Error uploading music file');
+  }
+
+  // Clear the input
+  event.target.value = '';
+}
+
+async function loadMusicFiles() {
+  const deviceToken = await getDeviceToken();
+  if (!deviceToken) return;
+
+  try {
+    const response = await fetch(`/api/music?deviceToken=${deviceToken}`);
+    const files = await response.json();
+
+    const container = document.getElementById('music-files-container');
+    container.innerHTML = '';
+
+    if (files.length === 0) {
+      container.innerHTML = '<p>No music files uploaded yet.</p>';
+      return;
+    }
+
+    files.forEach(file => {
+      const fileDiv = document.createElement('div');
+      fileDiv.className = 'music-file-item';
+      fileDiv.innerHTML = `
+        <span>${file.filename}</span>
+        <button onclick="playMusic('${file.filepath}')">Play</button>
+        <button onclick="addToQueue(${file.id})">Add to Queue</button>
+        <button onclick="deleteMusicFile(${file.id})" style="background: red; color: white;">Delete</button>
+      `;
+      container.appendChild(fileDiv);
+    });
+  } catch (error) {
+    console.error('Error loading music files:', error);
+  }
+}
+
+async function loadMusicQueue() {
+  const deviceToken = await getDeviceToken();
+  if (!deviceToken) return;
+
+  try {
+    const response = await fetch(`/api/music/queue?deviceToken=${deviceToken}`);
+    const queue = await response.json();
+
+    const container = document.getElementById('music-queue-container');
+    container.innerHTML = '';
+
+    if (queue.length === 0) {
+      container.innerHTML = '<p>Queue is empty.</p>';
+      return;
+    }
+
+    queue.forEach(item => {
+      const queueDiv = document.createElement('div');
+      queueDiv.className = 'music-queue-item';
+      queueDiv.innerHTML = `
+        <span>${item.filename}</span>
+        <button onclick="playMusic('${item.filepath}')">Play</button>
+        <button onclick="removeFromQueue(${item.music_file_id})">Remove</button>
+      `;
+      container.appendChild(queueDiv);
+    });
+  } catch (error) {
+    console.error('Error loading music queue:', error);
+  }
+}
+
+async function deleteMusicFile(fileId) {
+  if (!confirm('Are you sure you want to delete this music file?')) return;
+
+  const deviceToken = await getDeviceToken();
+  if (!deviceToken) return;
+
+  try {
+    const response = await fetch(`/api/music/${fileId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceToken })
+    });
+
+    if (response.ok) {
+      alert('Music file deleted successfully!');
+      loadMusicFiles();
+      loadMusicQueue(); // Refresh queue in case deleted file was in queue
+    } else {
+      const result = await response.json();
+      alert('Error deleting music file: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Error deleting music file');
+  }
+}
+
+async function addToQueue(fileId) {
+  const deviceToken = await getDeviceToken();
+  if (!deviceToken) return;
+
+  try {
+    const response = await fetch('/api/music/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceToken, musicFileId: fileId })
+    });
+
+    if (response.ok) {
+      loadMusicQueue();
+    } else {
+      const result = await response.json();
+      alert('Error adding to queue: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Queue add error:', error);
+    alert('Error adding to queue');
+  }
+}
+
+async function removeFromQueue(musicFileId) {
+  const deviceToken = await getDeviceToken();
+  if (!deviceToken) return;
+
+  try {
+    const response = await fetch(`/api/music/queue/${musicFileId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceToken })
+    });
+
+    if (response.ok) {
+      loadMusicQueue();
+    } else {
+      const result = await response.json();
+      alert('Error removing from queue: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Queue remove error:', error);
+    alert('Error removing from queue');
+  }
+}
+
+async function clearMusicQueue() {
+  if (!confirm('Are you sure you want to clear the entire queue?')) return;
+
+  const deviceToken = await getDeviceToken();
+  if (!deviceToken) return;
+
+  try {
+    const response = await fetch('/api/music/queue', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceToken })
+    });
+
+    if (response.ok) {
+      loadMusicQueue();
+    } else {
+      const result = await response.json();
+      alert('Error clearing queue: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Queue clear error:', error);
+    alert('Error clearing queue');
+  }
+}
+
+function playMusic(filepath) {
+  // This would need to be implemented based on how music playing is handled in the app
+  // For now, just log it
+  console.log('Playing music:', filepath);
+  // You might want to implement actual audio playing here
+}

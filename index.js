@@ -17,9 +17,10 @@ import crypto from "crypto";
 import { execSync } from "child_process";
 import Database from 'better-sqlite3';
 import multer from 'multer';
+import * as openpgp from 'openpgp';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb, addMusicFile, getMusicFiles, getMusicFileByHash, deleteMusicFile, addToQueue, getMusicQueue, removeFromQueue, clearMusicQueue, ensureUserGPGKey } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
@@ -73,10 +74,32 @@ const upload = multer({
   }
 });
 
+// Configure multer for music file uploads
+const musicUpload = multer({
+  dest: path.join(__dirname, 'static/assets/custommusic'),
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit for music files
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow audio files only
+    if (file.mimetype.startsWith('audio/') || file.originalname.toLowerCase().endsWith('.mp3')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed'));
+    }
+  }
+});
+
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Ensure custom music directory exists
+const customMusicDir = path.join(__dirname, 'static/assets/custommusic');
+if (!fs.existsSync(customMusicDir)) {
+  fs.mkdirSync(customMusicDir, { recursive: true });
 }
 
 // Initialize database
@@ -1929,6 +1952,244 @@ app.post('/api/delete-account', (req, res) => {
   } catch (error) {
     console.error('Error deleting account:', error);
     res.status(500).json({ message: 'Failed to delete account' });
+  }
+});
+
+// Music API endpoints
+app.get('/api/music', (req, res) => {
+  const { deviceToken } = req.query;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const files = getMusicFiles(user.id);
+    res.json(files);
+  } catch (error) {
+    console.error('Error fetching music files:', error);
+    res.status(500).json({ message: 'Failed to fetch music files' });
+  }
+});
+
+app.post('/api/music/upload', musicUpload.single('musicFile'), async (req, res) => {
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'No music file provided' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Read the file to compute hash
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+    // Check if file with same hash already exists for this user
+    const existingFile = getMusicFileByHash(user.id, fileHash);
+    if (existingFile) {
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+      return res.status(409).json({
+        message: 'File already exists',
+        existingFile: existingFile
+      });
+    }
+
+    // Generate/ensure GPG key for user
+    const gpgKeyData = await ensureUserGPGKey(user.id);
+
+    // Sign the file content
+    const privateKey = await openpgp.readPrivateKey({ armoredKey: gpgKeyData.privateKey });
+    const signature = await openpgp.sign({
+      message: await openpgp.createMessage({ binary: fileBuffer }),
+      signingKeys: privateKey,
+      detached: true
+    });
+
+    // Move file to custommusic directory
+    const filename = req.file.originalname;
+    const filepath = `/assets/custommusic/${filename}`;
+    let finalPath = path.join(__dirname, 'static', 'assets', 'custommusic', filename);
+
+    // Ensure filename is unique
+    let counter = 1;
+    const nameParts = filename.split('.');
+    const ext = nameParts.pop();
+    const baseName = nameParts.join('.');
+    while (fs.existsSync(finalPath)) {
+      const newName = `${baseName}(${counter}).${ext}`;
+      finalPath = path.join(__dirname, 'static', 'assets', 'custommusic', newName);
+      filepath = `/assets/custommusic/${newName}`;
+      counter++;
+    }
+
+    fs.renameSync(req.file.path, finalPath);
+
+    // Save to database with signature
+    const fileId = addMusicFile(user.id, filename, filepath, fileHash, signature);
+
+    res.json({
+      id: fileId,
+      filename: filename,
+      filepath: filepath,
+      hash: fileHash,
+      signature: signature,
+      uploaded_at: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error uploading music file:', error);
+    res.status(500).json({ message: 'Failed to upload music file' });
+  }
+});
+
+app.delete('/api/music/:id', (req, res) => {
+  const { id } = req.params;
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Get file info before deleting
+    const files = getMusicFiles(user.id);
+    const file = files.find(f => f.id === parseInt(id));
+    if (!file) {
+      return res.status(404).json({ message: 'Music file not found' });
+    }
+
+    // Delete from database
+    deleteMusicFile(user.id, parseInt(id));
+
+    // Delete physical file
+    try {
+      const fullPath = path.join(__dirname, 'static', file.filepath.substring(1)); // Remove leading /
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    } catch (fileError) {
+      console.error('Error deleting physical file:', fileError);
+      // Continue even if file deletion fails
+    }
+
+    res.json({ message: 'Music file deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting music file:', error);
+    res.status(500).json({ message: 'Failed to delete music file' });
+  }
+});
+
+app.get('/api/music/queue', (req, res) => {
+  const { deviceToken } = req.query;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    const queue = getMusicQueue(user.id);
+    res.json(queue);
+  } catch (error) {
+    console.error('Error fetching music queue:', error);
+    res.status(500).json({ message: 'Failed to fetch music queue' });
+  }
+});
+
+app.post('/api/music/queue', (req, res) => {
+  const { deviceToken, musicFileId, position } = req.body;
+
+  if (!deviceToken || !musicFileId) {
+    return res.status(400).json({ message: 'Device token and music file ID required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    // Check if file exists and belongs to user
+    const files = getMusicFiles(user.id);
+    const file = files.find(f => f.id === parseInt(musicFileId));
+    if (!file) {
+      return res.status(404).json({ message: 'Music file not found' });
+    }
+
+    addToQueue(user.id, parseInt(musicFileId), position);
+
+    res.json({ message: 'Added to queue successfully' });
+  } catch (error) {
+    console.error('Error adding to queue:', error);
+    res.status(500).json({ message: 'Failed to add to queue' });
+  }
+});
+
+app.delete('/api/music/queue/:id', (req, res) => {
+  const { id } = req.params;
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    removeFromQueue(user.id, parseInt(id));
+
+    res.json({ message: 'Removed from queue successfully' });
+  } catch (error) {
+    console.error('Error removing from queue:', error);
+    res.status(500).json({ message: 'Failed to remove from queue' });
+  }
+});
+
+app.delete('/api/music/queue', (req, res) => {
+  const { deviceToken } = req.body;
+
+  if (!deviceToken) {
+    return res.status(400).json({ message: 'Device token required' });
+  }
+
+  try {
+    const user = getUserByDeviceToken(deviceToken);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid device token' });
+    }
+
+    clearMusicQueue(user.id);
+
+    res.json({ message: 'Queue cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing queue:', error);
+    res.status(500).json({ message: 'Failed to clear queue' });
   }
 });
 
