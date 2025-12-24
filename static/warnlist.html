@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warnlist Management</title>
+    <link rel="stylesheet" href="/assets/css/global.css?v=6">
+    <link rel="stylesheet" href="/assets/css/container.css?v=2">
+    <link rel="stylesheet" href="/assets/css/nav.css?v=01">
+    <style>
+        .warnlist-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .warnlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        .warnlist-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .warnlist-form input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+        
+        .warnlist-form button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .warnlist-form button.secondary {
+            background: var(--secondary-color);
+        }
+        
+        .warnlist-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .warnlist-table th,
+        .warnlist-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        
+        .warnlist-table th {
+            background: var(--header-bg);
+            font-weight: bold;
+        }
+        
+        .warnlist-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .warnlist-actions button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-edit {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-delete {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: var(--text-color);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .btn-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-group button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-cancel {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-save {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .bulk-actions {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .bulk-actions select {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body class="center">
+    <div id="particles-js">
+        <div class="f-nav"></div>
+        <div class="main">
+            <div class="warnlist-container">
+                <div class="warnlist-header">
+                    <h1>Domain Warnlist Management</h1>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-domains">0</div>
+                            <div class="stat-label">Total Domains</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="active-domains">0</div>
+                            <div class="stat-label">Active Warnings</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="blocked-today">0</div>
+                            <div class="stat-label">Blocked Today</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="warnlist-form">
+                    <input type="text" id="domain-input" placeholder="Enter domain (e.g., example.com)">
+                    <input type="text" id="warning-message-input" placeholder="Custom warning message (optional)">
+                    <button onclick="addDomain()">Add Domain</button>
+                    <button class="secondary" onclick="openBulkImport()">Bulk Import</button>
+                </div>
+                
+                <div class="bulk-actions">
+                    <select id="bulk-action">
+                        <option value="">Bulk Actions</option>
+                        <option value="activate">Activate Selected</option>
+                        <option value="deactivate">Deactivate Selected</option>
+                        <option value="delete">Delete Selected</option>
+                    </select>
+                    <button onclick="applyBulkAction()">Apply</button>
+                    <button class="secondary" onclick="exportWarnlist()">Export</button>
+                    <button class="secondary" onclick="importWarnlist()">Import</button>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search domains...">
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table class="warnlist-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all"></th>
+                                <th>Domain</th>
+                                <th>Warning Message</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="warnlist-table-body">
+                            <!-- Domains will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination">
+                    <button onclick="previousPage()" id="prev-btn">Previous</button>
+                    <span id="page-info">Page 1</span>
+                    <button onclick="nextPage()" id="next-btn">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Domain Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Edit Domain</h3>
+            <div class="form-group">
+                <label for="edit-domain">Domain:</label>
+                <input type="text" id="edit-domain" readonly>
+            </div>
+            <div class="form-group">
+                <label for="edit-message">Warning Message:</label>
+                <textarea id="edit-message" placeholder="Enter custom warning message"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit-status">Status:</label>
+                <select id="edit-status">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveDomain()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="./assets/mathematics/bundle.js?v=2025-04-15"></script>
+    <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
+    <script src="/assets/js/m1.js"></script>
+    <script src="/assets/js/s1.js"></script>
+    <script src="/assets/js/h1.js"></script>
+    
+    <script>
+        let currentEditId = null;
+        let domains = [];
+        let filteredDomains = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Check authentication
+        async function checkAuth() {
+            const deviceToken = localStorage.getItem('deviceToken');
+            if (!deviceToken) {
+                window.location.href = '/signin';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/validate-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceToken })
+                });
+
+                const data = await response.json();
+                if (!data.valid) {
+                    localStorage.removeItem('deviceToken');
+                    window.location.href = '/signin';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/signin';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadDomains();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('search-input').addEventListener('input', filterDomains);
+            document.getElementById('select-all').addEventListener('change', toggleSelectAll);
+        }
+
+        async function loadDomains() {
+            try {
+                const response = await fetch('/api/warnlist');
+                if (response.ok) {
+                    domains = await response.json();
+                    filteredDomains = [...domains];
+                    renderTable();
+                    updateStats();
+                } else {
+                    console.error('Failed to load domains');
+                }
+            } catch (error) {
+                console.error('Error loading domains:', error);
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('warnlist-table-body');
+            tbody.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageDomains = filteredDomains.slice(startIndex, endIndex);
+
+            if (pageDomains.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-color);">No domains found</td></tr>';
+                return;
+            }
+
+            pageDomains.forEach(domain => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" value="${domain.id}" class="domain-checkbox"></td>
+                    <td>${domain.domain}</td>
+                    <td>${domain.warning_message || 'Default warning'}</td>
+                    <td>
+                        <span class="status-badge ${domain.active ? 'status-active' : 'status-inactive'}">
+                            ${domain.active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>${new Date(domain.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <div class="warnlist-actions">
+                            <button class="btn-edit" onclick="editDomain(${domain.id})">Edit</button>
+                            <button class="btn-delete" onclick="deleteDomain(${domain.id})">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredDomains.length / itemsPerPage);
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prev-btn').disabled = currentPage === 1;
+            document.getElementById('next-btn').disabled = currentPage === totalPages;
+        }
+
+        function nextPage() {
+            if (currentPage * itemsPerPage < filteredDomains.length) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function filterDomains() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            filteredDomains = domains.filter(domain => 
+                domain.domain.toLowerCase().includes(searchTerm) ||
+                (domain.warning_message && domain.warning_message.toLowerCase().includes(searchTerm))
+            );
+            currentPage = 1;
+            renderTable();
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.domain-checkbox');
+            checkboxes.forEach(checkbox => checkbox.checked = selectAll.checked);
+        }
+
+        function getSelectedDomains() {
+            const checkboxes = document.querySelectorAll('.domain-checkbox:checked');
+            return Array.from(checkboxes).map(cb => parseInt(cb.value));
+        }
+
+        async function addDomain() {
+            const domainInput = document.getElementById('domain-input');
+            const messageInput = document.getElementById('warning-message-input');
+            
+            const domain = domainInput.value.trim();
+            const message = messageInput.value.trim();
+
+            if (!domain) {
+                alert('Please enter a domain');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/warnlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                    },
+                    body: JSON.stringify({
+                        domain: domain,
+                        warning_message: message || null
+                    })
+                });
+
+                if (response.ok) {
+                    domainInput.value = '';
+                    messageInput.value = '';
+                    loadDomains();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.message);
+                }
+            } catch (error) {
+                console.error('Error adding domain:', error);
+                alert('Error adding domain');
+            }
+        }
+
+        function editDomain(id) {
+            const domain = domains.find(d => d.id === id);
+            if (!domain) return;
+
+            currentEditId = id;
+            document.getElementById('edit-domain').value = domain.domain;
+            document.getElementById('edit-message').value = domain.warning_message || '';
+            document.getElementById('edit-status').value = domain.active ? '1' : '0';
+            document.getElementById('edit-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+            currentEditId = null;
+        }
+
+        async function saveDomain() {
+            if (!currentEditId) return;
+
+            const message = document.getElementById('edit-message').value;
+            const active = document.getElementById('edit-status').value === '1';
+
+            try {
+                const response = await fetch(`/api/warnlist/${currentEditId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                    },
+                    body: JSON.stringify({
+                        warning_message: message || null,
+                        active: active
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    loadDomains();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.message);
+                }
+            } catch (error) {
+                console.error('Error saving domain:', error);
+                alert('Error saving domain');
+            }
+        }
+
+        async function deleteDomain(id) {
+            if (!confirm('Are you sure you want to delete this domain?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/warnlist/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadDomains();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.message);
+                }
+            } catch (error) {
+                console.error('Error deleting domain:', error);
+                alert('Error deleting domain');
+            }
+        }
+
+        async function applyBulkAction() {
+            const selectedDomains = getSelectedDomains();
+            if (selectedDomains.length === 0) {
+                alert('Please select domains to perform bulk action');
+                return;
+            }
+
+            const action = document.getElementById('bulk-action').value;
+            if (!action) {
+                alert('Please select a bulk action');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/warnlist/bulk', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        domain_ids: selectedDomains
+                    })
+                });
+
+                if (response.ok) {
+                    loadDomains();
+                    document.getElementById('select-all').checked = false;
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.message);
+                }
+            } catch (error) {
+                console.error('Error applying bulk action:', error);
+                alert('Error applying bulk action');
+            }
+        }
+
+        function exportWarnlist() {
+            const dataStr = JSON.stringify(domains, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'warnlist_export.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importWarnlist() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (!Array.isArray(data)) {
+                            alert('Invalid file format');
+                            return;
+                        }
+
+                        const response = await fetch('/api/warnlist/import', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                            },
+                            body: JSON.stringify({ domains: data })
+                        });
+
+                        if (response.ok) {
+                            loadDomains();
+                            alert('Domains imported successfully');
+                        } else {
+                            const error = await response.json();
+                            alert('Error: ' + error.message);
+                        }
+                    } catch (error) {
+                        console.error('Error importing domains:', error);
+                        alert('Error importing domains');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function openBulkImport() {
+            const domains = prompt('Enter domains (one per line):');
+            if (!domains) return;
+
+            const domainList = domains.split('\n')
+                .map(d => d.trim())
+                .filter(d => d.length > 0);
+
+            if (domainList.length === 0) {
+                alert('No valid domains found');
+                return;
+            }
+
+            // Add domains one by one
+            domainList.forEach(async (domain) => {
+                try {
+                    await fetch('/api/warnlist', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                        },
+                        body: JSON.stringify({ domain: domain })
+                    });
+                } catch (error) {
+                    console.error('Error adding domain:', domain, error);
+                }
+            });
+
+            setTimeout(() => {
+                loadDomains();
+                alert('Domains added successfully');
+            }, 1000);
+        }
+
+        function updateStats() {
+            const totalDomains = domains.length;
+            const activeDomains = domains.filter(d => d.active).length;
+            
+            document.getElementById('total-domains').textContent = totalDomains;
+            document.getElementById('active-domains').textContent = activeDomains;
+            
+            // For blocked today, we would need to track this in the backend
+            // For now, we'll just show 0
+            document.getElementById('blocked-today').textContent = '0';
+        }
+    </script>
+</body>
+</html>

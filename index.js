@@ -106,6 +106,14 @@ if (!fs.existsSync(customMusicDir)) {
 initDB();
 console.log(chalk.green("📊 Database initialized"));
 
+// Initialize warnlist table
+try {
+  createWarnlistTable();
+  console.log(chalk.green("🛡️ Warnlist table initialized"));
+} catch (error) {
+  console.error(chalk.red("Failed to initialize warnlist table:"), error);
+}
+
 // Migrate existing plain text passwords to encrypted
 const migrationDb = new Database(path.join(__dirname, 'users.db'));
 const users = migrationDb.prepare('SELECT id, password FROM users').all();
@@ -2286,6 +2294,197 @@ app.get('/api/metrics', adminAuth, (req, res) => {
     activeUsers: activeSessions.length,
     totalRequests: trafficHistory.reduce((sum, entry) => sum + entry.requests, 0)
   });
+});
+
+// Warnlist API endpoints
+app.get('/api/warnlist', adminAuth, (req, res) => {
+  try {
+    const warnlist = getWarnlist();
+    res.json(warnlist);
+  } catch (error) {
+    console.error('Error fetching warnlist:', error);
+    res.status(500).json({ message: 'Failed to fetch warnlist' });
+  }
+});
+
+app.post('/api/warnlist', adminAuth, (req, res) => {
+  const { domain, warning_message } = req.body;
+
+  if (!domain) {
+    return res.status(400).json({ message: 'Domain is required' });
+  }
+
+  try {
+    const domainId = addDomainToWarnlist(domain, warning_message);
+    res.json({ message: 'Domain added to warnlist successfully', id: domainId });
+  } catch (error) {
+    console.error('Error adding domain to warnlist:', error);
+    res.status(500).json({ message: 'Failed to add domain to warnlist' });
+  }
+});
+
+app.put('/api/warnlist/:id', adminAuth, (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  try {
+    updateDomainInWarnlist(parseInt(id), updates);
+    res.json({ message: 'Domain updated successfully' });
+  } catch (error) {
+    console.error('Error updating domain in warnlist:', error);
+    res.status(500).json({ message: 'Failed to update domain' });
+  }
+});
+
+app.delete('/api/warnlist/:id', adminAuth, (req, res) => {
+  const { id } = req.params;
+
+  try {
+    deleteDomainFromWarnlist(parseInt(id));
+    res.json({ message: 'Domain removed from warnlist successfully' });
+  } catch (error) {
+    console.error('Error removing domain from warnlist:', error);
+    res.status(500).json({ message: 'Failed to remove domain from warnlist' });
+  }
+});
+
+app.post('/api/warnlist/bulk', adminAuth, (req, res) => {
+  const { action, domain_ids } = req.body;
+
+  if (!action || !domain_ids || !Array.isArray(domain_ids)) {
+    return res.status(400).json({ message: 'Action and domain_ids are required' });
+  }
+
+  try {
+    bulkUpdateWarnlist(action, domain_ids);
+    res.json({ message: 'Bulk operation completed successfully' });
+  } catch (error) {
+    console.error('Error performing bulk operation:', error);
+    res.status(500).json({ message: 'Failed to perform bulk operation' });
+  }
+});
+
+app.post('/api/warnlist/import', adminAuth, (req, res) => {
+  const { domains } = req.body;
+
+  if (!domains || !Array.isArray(domains)) {
+    return res.status(400).json({ message: 'Domains array is required' });
+  }
+
+  try {
+    const addedCount = importWarnlist(domains);
+    res.json({ message: `Successfully imported ${addedCount} domains` });
+  } catch (error) {
+    console.error('Error importing domains:', error);
+    res.status(500).json({ message: 'Failed to import domains' });
+  }
+});
+
+// Domain checking middleware
+app.use((req, res, next) => {
+  // Only check domains for proxy requests (bare server routes)
+  if (bareServer.shouldRoute(req)) {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const domain = url.hostname;
+
+    try {
+      const domainCheck = isDomainWarned(domain);
+      if (domainCheck.isWarned) {
+        // Serve warning page
+        res.setHeader('Content-Type', 'text/html');
+        res.status(403).send(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Access Denied</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background-color: #f8f9fa;
+                color: #333;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+              }
+              .container {
+                background: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                text-align: center;
+                max-width: 600px;
+              }
+              .warning-icon {
+                font-size: 48px;
+                color: #dc3545;
+                margin-bottom: 20px;
+              }
+              h1 {
+                color: #dc3545;
+                margin-bottom: 20px;
+              }
+              p {
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 30px;
+              }
+              .domain-name {
+                font-family: monospace;
+                background: #f8f9fa;
+                padding: 4px 8px;
+                border-radius: 4px;
+                border: 1px solid #dee2e6;
+                display: inline-block;
+                margin: 10px 0;
+              }
+              .btn {
+                background-color: #007bff;
+                color: white;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+              }
+              .btn:hover {
+                background-color: #0056b3;
+              }
+              .footer {
+                margin-top: 30px;
+                font-size: 12px;
+                color: #6c757d;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="warning-icon">⚠️</div>
+              <h1>Access Denied</h1>
+              <p><strong>${domainCheck.warningMessage}</strong></p>
+              <div class="domain-name">${domain}</div>
+              <p>If you believe this is an error, please contact the administrator.</p>
+              <a href="/" class="btn">Return to Home</a>
+              <div class="footer">
+                This warning was triggered by the domain filtering system.
+              </div>
+            </div>
+          </body>
+          </html>
+        `);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking domain:', error);
+      // Continue with request if there's an error checking the domain
+    }
+  }
+  next();
 });
 
 app.use((req, res, next) => {

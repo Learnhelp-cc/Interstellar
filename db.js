@@ -769,3 +769,178 @@ export function decryptAES128(encryptedBase64, keyBase64) {
 
   return decrypted;
 }
+
+// Warnlist functions
+export function createWarnlistTable() {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS warnlist (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      domain TEXT UNIQUE NOT NULL,
+      warning_message TEXT,
+      active BOOLEAN DEFAULT TRUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
+export function addDomainToWarnlist(domain, warningMessage = null) {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  const stmt = db.prepare('INSERT INTO warnlist (domain, warning_message) VALUES (?, ?)');
+  try {
+    const result = stmt.run(domain.toLowerCase(), warningMessage);
+    return result.lastInsertRowid;
+  } catch (error) {
+    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      throw new Error('Domain already exists in warnlist');
+    }
+    throw error;
+  }
+}
+
+export function getWarnlist() {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  const stmt = db.prepare('SELECT * FROM warnlist ORDER BY created_at DESC');
+  return stmt.all();
+}
+
+export function getActiveWarnlist() {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  const stmt = db.prepare('SELECT * FROM warnlist WHERE active = 1 ORDER BY created_at DESC');
+  return stmt.all();
+}
+
+export function getDomainFromWarnlist(domain) {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  const stmt = db.prepare('SELECT * FROM warnlist WHERE domain = ?');
+  return stmt.get(domain.toLowerCase());
+}
+
+export function updateDomainInWarnlist(id, updates) {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  let query = 'UPDATE warnlist SET ';
+  const params = [];
+  const values = [];
+  
+  if (updates.warning_message !== undefined) {
+    query += 'warning_message = ?, ';
+    params.push(updates.warning_message);
+  }
+  
+  if (updates.active !== undefined) {
+    query += 'active = ?, ';
+    params.push(updates.active ? 1 : 0);
+  }
+  
+  // Remove trailing comma and space
+  query = query.slice(0, -2);
+  query += ' WHERE id = ?';
+  params.push(id);
+  
+  const stmt = db.prepare(query);
+  return stmt.run(...params);
+}
+
+export function deleteDomainFromWarnlist(id) {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  const stmt = db.prepare('DELETE FROM warnlist WHERE id = ?');
+  return stmt.run(id);
+}
+
+export function bulkUpdateWarnlist(action, domainIds) {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  let query = '';
+  if (action === 'activate') {
+    query = 'UPDATE warnlist SET active = 1 WHERE id IN (';
+  } else if (action === 'deactivate') {
+    query = 'UPDATE warnlist SET active = 0 WHERE id IN (';
+  } else if (action === 'delete') {
+    query = 'DELETE FROM warnlist WHERE id IN (';
+  } else {
+    throw new Error('Invalid bulk action');
+  }
+  
+  const placeholders = domainIds.map(() => '?').join(',');
+  query += placeholders + ')';
+  
+  const stmt = db.prepare(query);
+  return stmt.run(...domainIds);
+}
+
+export function importWarnlist(domains) {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  const insertStmt = db.prepare('INSERT OR IGNORE INTO warnlist (domain, warning_message) VALUES (?, ?)');
+  
+  let addedCount = 0;
+  for (const domain of domains) {
+    if (domain.domain) {
+      try {
+        insertStmt.run(domain.domain.toLowerCase(), domain.warning_message || null);
+        addedCount++;
+      } catch (error) {
+        // Skip duplicates
+      }
+    }
+  }
+  
+  return addedCount;
+}
+
+export function isDomainWarned(domain) {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  
+  // Check exact domain match
+  const stmt = db.prepare('SELECT warning_message FROM warnlist WHERE domain = ? AND active = 1');
+  const result = stmt.get(domain.toLowerCase());
+  
+  if (result) {
+    return {
+      isWarned: true,
+      warningMessage: result.warning_message || 'This website is flagged by the Webmaster! Visiting this is not confirmed to be safe!'
+    };
+  }
+  
+  // Check subdomain matches (e.g., if example.com is blocked, block sub.example.com)
+  const domainParts = domain.toLowerCase().split('.');
+  for (let i = 0; i < domainParts.length - 1; i++) {
+    const subdomain = domainParts.slice(i).join('.');
+    const subResult = stmt.get(subdomain);
+    if (subResult) {
+      return {
+        isWarned: true,
+        warningMessage: subResult.warning_message || 'This website is flagged by the Webmaster! Visiting this is not confirmed to be safe!'
+      };
+    }
+  }
+  
+  return { isWarned: false };
+}
