@@ -20,7 +20,7 @@ import multer from 'multer';
 import * as openpgp from 'openpgp';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb, addMusicFile, getMusicFiles, getMusicFileByHash, deleteMusicFile, addToQueue, getMusicQueue, removeFromQueue, clearMusicQueue, ensureUserGPGKey } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb, addMusicFile, getMusicFiles, getMusicFileByHash, deleteMusicFile, addToQueue, getMusicQueue, removeFromQueue, clearMusicQueue, ensureUserGPGKey, createWarnlistTable } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
