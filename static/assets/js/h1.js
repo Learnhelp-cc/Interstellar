@@ -56,6 +56,10 @@ document.addEventListener("DOMContentLoaded", event => {
     window.localStorage.setItem("particles", "true");
   }
   if (window.localStorage.getItem("particles") === "true" && window.location.pathname !== '/d') {
+    // Check if it's December (month 11) or January (month 0) for Christmas season
+    const currentMonth = new Date().getMonth();
+    const isChristmasSeason = currentMonth === 11 || currentMonth === 0;
+    
     const particlesConfig = {
       particles: {
         number: {
@@ -112,7 +116,7 @@ document.addEventListener("DOMContentLoaded", event => {
         },
         move: {
           enable: true,
-          speed: 20,
+          speed: isChristmasSeason ? 5 : 20, // Slow down for snow effect during Christmas season
           direction: "bottom",
           random: false,
           straight: true,
@@ -167,122 +171,6 @@ document.addEventListener("DOMContentLoaded", event => {
       retina_detect: true,
     };
     particlesJS("particles-js", particlesConfig);
-    
-    // Add rain bouncing off search bar functionality
-    setTimeout(() => {
-      const pJS = window.pJSDom && window.pJSDom[0] ? window.pJSDom[0].pJS : null;
-      if (pJS) {
-        // Store original update function
-        const originalUpdate = pJS.fn.particlesUpdate;
-        
-        // Create splash particles array
-        const splashParticles = [];
-        
-        // Override particles update to add collision detection
-        pJS.fn.particlesUpdate = function() {
-          // Call original update
-          originalUpdate.call(this);
-          
-          // Get search bar element and its position
-          const searchContainer = document.querySelector('.search-container');
-          const searchBar = document.querySelector('.truncate');
-          if (!searchContainer || !searchBar) return;
-          
-          const containerRect = searchContainer.getBoundingClientRect();
-          const rect = searchBar.getBoundingClientRect();
-          const searchBarTop = rect.top;
-          const searchBarBottom = rect.bottom;
-          const searchBarLeft = rect.left;
-          const searchBarRight = rect.right;
-          
-          // Check each particle for collision with search bar
-          for (let i = 0; i < pJS.particles.array.length; i++) {
-            const p = pJS.particles.array[i];
-            
-            // Check if particle is within horizontal bounds of search bar
-            if (p.x >= searchBarLeft && p.x <= searchBarRight) {
-              // Check if particle is hitting the top of the search bar
-              if (p.y >= searchBarTop - 2 && p.y <= searchBarTop + 2) {
-                // Create splash effect
-                createSplashEffect(p.x, p.y);
-                
-                // Bounce the particle
-                p.vy = Math.abs(p.vy) * 0.8; // Reverse direction and reduce speed
-                p.y = searchBarTop - 2; // Position just above the search bar
-                
-                // Add some horizontal spread for realism
-                p.vx += (Math.random() - 0.5) * 2;
-              }
-            }
-          }
-          
-          // Update and draw splash particles
-          updateSplashParticles();
-        };
-        
-        // Function to create splash effect
-        function createSplashEffect(x, y) {
-          const splashCount = 8; // Number of splash particles
-          for (let i = 0; i < splashCount; i++) {
-            const angle = (Math.PI * 2 * i) / splashCount;
-            const speed = Math.random() * 2 + 1;
-            
-            splashParticles.push({
-              x: x,
-              y: y,
-              vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed - 2, // Initial upward velocity
-              life: 1.0,
-              size: Math.random() * 2 + 1
-            });
-          }
-        }
-        
-        // Function to update splash particles
-        function updateSplashParticles() {
-          const canvas = document.querySelector('.particles-js-canvas-el');
-          if (!canvas) return;
-          
-          const ctx = canvas.getContext('2d');
-          const rect = canvas.getBoundingClientRect();
-          
-          // Draw splash particles
-          for (let i = splashParticles.length - 1; i >= 0; i--) {
-            const sp = splashParticles[i];
-            
-            // Update position
-            sp.x += sp.vx;
-            sp.y += sp.vy;
-            sp.vy += 0.1; // Gravity
-            sp.life -= 0.02; // Fade out
-            
-            // Draw particle
-            ctx.save();
-            ctx.globalAlpha = sp.life;
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(sp.x - rect.left, sp.y - rect.top, sp.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            
-            // Remove dead particles
-            if (sp.life <= 0) {
-              splashParticles.splice(i, 1);
-            }
-          }
-        }
-        
-        // Override the draw function to ensure splash particles are drawn
-        const originalDraw = pJS.fn.draw;
-        pJS.fn.draw = function() {
-          // Call original draw
-          originalDraw.call(this);
-          
-          // Draw splash particles on top
-          updateSplashParticles();
-        };
-      }
-    }, 1000);
   }
 });
 // Splash texts
@@ -326,21 +214,50 @@ const welcomeMessages = [
   "أهلا وسهلا",     // Arabic
   "მოგესალმებით",   // Georgian
   "Bem-vindo",      // Portuguese
-  "Dobrodošli",     // Croatian
+  "Dobrodošli",     // Croatian 
   "Vitajte"         // Slovakian
+];
+
+// Merry Christmas messages in different languages
+const christmasMessages = [
+  "Merry Christmas",        // English
+  "Feliz Navidad",          // Spanish
+  "Vrolijk Kerstfeest",     // Dutch
+  "Frohe Weihnachten",      // German
+  "Joyeux Noël",            // French
+  "God Jul",                // Swedish
+  "メリークリスマス",       // Japanese
+  "메리 크리스마스",        // Korean
+  "圣诞快乐",               // Chinese
+  "Счастливого Рождества",  // Russian
+  "عيد ميلاد مجيد",         // Arabic
+  "საუკეთესო შობა",         // Georgian
+  "Feliz Natal",            // Portuguese
+  "Sretni Božić",           // Croatian
+  "Veselé Vianoce"          // Slovakian
 ];
 
 let currentMessageIndex = 0;
 const welcomeText = document.getElementById("welcome-text");
 
 function rotateWelcomeMessage() {
+  // Check if it's December (month 11) or January (month 0)
+  const currentMonth = new Date().getMonth();
+  const isChristmasSeason = currentMonth === 11 || currentMonth === 0;
+  
   // Fade out
   welcomeText.classList.add("fade-out");
 
   setTimeout(() => {
-    // Change text
-    currentMessageIndex = (currentMessageIndex + 1) % welcomeMessages.length;
-    welcomeText.textContent = welcomeMessages[currentMessageIndex];
+    if (isChristmasSeason) {
+      // Cycle through Merry Christmas messages in different languages
+      welcomeText.textContent = christmasMessages[currentMessageIndex];
+      currentMessageIndex = (currentMessageIndex + 1) % christmasMessages.length;
+    } else {
+      // Cycle through normal welcome messages in different languages
+      welcomeText.textContent = welcomeMessages[currentMessageIndex];
+      currentMessageIndex = (currentMessageIndex + 1) % welcomeMessages.length;
+    }
 
     // Fade in
     welcomeText.classList.remove("fade-out");
