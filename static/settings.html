@@ -23,8 +23,8 @@
     <div class="main">
     <div class="settings-container">
       <div class="settings-card">
-        <h3>About:Blank</h3>
-        <p>
+        <h3 data-translate="settings.aboutBlank">About:Blank</h3>
+        <p data-translate="settings.aboutBlankDesc">
           Cloak the site in an about:blank page and toggle about:blank on
           startup (enabled by default)
         </p>
@@ -35,25 +35,25 @@
               <span class="slider-round"></span>
             </label>
           </div>
-          <button onclick="AB()" class="key-button">Open Popup</button>
+          <button onclick="AB()" class="key-button" data-translate="settings.openPopup">Open Popup</button>
         </div>
       </div>
       <div class="settings-card">
-        <h3>Set Panic Key</h3>
-        <p>
+        <h3 data-translate="settings.setPanicKey">Set Panic Key</h3>
+        <p data-translate="settings.panicKeyDesc">
           Quick open another site with one press. Used for redirects when
           about:blank is opened. For multiple key strokes separate them with a
           comma. Ex. "A,B,C"
         </p>
         <input type="text" id="eventKeyInput" placeholder="Panic Keys (comma separated)" class="key-form" />
         <input class="key-form" placeholder="Panic Link" type="text" id="linkInput" value />
-        <button class="key-button" value="Save" onclick="saveEventKey()">
+        <button class="key-button" value="Save" onclick="saveEventKey()" data-translate="settings.save">
           Save
         </button>
       </div>
       <div class="settings-card">
-        <h3>&#84;&#97;&#98;&#32;&#67;&#108;&#111;&#97;&#107;&#101;&#114;</h3>
-        <p>Change the title and icon of the page.</p>
+        <h3 data-translate="settings.tabCloaker">&#84;&#97;&#98;&#32;&#67;&#108;&#111;&#97;&#107;&#101;&#114;</h3>
+        <p data-translate="settings.tabCloakerDesc">Change the title and icon of the page.</p>
         <select id="dropdown" onchange="handleDropdownChange(this)">
           <option value="Classroom">Default</option>
           <option value="Clever">Clever</option>
@@ -139,24 +139,24 @@
           <option value="Thesaurus">Thesaurus.com</option>
         </select>
         <div id="buttonLayer">
-          <button class="key-button" value="Save" onclick="CustomIcon(); CustomName(); redirectToMainDomain();">
+          <button class="key-button" value="Save" onclick="CustomIcon(); CustomName(); redirectToMainDomain();" data-translate="settings.save">
             Save
           </button>
-          <button class="key-button" value="Reset" onclick="ResetCustomCloak(); redirectToMainDomain();">
+          <button class="key-button" value="Reset" onclick="ResetCustomCloak(); redirectToMainDomain();" data-translate="settings.resetCloak">
             Reset Cloak
           </button>
         </div>
       </div>
       <div class="settings-card">
-        <h3>Set Background Image</h3>
-        <p>Change the site's background image.</p>
+        <h3 data-translate="settings.setBackgroundImage">Set Background Image</h3>
+        <p data-translate="settings.backgroundImageDesc">Change the site's background image.</p>
         <input class="key-form" type="text" id="background-input" placeholder="Enter image URL" />
-        <button class="key-button" id="save-button">Save</button>
+        <button class="key-button" id="save-button" data-translate="settings.save">Save</button>
         <button class="key-button" id="reset-button">Reset</button>
       </div>
       <div class="settings-card">
-        <h3>Search Engine</h3>
-        <p>Change the search engine when searching.</p>
+        <h3 data-translate="settings.searchEngine">Search Engine</h3>
+        <p data-translate="settings.searchEngineDesc">Change the search engine when searching.</p>
         <select title="engine" id="engine" onchange="EngineChange(this)">
           <option value="Google">Google (Default)</option>
           <option value="Bing">Bing</option>
@@ -167,13 +167,13 @@
           <option value="Ecosia">Ecosia</option>
         </select>
         <input class="key-form" type="text" id="engine-form" placeholder="Change Search Engine" name="engine" />
-        <button class="key-button" value="Save" onclick="SaveEngine();">
+        <button class="key-button" value="Save" onclick="SaveEngine();" data-translate="settings.save">
           Save
         </button>
       </div>
       <div class="settings-card">
-        <h3>Choose your <an>Pro</an>xy</h3>
-        <p>
+        <h3 data-translate="settings.chooseProxy">Choose your <an>Pro</an>xy</h3>
+        <p data-translate="settings.proxyDesc">
           Ultra<an>vio</an>let is the main <an>pro</an>xy, but Dynamic is
           faster and supports more sites. (Dynamic is still in beta, so expect
           some bugs.)
@@ -184,8 +184,8 @@
         </select>
       </div>
       <div class="settings-card">
-        <h3>Particles</h3>
-        <p>
+        <h3 data-translate="settings.particles">Particles</h3>
+        <p data-translate="settings.particlesDesc">
           Add the particles that are from the previous version to the new
           site.
         </p>
@@ -195,45 +195,56 @@
         </label>
       </div>
       <div class="settings-card">
-        <h3>Save Data Management</h3>
-        <p>Export your Interstellar data on this site and import it on another site.
+        <h3 data-translate="settings.saveDataManagement">Save Data Management</h3>
+        <p data-translate="settings.saveDataDesc">Export your Interstellar data on this site and import it on another site.
           This is useful because this site might be blocked in the future,
           but you don't want to lose your save data.
         </p>
         <p id="warning">Importing a save file will overwrite your current saves!</p>
-        <button class="key-button" value="Export" onclick="exportSaveData();">Export Save</button>
-        <button class="key-button" value="Import" onclick="importSaveData();">Import Save</button>
+        <button class="key-button" value="Export" onclick="exportSaveData();" data-translate="settings.exportSave">Export Save</button>
+        <button class="key-button" value="Import" onclick="importSaveData();" data-translate="settings.importSave">Import Save</button>
       </div>
       <div class="settings-card">
-        <h3>Music Queue</h3>
-        <p>Manage your custom music files and queue.</p>
+        <h3 data-translate="settings.musicQueue">Music Queue</h3>
+        <p data-translate="settings.musicQueueDesc">Manage your custom music files and queue.</p>
         <div id="music-settings">
           <div id="music-upload-section">
             <input type="file" id="music-file-input" accept="audio/*" style="display: none;">
-            <button class="key-button" onclick="document.getElementById('music-file-input').click()">Upload Music</button>
+            <button class="key-button" onclick="document.getElementById('music-file-input').click()" data-translate="settings.uploadMusic">Upload Music</button>
           </div>
           <div id="music-files-list">
-            <h4>Your Music Files:</h4>
+            <h4 data-translate="settings.yourMusicFiles">Your Music Files:</h4>
             <div id="music-files-container"></div>
           </div>
           <div id="music-queue-section">
-            <h4>Music Queue:</h4>
-            <button class="key-button" onclick="clearMusicQueue()">Clear Queue</button>
+            <h4 data-translate="settings.musicQueueTitle">Music Queue:</h4>
+            <button class="key-button" onclick="clearMusicQueue()" data-translate="settings.clearQueue">Clear Queue</button>
             <div id="music-queue-container"></div>
           </div>
         </div>
       </div>
       <div class="settings-card">
-        <h3>Information</h3>
+        <h3 data-translate="settings.language">Language</h3>
+        <p data-translate="settings.languageDesc">Select your preferred language for the interface.</p>
+        <select id="language-selector">
+          <option value="en">English</option>
+          <option value="es">Español (Spanish)</option>
+          <option value="nl">Nederlands (Dutch)</option>
+          <option value="de">Deutsch (German)</option>
+          <option value="fr">Français (French)</option>
+        </select>
+      </div>
+      <div class="settings-card">
+        <h3 data-translate="settings.information">Information</h3>
         <p id="version-info">Version: Loading...</p>
         <p id="last-updated">Last Updated: Loading...</p>
         <p>
-          Questions?
+          <span data-translate="settings.questions">Questions?</span>
           email us at
           <a href="mailto:webmaster@ilikepancakes.ink">webmaster</a>, or
-          <a href="https://docs.gointerstellar.app/faq">check our FAQ</a>!
-        <p>full credit to the original contributors!</p>
-        <a href="https://ilikepancakes.ink">check out my website</a>
+          <a href="https://docs.gointerstellar.app/faq" data-translate="settings.checkFaq">check our FAQ</a>!
+        <p data-translate="settings.credits">full credit to the original contributors!</p>
+        <a href="https://ilikepancakes.ink" data-translate="settings.website">check out my website</a>
         </p>
       </div>
     </div>

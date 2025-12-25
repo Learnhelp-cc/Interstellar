@@ -214,8 +214,17 @@ const welcomeMessages = [
   "أهلا وسهلا",     // Arabic
   "მოგესალმებით",   // Georgian
   "Bem-vindo",      // Portuguese
-  "Dobrodošli",     // Croatian 
-  "Vitajte"         // Slovakian
+  "Dobrodošli",     // Croatian
+  "Vitajte",        // Slovakian
+  "Benvenuto",      // Italian
+  "Καλώς ήρθατε",   // Greek
+  "स्वागतम्",       // Nepali
+  "ברוך הבא",       // Hebrew
+  "Sugeng rawuh",   // Javanese
+  "Chào mừng",      // Vietnamese
+  "A jaɓɓorgo",     // Fulfulde
+  "Ir ka koy",      // Zarma
+  "Marhaban"        // Tamasheq
 ];
 
 // Merry Christmas messages in different languages
@@ -234,7 +243,16 @@ const christmasMessages = [
   "საუკეთესო შობა",         // Georgian
   "Feliz Natal",            // Portuguese
   "Sretni Božić",           // Croatian
-  "Veselé Vianoce"          // Slovakian
+  "Veselé Vianoce",         // Slovakian
+  "Buon Natale",            // Italian
+  "Καλά Χριστούγεννα",     // Greek
+  "शुभ क्रिसमस",           // Nepali
+  "חג מולד שמח",            // Hebrew
+  "Sugeng Natal",           // Javanese
+  "Chúc mừng Giáng sinh",   // Vietnamese
+  "Kirismasu njoddi",       // Fulfulde
+  "Ir ka koy Kirismasu",    // Zarma
+  "Marhaban Kirismasu"      // Tamasheq
 ];
 
 let currentMessageIndex = 0;

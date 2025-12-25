@@ -649,6 +649,90 @@ async function clearMusicQueue() {
   }
 }
 
+// Language switching functionality
+let translations = {};
+
+async function loadTranslations() {
+  try {
+    const response = await fetch('/assets/json/translations.json');
+    translations = await response.json();
+  } catch (error) {
+    console.error('Failed to load translations:', error);
+  }
+}
+
+function applyTranslations(lang) {
+  if (!translations[lang]) return;
+
+  const trans = translations[lang];
+
+  // Settings page translations
+  if (window.location.pathname.includes('settings')) {
+    // Use data attributes for translatable elements
+    document.querySelectorAll('[data-translate]').forEach(el => {
+      const key = el.getAttribute('data-translate');
+      const keys = key.split('.');
+      let value = trans;
+      for (const k of keys) {
+        value = value?.[k];
+      }
+      if (value) {
+        if (el.tagName === 'INPUT' && el.type === 'text') {
+          el.placeholder = value;
+        } else {
+          el.textContent = value;
+        }
+      }
+    });
+
+    // Specific elements
+    document.getElementById('eventKeyInput')?.setAttribute('placeholder', trans.settings.panicKeysPlaceholder);
+    document.getElementById('linkInput')?.setAttribute('placeholder', trans.settings.panicLinkPlaceholder);
+    document.getElementById('background-input')?.setAttribute('placeholder', trans.settings.enterImageUrl);
+    document.getElementById('engine-form')?.setAttribute('placeholder', trans.settings.changeSearchEngine);
+    document.getElementById('warning')?.textContent = trans.settings.importWarning;
+  }
+
+  // Index page translations
+  if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+    document.getElementById('input')?.setAttribute('placeholder', trans.index.searchPlaceholder);
+    document.querySelector('button[title*="View Search History"]')?.setAttribute('title', trans.index.viewSearchHistory);
+    const nowPlayingSpan = document.querySelector('span[id*="song-title"]')?.parentElement;
+    if (nowPlayingSpan) {
+      nowPlayingSpan.firstChild.textContent = trans.index.nowPlaying + ': ';
+    }
+  }
+
+  // Store selected language
+  localStorage.setItem('selectedLanguage', lang);
+}
+
+function initLanguageSelector() {
+  const selector = document.getElementById('language-selector');
+  if (selector) {
+    // Set current language
+    const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+    selector.value = currentLang;
+
+    // Apply current translations
+    applyTranslations(currentLang);
+
+    // Handle language change
+    selector.addEventListener('change', (e) => {
+      const selectedLang = e.target.value;
+      applyTranslations(selectedLang);
+      // Reload page to apply changes fully
+      setTimeout(() => window.location.reload(), 100);
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadTranslations().then(() => {
+    initLanguageSelector();
+  });
+});
+
 function playMusic(filepath) {
   // This would need to be implemented based on how music playing is handled in the app
   // For now, just log it
