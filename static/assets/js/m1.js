@@ -383,19 +383,59 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Function to change wallpaper randomly
-  function changeWallpaper() {
-    const backgroundImages = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg'];
-    const lastBackground = localStorage.getItem("lastBackgroundImage");
-    let randomImage;
+  async function changeWallpaper() {
+    try {
+      // Get list of all image files in the backgrounds folder
+      const imageFiles = [
+        '0EFA789D-960B-486C-A0BA-42FB40556E73_1_102_o.jpeg',
+        '15245569-3A7B-4BF8-A139-B4B322901778_1_105_c.jpeg',
+        '152480CD-2B33-4A34-BF4D-E6EFB942DDF4_1_102_o.jpeg',
+        '2A79196D-CD3D-4F25-8F84-B90021260309_1_102_o.jpeg',
+        '4751ADDF-3805-4823-B49E-C87E9759201B_1_102_o.jpeg',
+        '6AB6A75E-A5EB-49CC-BC94-2015EBC62D39_4_5005_c.jpeg',
+        '7B120E31-845E-4F40-9135-835190405C4E_1_102_o.jpeg',
+        '861A919D-1F91-480F-8272-47DFB0AAAD15_1_102_o.jpeg',
+        'A54B1BEE-6D37-4913-BBCB-0F85161C211C_1_102_o.jpeg',
+        'A6B18EF6-A72C-4418-AC8F-B27C4E832CFE_1_102_o.jpeg',
+        'AA47DBCE-9745-4756-AF2D-C7A9436BD60D_1_102_a.jpeg',
+        'C34C1581-4C18-4C64-B3C7-34FA02CC4059_1_102_o.jpeg',
+        'CCEF5AD7-D0A8-4A55-958F-7B9950969F10_1_102_o.jpeg',
+        'CF626C22-1ADA-408B-A308-8FBA2A5D9B26_1_102_o.jpeg',
+        'E2709FB2-1F9D-4AB3-B3F5-A82F71BBD92F_1_102_o.jpeg',
+        'E33D4D02-3F69-4089-AB95-45ADC53800C1_1_105_c.jpeg',
+        'E94A4093-19E5-4895-8B28-B1600B0DA2D1_1_102_o.jpeg',
+        'F3721EB5-F463-40F3-BB73-400A886EEA4D_1_102_o.jpeg',
+        'FDBB980D-C10A-413D-B7F1-CDAF8D3A9837_1_102_a.jpeg',
+        '1CE7C2EF-3B80-408D-813A-2DC09D5DED0A_1_105_c.jpeg'
+      ];
+      
+      const lastBackground = localStorage.getItem("lastBackgroundImage");
+      let randomImage;
+      
+      do {
+        randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+      } while (randomImage === lastBackground && imageFiles.length > 1);
 
-    do {
-      randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
-    } while (randomImage === lastBackground && backgroundImages.length > 1);
+      const backgroundUrl = `/assets/media/background/${randomImage}`;
+      document.body.style.backgroundImage = `url('${backgroundUrl}')`;
+      localStorage.setItem("backgroundImage", backgroundUrl);
+      localStorage.setItem("lastBackgroundImage", randomImage);
+    } catch (error) {
+      console.error('Error loading background images:', error);
+      // Fallback to original hardcoded images
+      const backgroundImages = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg'];
+      const lastBackground = localStorage.getItem("lastBackgroundImage");
+      let randomImage;
 
-    const backgroundUrl = `/assets/media/background/${randomImage}`;
-    document.body.style.backgroundImage = `url('${backgroundUrl}')`;
-    localStorage.setItem("backgroundImage", backgroundUrl);
-    localStorage.setItem("lastBackgroundImage", randomImage);
+      do {
+        randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
+      } while (randomImage === lastBackground && backgroundImages.length > 1);
+
+      const backgroundUrl = `/assets/media/background/${randomImage}`;
+      document.body.style.backgroundImage = `url('${backgroundUrl}')`;
+      localStorage.setItem("backgroundImage", backgroundUrl);
+      localStorage.setItem("lastBackgroundImage", randomImage);
+    }
   }
 
   // Background Image Logic - Set initial random background (except on tabs page)
