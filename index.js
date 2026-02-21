@@ -802,7 +802,7 @@ app.post('/api/signout', (req, res) => {
 
 // Routes for auth pages
 app.get('/signin', (req, res) => {
-  res.sendFile(path.join(__dirname, "static", "signin.html"));
+  res.sendFile(path.join(process.cwd(), "static", "signin.html"));
 });
 
 app.get('/request', (req, res) => {
