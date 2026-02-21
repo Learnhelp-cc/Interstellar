@@ -25,7 +25,7 @@ import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUs
 console.log(chalk.yellow("🚀 Starting server..."));
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-dotenv.config({ path: path.join(__dirname, "creds.env") });
+dotenv.config({ path: path.join(process.cwd(), "creds.env") });
 
 // AES-256 encryption setup
 const MASTER_KEY = process.env.MASTER_KEY;
@@ -60,7 +60,7 @@ function decryptPassword(encryptedPassword) {
 
 // Configure multer for file uploads
 const upload = multer({
-  dest: path.join(__dirname, 'uploads'),
+  dest: path.join(process.cwd(), 'uploads'),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
@@ -76,7 +76,7 @@ const upload = multer({
 
 // Configure multer for music file uploads
 const musicUpload = multer({
-  dest: path.join(__dirname, 'static/assets/custommusic'),
+  dest: path.join(process.cwd(), 'static/assets/custommusic'),
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit for music files
   },
@@ -91,13 +91,13 @@ const musicUpload = multer({
 });
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Ensure custom music directory exists
-const customMusicDir = path.join(__dirname, 'static/assets/custommusic');
+const customMusicDir = path.join(process.cwd(), 'static/assets/custommusic');
 if (!fs.existsSync(customMusicDir)) {
   fs.mkdirSync(customMusicDir, { recursive: true });
 }
@@ -115,8 +115,9 @@ try {
 }
 
 // Migrate existing plain text passwords to encrypted
-const migrationDb = new Database(path.join(__dirname, 'users.db'));
+const migrationDb = new Database(path.join(process.cwd(), 'users.db'));
 const users = migrationDb.prepare('SELECT id, password FROM users').all();
+
 for (const user of users) {
   try {
     // Try to decrypt - if it fails, it's plain text
@@ -128,7 +129,6 @@ for (const user of users) {
     console.log(chalk.yellow(`🔐 Migrated password for user ID ${user.id} to encrypted format`));
   }
 }
-migrationDb.close();
 
 const server = http.createServer();
 const app = express();
@@ -840,6 +840,7 @@ app.get('/admin', adminAuth, (req, res) => {
         <button onclick="manageUsers()">Manage Users</button>
         <button onclick="manageMessages()">Manage Messages</button>
         <button onclick="viewReferrals()">View Referrals</button>
+        <button onclick="manageSearchHistory()">Manage Search History</button>
         <button onclick="toggleLockdown()">${isLockedDown ? 'Lift Lockdown' : 'Activate Lockdown'}</button>
       </div>
       <div id="content"></div>
@@ -1068,6 +1069,9 @@ app.get('/admin', adminAuth, (req, res) => {
               document.getElementById('content').innerHTML = '<h2>Referral Information</h2>' + html;
             });
         }
+        function manageSearchHistory() {
+          window.open('/search-history', '_blank');
+        }
         function toggleLockdown() {
           const action = '${isLockedDown ? 'unlock' : 'lockdown'}';
           fetch('/admin/' + action, { method: 'POST' })
@@ -1078,6 +1082,143 @@ app.get('/admin', adminAuth, (req, res) => {
     </html>
   `);
 });
+
+// Admin search history routes
+app.get('/admin/search-history', adminAuth, async (req, res) => {
+  try {
+    // Get all search history with user information
+    const stmt = db.prepare(`
+      SELECT 
+        sh.id,
+        sh.user_id,
+        sh.url,
+        sh.title,
+        sh.visited_at,
+        u.username
+      FROM search_history sh
+      JOIN users u ON sh.user_id = u.id
+      ORDER BY sh.visited_at DESC
+      LIMIT 1000
+    `);
+    const history = stmt.all();
+    
+    // Add domain extraction
+    const historyWithDomains = history.map(item => ({
+      ...item,
+      domain: extractDomain(item.url)
+    }));
+    
+    res.json(historyWithDomains);
+  } catch (error) {
+    console.error('Error fetching search history:', error);
+    res.status(500).json({ message: 'Failed to fetch search history' });
+  }
+});
+
+app.get('/admin/search-history/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const stmt = db.prepare(`
+      SELECT 
+        sh.id,
+        sh.user_id,
+        sh.url,
+        sh.title,
+        sh.visited_at,
+        u.username
+      FROM search_history sh
+      JOIN users u ON sh.user_id = u.id
+      WHERE sh.id = ?
+    `);
+    const history = stmt.get(id);
+    
+    if (!history) {
+      return res.status(404).json({ message: 'Search history entry not found' });
+    }
+    
+    res.json({
+      ...history,
+      domain: extractDomain(history.url)
+    });
+  } catch (error) {
+    console.error('Error fetching search history entry:', error);
+    res.status(500).json({ message: 'Failed to fetch search history entry' });
+  }
+});
+
+app.delete('/admin/search-history/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const stmt = db.prepare('DELETE FROM search_history WHERE id = ?');
+    const result = stmt.run(id);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ message: 'Search history entry not found' });
+    }
+    
+    res.json({ message: 'Search history entry deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting search history entry:', error);
+    res.status(500).json({ message: 'Failed to delete search history entry' });
+  }
+});
+
+app.delete('/admin/search-history', adminAuth, async (req, res) => {
+  try {
+    const stmt = db.prepare('DELETE FROM search_history');
+    stmt.run();
+    res.json({ message: 'All search history cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing search history:', error);
+    res.status(500).json({ message: 'Failed to clear search history' });
+  }
+});
+
+app.delete('/admin/search-history/bulk', adminAuth, async (req, res) => {
+  try {
+    const { history_ids } = req.body;
+    if (!history_ids || !Array.isArray(history_ids)) {
+      return res.status(400).json({ message: 'history_ids array is required' });
+    }
+    
+    const placeholders = history_ids.map(() => '?').join(',');
+    const stmt = db.prepare(`DELETE FROM search_history WHERE id IN (${placeholders})`);
+    stmt.run(...history_ids);
+    
+    res.json({ message: 'Selected search history entries deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting search history entries:', error);
+    res.status(500).json({ message: 'Failed to delete search history entries' });
+  }
+});
+
+app.delete('/admin/search-history/user-bulk', adminAuth, async (req, res) => {
+  try {
+    const { user_ids } = req.body;
+    if (!user_ids || !Array.isArray(user_ids)) {
+      return res.status(400).json({ message: 'user_ids array is required' });
+    }
+    
+    const placeholders = user_ids.map(() => '?').join(',');
+    const stmt = db.prepare(`DELETE FROM search_history WHERE user_id IN (${placeholders})`);
+    stmt.run(...user_ids);
+    
+    res.json({ message: 'Search history for selected users deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user search history:', error);
+    res.status(500).json({ message: 'Failed to delete user search history' });
+  }
+});
+
+// Helper function to extract domain from URL
+function extractDomain(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (error) {
+    return 'unknown';
+  }
+}
 
 app.get('/admin/logs', adminAuth, (req, res) => {
   res.json(suspectLogs);

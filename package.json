@@ -16,7 +16,6 @@
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@nebula-services/bare-server-node": "^2.0.4",
-    "better-sqlite3": "^11.10.0",
     "chalk": "^5.4.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -27,11 +26,13 @@
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "openpgp": "^6.2.2",
+    "better-sqlite3": "^12.2.1",
     "ssh2": "^1.17.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.2"
+    "@biomejs/biome": "2.2.2",
+    "node-gyp": "^12.2.0"
   },
   "packageManager": "pnpm@9.10.0"
 }
