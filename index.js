@@ -374,7 +374,7 @@ function securityMiddleware(req, res, next) {
     "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://particlesjs.com https://*.particlesjs.com; " +
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
     "img-src 'self' data: https: blob:; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
+    "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
     "connect-src 'self' wss: ws: https:; " +
     "media-src 'self' data: blob:; " +
     "object-src 'none'; " +
@@ -2359,6 +2359,28 @@ const routes = [
 // biome-ignore lint: idk
 routes.forEach(route => {
   app.get(route.path, (req, res) => {
+    // Check authentication for search history page
+    if (route.path === '/search-history') {
+      const deviceToken = req.cookies.deviceToken || req.headers['x-device-token'];
+      if (!deviceToken) {
+        return res.redirect('/signin');
+      }
+
+      try {
+        const user = getUserByDeviceToken(deviceToken);
+        if (!user || user.pending) {
+          return res.redirect('/signin');
+        }
+        
+        // Check if user is admin (simplified check - in real app, verify properly)
+        // For now, we'll allow all authenticated users to access search history
+        // but you could add admin role checking here
+      } catch (error) {
+        console.error('Authentication error for search history:', error);
+        return res.redirect('/signin');
+      }
+    }
+    
     res.sendFile(path.join(__dirname, "static", route.file));
   });
 });
@@ -2950,5 +2972,183 @@ wssChat.on('connection', (ws, req) => {
     }
   });
 });
+
+// Function to create the main search interface
+function createMain() {
+  const main = document.createElement("div");
+  main.className = "main";
+  main.id = "main";
+  main.style.display = "flex";
+  main.style.flexDirection = "column";
+  main.style.alignItems = "center";
+  main.style.justifyContent = "center";
+  main.style.minHeight = "100vh";
+  main.style.width = "100%";
+  main.style.padding = "20px";
+  main.style.boxSizing = "border-box";
+
+  const searchBar = document.createElement("div");
+  searchBar.className = "search-bar";
+  searchBar.style.display = "flex";
+  searchBar.style.gap = "10px";
+  searchBar.style.marginBottom = "20px";
+  searchBar.style.width = "100%";
+  searchBar.style.maxWidth = "600px";
+  searchBar.style.justifyContent = "center";
+  searchBar.style.alignItems = "center";
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = "Search the web...";
+  searchInput.style.padding = "12px 16px";
+  searchInput.style.border = "2px solid #ccc";
+  searchInput.style.borderRadius = "25px";
+  searchInput.style.fontSize = "16px";
+  searchInput.style.width = "100%";
+  searchInput.style.maxWidth = "500px";
+  searchInput.style.outline = "none";
+  searchInput.style.transition = "border-color 0.3s ease";
+  searchInput.style.background = "rgba(255, 255, 255, 0.9)";
+  searchInput.style.backdropFilter = "blur(10px)";
+
+  searchInput.addEventListener("focus", () => {
+    searchInput.style.borderColor = "#007bff";
+  });
+
+  searchInput.addEventListener("blur", () => {
+    searchInput.style.borderColor = "#ccc";
+  });
+
+  searchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      const query = searchInput.value.trim();
+      if (query) {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank");
+      }
+    }
+  });
+
+  const searchButton = document.createElement("button");
+  searchButton.textContent = "Search";
+  searchButton.style.padding = "12px 24px";
+  searchButton.style.backgroundColor = "#007bff";
+  searchButton.style.color = "white";
+  searchButton.style.border = "none";
+  searchButton.style.borderRadius = "25px";
+  searchButton.style.cursor = "pointer";
+  searchButton.style.fontSize = "16px";
+  searchButton.style.transition = "background-color 0.3s ease";
+  searchButton.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+
+  searchButton.addEventListener("mouseover", () => {
+    searchButton.style.backgroundColor = "#0056b3";
+  });
+
+  searchButton.addEventListener("mouseout", () => {
+    searchButton.style.backgroundColor = "#007bff";
+  });
+
+  searchButton.addEventListener("click", () => {
+    const query = searchInput.value.trim();
+    if (query) {
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank");
+    }
+  });
+
+  const title = document.createElement("h1");
+  title.textContent = "Interstellar";
+  title.style.fontSize = "3rem";
+  title.style.marginBottom = "10px";
+  title.style.textAlign = "center";
+  title.style.color = "#333";
+  title.style.textShadow = "2px 2px 4px rgba(0,0,0,0.1)";
+
+  const splashText = document.createElement("p");
+  splashText.textContent = "Explore the universe of knowledge";
+  splashText.style.fontSize = "1.2rem";
+  splashText.style.color = "#666";
+  splashText.style.textAlign = "center";
+  splashText.style.maxWidth = "600px";
+  splashText.style.lineHeight = "1.6";
+
+  searchBar.appendChild(searchInput);
+  searchBar.appendChild(searchButton);
+  main.appendChild(searchBar);
+  main.appendChild(title);
+  main.appendChild(splashText);
+
+  return main;
+}
+
+// Function to create the navigation
+function createNav() {
+  const nav = document.createElement("div");
+  nav.className = "f-nav";
+  nav.style.position = "fixed";
+  nav.style.top = "0";
+  nav.style.left = "0";
+  nav.style.width = "100%";
+  nav.style.height = "60px";
+  nav.style.background = "rgba(255, 255, 255, 0.9)";
+  nav.style.backdropFilter = "blur(10px)";
+  nav.style.borderBottom = "1px solid #eee";
+  nav.style.display = "flex";
+  nav.style.justifyContent = "center";
+  nav.style.alignItems = "center";
+  nav.style.zIndex = "1000";
+
+  const navContainer = document.createElement("div");
+  navContainer.style.display = "flex";
+  navContainer.style.gap = "20px";
+
+  const links = [
+    { text: "Apps", href: "/b" },
+    { text: "Games", href: "/a" },
+    { text: "Settings", href: "/c" },
+    { text: "Tabs", href: "/d" },
+    { text: "Chat", href: "/chat" },
+    { text: "AI", href: "/ai" },
+    { text: "Account", href: "/account" },
+    { text: "Metrics", href: "/metrics" },
+    { text: "Search History", href: "/search-history" }
+  ];
+
+  links.forEach(link => {
+    const a = document.createElement("a");
+    a.href = link.href;
+    a.textContent = link.text;
+    a.style.color = "#333";
+    a.style.textDecoration = "none";
+    a.style.padding = "8px 16px";
+    a.style.borderRadius = "20px";
+    a.style.transition = "background-color 0.3s ease";
+    
+    a.addEventListener("mouseover", () => {
+      a.style.backgroundColor = "#f0f0f0";
+    });
+    
+    a.addEventListener("mouseout", () => {
+      a.style.backgroundColor = "transparent";
+    });
+    
+    navContainer.appendChild(a);
+  });
+
+  nav.appendChild(navContainer);
+  return nav;
+}
+
+// Initialize the page when DOM is loaded
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Create and append navigation
+    const nav = createNav();
+    document.body.appendChild(nav);
+
+    // Create and append main content
+    const main = createMain();
+    document.body.appendChild(main);
+  });
+}
 
 server.listen({ port: PORT });

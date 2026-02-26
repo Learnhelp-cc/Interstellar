@@ -35,6 +35,9 @@ img {
    background-color: var(--background-nav);
    box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.5);
    -webkit-backdrop-filter: var(--backdrop-filter);
+   -moz-backdrop-filter: var(--backdrop-filter);
+   -ms-backdrop-filter: var(--backdrop-filter);
+   -o-backdrop-filter: var(--backdrop-filter);
    backdrop-filter: var(--backdrop-filter);
    transition: 0.35s ease;
    border-radius: 15px;
@@ -42,6 +45,9 @@ img {
    margin: 15px;
    z-index: 100;
    position: fixed;
+   /* Multiple fallbacks for better browser support */
+   background-color: rgba(255, 255, 255, 0.05);
+   background: var(--background-nav);
 }
 
 .f-nav .icon:hover {
