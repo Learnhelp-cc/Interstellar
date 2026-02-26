@@ -20,11 +20,11 @@ import multer from 'multer';
 import * as openpgp from 'openpgp';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb, addMusicFile, getMusicFiles, getMusicFileByHash, deleteMusicFile, addToQueue, getMusicQueue, removeFromQueue, clearMusicQueue, ensureUserGPGKey, createWarnlistTable } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb, addMusicFile, getMusicFiles, getMusicFileByHash, deleteMusicFile, addToQueue, getMusicQueue, removeFromQueue, clearMusicQueue, ensureUserGPGKey, createWarnlistTable, db } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __dirname = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, '$1');
 dotenv.config({ path: path.join(process.cwd(), "creds.env") });
 
 // AES-256 encryption setup
@@ -802,7 +802,7 @@ app.post('/api/signout', (req, res) => {
 
 // Routes for auth pages
 app.get('/signin', (req, res) => {
-  res.sendFile(path.join(process.cwd(), "static", "signin.html"));
+  res.sendFile(path.join(__dirname, "static", "signin.html"));
 });
 
 app.get('/request', (req, res) => {
@@ -2352,6 +2352,7 @@ const routes = [
   { path: "/ai", file: "ai.html" },
   { path: "/account", file: "account.html" },
   { path: "/metrics", file: "metrics.html" },
+  { path: "/search-history", file: "search-history.html" },
   { path: "/", file: "index.html" },
 ];
 
@@ -2638,10 +2639,18 @@ app.use((err, req, res, next) => {
 });
 
 server.on("request", (req, res) => {
-  if (bareServer.shouldRoute(req)) {
+  // First check if this is a static file request
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = url.pathname;
+
+  // Check if it's a static file (has an extension or starts with /assets)
+  const isStaticFile = pathname.includes('.') || pathname.startsWith('/assets/') || pathname.startsWith('/uploads/');
+
+  if (isStaticFile) {
+    app(req, res);
+  } else if (bareServer.shouldRoute(req)) {
     // Log proxy requests as potentially suspect
     const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
-    const url = new URL(req.url, `http://${req.headers.host}`);
     logSuspectActivity(clientIP, url.hostname);
 
     // Collect metrics for proxy requests
