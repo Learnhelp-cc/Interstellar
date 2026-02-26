@@ -10,11 +10,12 @@
     <style>
         .search-history-container {
             max-width: 1200px;
-            margin: 20px auto;
+            margin: 40px auto 20px auto;
             padding: 20px;
-            background: var(--card-bg);
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: rgba(240, 240, 240, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border: 1px solid #d0d0d0;
         }
         
         .search-history-header {
@@ -36,18 +37,18 @@
         
         .search-history-tabs button {
             padding: 8px 16px;
-            border: 1px solid var(--border-color);
-            background: var(--card-bg);
-            color: var(--text-color);
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            color: #333;
             cursor: pointer;
             border-radius: 4px;
             font-weight: bold;
         }
         
         .search-history-tabs button.active {
-            background: var(--primary-color);
+            background: #333;
             color: white;
-            border-color: var(--primary-color);
+            border-color: #333;
         }
         
         .search-controls {
@@ -56,32 +57,48 @@
             gap: 15px;
             margin-bottom: 20px;
             padding: 15px;
-            background: var(--input-bg);
+            background: #f5f5f5;
             border-radius: 6px;
+            overflow: hidden;
+            box-sizing: border-box;
         }
         
         .search-controls .form-group {
             display: flex;
             flex-direction: column;
             gap: 5px;
+            min-width: 0; /* Prevent overflow */
         }
         
         .search-controls label {
             font-size: 12px;
             font-weight: bold;
-            color: var(--text-color);
+            color: #333;
             text-transform: uppercase;
             letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .search-controls input,
         .search-controls select {
             padding: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #ccc;
             border-radius: 4px;
-            background: var(--card-bg);
-            color: var(--text-color);
+            background: #fff;
+            color: #333;
             font-size: 14px;
+            box-sizing: border-box;
+            width: 100%;
+            min-width: 0;
+        }
+        
+        .search-controls .actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-self: end;
         }
         
         .search-controls button {
@@ -89,13 +106,15 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            background: var(--primary-color);
+            background: #333;
             color: white;
             font-weight: bold;
+            white-space: nowrap;
+            min-width: 120px;
         }
         
         .search-controls .btn-secondary {
-            background: var(--secondary-color);
+            background: #666;
         }
         
         .bulk-actions {
@@ -106,40 +125,42 @@
         
         .bulk-actions select {
             padding: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #ccc;
             border-radius: 4px;
-            background: var(--card-bg);
-            color: var(--text-color);
+            background: #fff;
+            color: #333;
         }
         
         .history-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            background: var(--card-bg);
+            background: #fff;
             border-radius: 6px;
             overflow: hidden;
+            border: 1px solid #ddd;
         }
         
         .history-table th,
         .history-table td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-color);
+            border-bottom: 1px solid #ddd;
+            color: #333;
             vertical-align: top;
         }
         
         .history-table th {
-            background: var(--header-bg);
+            background: #f5f5f5;
             font-weight: bold;
             position: sticky;
             top: 0;
             z-index: 1;
+            border-bottom: 2px solid #ddd;
         }
         
         .history-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: #f9f9f9;
         }
         
         .history-actions {
@@ -153,21 +174,20 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
+            background: #666;
+            color: white;
         }
         
         .btn-view {
-            background: var(--warning-color);
-            color: white;
+            background: #666;
         }
         
         .btn-delete {
-            background: var(--danger-color);
-            color: white;
+            background: #333;
         }
         
         .btn-select {
-            background: var(--secondary-color);
-            color: white;
+            background: #999;
         }
         
         .user-info {
@@ -180,7 +200,7 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: #333;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -190,16 +210,16 @@
         }
         
         .domain-badge {
-            background: var(--input-bg);
+            background: #f5f5f5;
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 12px;
-            color: var(--text-color);
+            color: #333;
         }
         
         .date-time {
             font-size: 12px;
-            color: var(--text-secondary);
+            color: #666;
         }
         
         .stats-grid {
@@ -210,22 +230,22 @@
         }
         
         .stat-card {
-            background: var(--card-bg);
+            background: #fff;
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #ddd;
             text-align: center;
         }
         
         .stat-number {
             font-size: 24px;
             font-weight: bold;
-            color: var(--primary-color);
+            color: #333;
         }
         
         .stat-label {
             font-size: 12px;
-            color: var(--text-color);
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 5px;
@@ -240,9 +260,9 @@
         
         .pagination button {
             padding: 8px 16px;
-            border: 1px solid var(--border-color);
-            background: var(--card-bg);
-            color: var(--text-color);
+            border: 1px solid #ccc;
+            background: #fff;
+            color: #333;
             cursor: pointer;
             border-radius: 4px;
         }
@@ -255,14 +275,14 @@
         .no-data {
             text-align: center;
             padding: 40px;
-            color: var(--text-color);
+            color: #666;
             font-style: italic;
         }
         
         .loading {
             text-align: center;
             padding: 20px;
-            color: var(--text-color);
+            color: #666;
         }
         
         .filters-active {
@@ -273,7 +293,7 @@
         }
         
         .filter-badge {
-            background: var(--primary-color);
+            background: #333;
             color: white;
             padding: 4px 8px;
             border-radius: 12px;
@@ -350,12 +370,9 @@
                         <label>User ID</label>
                         <input type="number" id="user-id-filter" placeholder="Filter by user ID...">
                     </div>
-                    <div class="form-group">
-                        <label>Actions</label>
-                        <div style="display: flex; gap: 5px;">
-                            <button onclick="applyFilters()">Apply Filters</button>
-                            <button class="btn-secondary" onclick="clearFilters()">Clear</button>
-                        </div>
+                    <div class="actions-group">
+                        <button onclick="applyFilters()">Apply Filters</button>
+                        <button class="btn-secondary" onclick="clearFilters()">Clear</button>
                     </div>
                 </div>
                 
@@ -613,7 +630,7 @@
             }
 
             if (filters.length === 0) {
-                container.innerHTML = '<span style="color: var(--text-secondary); font-style: italic;">No active filters</span>';
+                container.innerHTML = '<span style="color: #666; font-style: italic;">No active filters</span>';
             } else {
                 filters.forEach(filter => {
                     const badge = document.createElement('span');
@@ -647,7 +664,7 @@
                             <div class="user-avatar">${getInitials(item.username)}</div>
                             <div>
                                 <div style="font-weight: bold;">${item.username}</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">ID: ${item.user_id}</div>
+                                <div style="font-size: 12px; color: #666;">ID: ${item.user_id}</div>
                             </div>
                         </div>
                     </td>

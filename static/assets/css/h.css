@@ -15,6 +15,20 @@
    margin-bottom: 5vh;
    transition: 0.35s ease;
    text-shadow: 2px 4px 6px rgb(0, 0, 0, 0.2);
+   position: relative;
+   z-index: 10;
+}
+
+/* Fallback styles for browsers without CSS variables support */
+.no-css-variables .title {
+   color: #fff;
+}
+
+/* Ensure title is always visible */
+.title {
+   visibility: visible !important;
+   opacity: 1 !important;
+   display: block !important;
 }
 
 #welcome-text {
@@ -54,30 +68,124 @@
    position: relative;
 }
 
-.truncate {
-   width: 50vw;
-   height: 5vh;
-   font-family: "Poppins", sans-serif;
-   font-size: 16px;
-   box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2);
-   background: var(--background-input);
-   -webkit-backdrop-filter: var(--backdrop-filter);
-   backdrop-filter: var(--backdrop-filter);
+/* Fallback styles for browsers without flexbox support */
+.no-flexbox .search-container {
+   display: block;
+   text-align: center;
+   width: 100%;
 }
 
-input {
-   padding: 20px;
-   width: 550px;
-   border-radius: 25px;
-   background: var(--background-input);
-   -webkit-backdrop-filter: var(--backdrop-filter);
-   backdrop-filter: var(--backdrop-filter);
-   text-align: center;
-   font-size: 24px;
-   border: none;
-   outline: none;
-   color: var(--text-primary);
-   transition: 0.4s;
+.no-flexbox .search-container form {
+   display: inline-block;
+   vertical-align: middle;
+}
+
+.no-flexbox .search-history-btn {
+   display: inline-block;
+   vertical-align: middle;
+   margin-left: 10px;
+}
+
+.truncate {
+   width: 50vw !important;
+   height: 5vh !important;
+   font-family: "Poppins", sans-serif;
+   font-size: 16px !important;
+   box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2) !important;
+   background: var(--background-input) !important;
+   -webkit-backdrop-filter: var(--backdrop-filter) !important;
+   -moz-backdrop-filter: var(--backdrop-filter) !important;
+   -ms-backdrop-filter: var(--backdrop-filter) !important;
+   -o-backdrop-filter: var(--backdrop-filter) !important;
+   backdrop-filter: var(--backdrop-filter) !important;
+   /* Multiple fallbacks for better browser support */
+   background: rgba(66, 65, 77, 0.8) !important;
+   background: var(--background-input) !important;
+   color: var(--text-primary) !important;
+   border-radius: 25px !important;
+   border: none !important;
+   outline: none !important;
+   text-align: center !important;
+   min-width: 300px !important;
+   max-width: 800px !important;
+   z-index: 10000 !important;
+   position: relative !important;
+}
+
+/* Fallback styles for browsers without backdrop-filter support */
+.no-backdrop-filter .truncate {
+   background: rgba(66, 65, 77, 0.9) !important;
+   backdrop-filter: none !important;
+   -webkit-backdrop-filter: none !important;
+}
+
+/* Fallback styles for browsers without CSS variables support */
+.no-css-variables .truncate {
+   background: rgba(66, 65, 77, 0.9) !important;
+   color: #fff !important;
+}
+
+/* Override input selector to ensure search bar visibility */
+input#input {
+   padding: 20px !important;
+   width: 50vw !important;
+   height: 5vh !important;
+   border-radius: 25px !important;
+   background: var(--background-input) !important;
+   -webkit-backdrop-filter: var(--backdrop-filter) !important;
+   backdrop-filter: var(--backdrop-filter) !important;
+   text-align: center !important;
+   font-size: 16px !important;
+   border: none !important;
+   outline: none !important;
+   color: var(--text-primary) !important;
+   transition: 0.4s !important;
+   min-width: 300px !important;
+   max-width: 800px !important;
+   box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+   z-index: 10000 !important;
+   position: relative !important;
+   /* Add fallback for browsers that don't support backdrop-filter */
+   background: rgba(255, 255, 255, 0.9) !important;
+   color: #000 !important;
+}
+
+/* Fallback styles for browsers without backdrop-filter support */
+.no-backdrop-filter input#input {
+   background: rgba(255, 255, 255, 0.9) !important;
+   color: #000 !important;
+   backdrop-filter: none !important;
+   -webkit-backdrop-filter: none !important;
+}
+
+/* Fallback styles for browsers without CSS variables support */
+.no-css-variables input#input {
+   background: rgba(255, 255, 255, 0.9) !important;
+   color: #000 !important;
+}
+
+/* Ensure input is always visible */
+input#input {
+   visibility: visible !important;
+   opacity: 1 !important;
+   display: block !important;
+}
+
+/* Override any other input styles that might conflict */
+form#fv input {
+   width: 50vw !important;
+   height: 5vh !important;
+   min-width: 300px !important;
+   max-width: 800px !important;
+   font-size: 16px !important;
+   padding: 20px !important;
+   background: rgba(255, 255, 255, 0.9) !important;
+   color: #000 !important;
+   border: 2px solid #fff !important;
+   border-radius: 25px !important;
+   box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+   z-index: 10000 !important;
+   position: relative !important;
 }
 
 #particles-js {
@@ -90,6 +198,19 @@ input {
    background-size: cover;
    background-position: 50% 50%;
    overflow: hidden;
+   z-index: 1;
+}
+
+/* Fallback styles for browsers without CSS variables support */
+.no-css-variables #particles-js {
+   background-color: #2b2a33;
+}
+
+/* Ensure particles container is always visible */
+#particles-js {
+   visibility: visible !important;
+   opacity: 1 !important;
+   display: block !important;
 }
 
 .particles-js-canvas-el {
@@ -102,6 +223,13 @@ input {
    pointer-events: none;
 }
 
+/* Ensure canvas is always visible */
+.particles-js-canvas-el {
+   visibility: visible !important;
+   opacity: 1 !important;
+   display: block !important;
+}
+
 #splash {
    color: white;
    margin-bottom: 1em;
@@ -110,6 +238,20 @@ input {
    font-family: "Poppins", sans-serif;
    transition: color 0.3s ease, opacity 0.3s ease;
    cursor: pointer;
+   position: relative;
+   z-index: 10;
+}
+
+/* Fallback styles for browsers without CSS variables support */
+.no-css-variables #splash {
+   color: #fff;
+}
+
+/* Ensure splash text is always visible */
+#splash {
+   visibility: visible !important;
+   opacity: 1 !important;
+   display: block !important;
 }
 
 #splash:hover {
@@ -180,6 +322,43 @@ input {
    align-items: center;
    justify-content: center;
    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+   /* Add fallback for browsers that don't support backdrop-filter */
+   background: rgba(66, 65, 77, 0.8);
+}
+
+/* Fallback styles for browsers without backdrop-filter support */
+.no-backdrop-filter .search-history-btn {
+   background: rgba(66, 65, 77, 0.9);
+   backdrop-filter: none !important;
+   -webkit-backdrop-filter: none !important;
+}
+
+/* Fallback styles for browsers without CSS variables support */
+.no-css-variables .search-history-btn {
+   background: rgba(66, 65, 77, 0.9);
+   color: #fff;
+}
+
+/* Fallback styles for browsers without flexbox support */
+.no-flexbox .search-history-btn {
+   display: inline-block;
+   vertical-align: middle;
+   position: static;
+   transform: none;
+   margin-left: 10px;
+}
+
+/* Ensure search history button is always visible */
+.search-history-btn {
+   visibility: visible !important;
+   opacity: 1 !important;
+   display: flex !important;
+}
+
+/* Additional fallback for very old browsers */
+.no-flexbox .search-history-btn {
+   display: inline-block;
+   text-align: center;
 }
 
 .search-history-btn:hover {

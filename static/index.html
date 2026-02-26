@@ -12,9 +12,341 @@
   <link rel="stylesheet" href="/assets/css/h.css?v=01" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=01" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body.center #particles-js .main .search-container {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      position: relative !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      z-index: 99999 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    body.center #particles-js .main .search-container form#fv {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+
+    body.center #particles-js .main .search-container form#fv input#input {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      width: 50vw !important;
+      height: 5vh !important;
+      min-width: 300px !important;
+      max-width: 800px !important;
+      font-size: 16px !important;
+      padding: 20px !important;
+      background: rgba(255, 255, 255, 0.9) !important;
+      color: #000 !important;
+      border: 2px solid #fff !important;
+      border-radius: 25px !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+      z-index: 100000 !important;
+      position: relative !important;
+      text-align: center !important;
+      outline: none !important;
+      border: none !important;
+    }
+
+    body.center #particles-js .main .search-container .search-history-btn {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: absolute !important;
+      right: 10px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      background: rgba(255, 255, 255, 0.8) !important;
+      color: #000 !important;
+      border: none !important;
+      border-radius: 50% !important;
+      width: 40px !important;
+      height: 40px !important;
+      cursor: pointer !important;
+      z-index: 100000 !important;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Ensure the main container doesn't hide anything */
+    body.center #particles-js .main {
+      visibility: visible !important;
+      opacity: 1 !important;
+      display: block !important;
+      position: relative !important;
+      z-index: 10 !important;
+    }
+
+    /* Ensure particles container doesn't interfere */
+    body.center #particles-js {
+      visibility: visible !important;
+      opacity: 1 !important;
+      display: block !important;
+      position: absolute !important;
+      z-index: 1 !important;
+    }
+
+    /* Force visibility on all search-related elements */
+    .search-container,
+    .search-container *,
+    #input,
+    #fv,
+    .search-history-btn {
+      visibility: visible !important;
+      opacity: 1 !important;
+      display: block !important;
+      z-index: 99999 !important;
+    }
+
+    /* Override any potential hiding rules */
+    .search-container[style*="display: none"],
+    .search-container[style*="visibility: hidden"],
+    .search-container[style*="opacity: 0"],
+    #input[style*="display: none"],
+    #input[style*="visibility: hidden"],
+    #input[style*="opacity: 0"] {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+  </style>
+
+  <!-- Browser compatibility detection and polyfills -->
+  <script>
+    console.log('🔍 DEBUG: Starting browser compatibility detection...');
+
+    // Browser feature detection
+    (function () {
+      console.log('🔍 DEBUG: Detecting browser features...');
+      var html = document.documentElement;
+      var classes = [];
+
+      // Check for CSS variables support
+      if (!CSS || !CSS.supports || !CSS.supports('--fake-var', '0')) {
+        classes.push('no-css-variables');
+        console.log('⚠️ DEBUG: CSS variables not supported');
+      } else {
+        console.log('✅ DEBUG: CSS variables supported');
+      }
+
+      // Check for backdrop-filter support
+      if (!CSS || !CSS.supports || !CSS.supports('backdrop-filter', 'blur(5px)')) {
+        classes.push('no-backdrop-filter');
+        console.log('⚠️ DEBUG: backdrop-filter not supported');
+      } else {
+        console.log('✅ DEBUG: backdrop-filter supported');
+      }
+
+      // Check for flexbox support
+      if (!CSS || !CSS.supports || !CSS.supports('display', 'flex')) {
+        classes.push('no-flexbox');
+        console.log('⚠️ DEBUG: flexbox not supported');
+      } else {
+        console.log('✅ DEBUG: flexbox supported');
+      }
+
+      // Check for CSS grid support
+      if (!CSS || !CSS.supports || !CSS.supports('display', 'grid')) {
+        classes.push('no-cssgrid');
+        console.log('⚠️ DEBUG: CSS grid not supported');
+      } else {
+        console.log('✅ DEBUG: CSS grid supported');
+      }
+
+      // Add classes to html element
+      if (classes.length > 0) {
+        html.className += ' ' + classes.join(' ');
+        console.log('🏷️ DEBUG: Added browser compatibility classes:', classes);
+      } else {
+        console.log('✅ DEBUG: All modern features supported');
+      }
+
+      // Check for service worker support
+      if (!('serviceWorker' in navigator)) {
+        html.className += ' no-serviceworker';
+        console.log('⚠️ DEBUG: Service Worker not supported');
+      } else {
+        console.log('✅ DEBUG: Service Worker supported');
+      }
+
+      // Check for localStorage support
+      if (!window.localStorage) {
+        html.className += ' no-localstorage';
+        console.log('⚠️ DEBUG: localStorage not supported');
+      } else {
+        console.log('✅ DEBUG: localStorage supported');
+      }
+
+      // Check for fetch API support
+      if (!window.fetch) {
+        html.className += ' no-fetch';
+        console.log('⚠️ DEBUG: fetch API not supported');
+      } else {
+        console.log('✅ DEBUG: fetch API supported');
+      }
+
+      // Check for Promise support
+      if (!window.Promise) {
+        html.className += ' no-promise';
+        console.log('⚠️ DEBUG: Promise not supported');
+      } else {
+        console.log('✅ DEBUG: Promise supported');
+      }
+
+      // Add browser-specific classes
+      var userAgent = navigator.userAgent.toLowerCase();
+      if (userAgent.indexOf('chrome') > -1 && userAgent.indexOf('edge') === -1) {
+        html.className += ' chrome';
+        console.log('🏷️ DEBUG: Detected Chrome browser');
+      } else if (userAgent.indexOf('firefox') > -1) {
+        html.className += ' firefox';
+        console.log('🏷️ DEBUG: Detected Firefox browser');
+      } else if (userAgent.indexOf('safari') > -1 && userAgent.indexOf('chrome') === -1) {
+        html.className += ' safari';
+        console.log('🏷️ DEBUG: Detected Safari browser');
+      } else if (userAgent.indexOf('edge') > -1) {
+        html.className += ' edge';
+        console.log('🏷️ DEBUG: Detected Edge browser');
+      } else if (userAgent.indexOf('opera') > -1 || userAgent.indexOf('opr') > -1) {
+        html.className += ' opera';
+        console.log('🏷️ DEBUG: Detected Opera browser');
+      } else {
+        html.className += ' other-browser';
+        console.log('🏷️ DEBUG: Detected unknown browser');
+      }
+
+      console.log('🔍 DEBUG: Browser compatibility detection complete');
+    })();
+
+    // Polyfill for addEventListener if needed
+    if (!window.addEventListener) {
+      console.log('🔧 DEBUG: Adding addEventListener polyfill');
+      window.addEventListener = function (event, callback) {
+        if (window.attachEvent) {
+          window.attachEvent('on' + event, callback);
+        } else {
+          window['on' + event] = callback;
+        }
+      };
+    }
+
+    // Polyfill for fetch if needed
+    if (!window.fetch) {
+      console.log('🔧 DEBUG: Adding fetch polyfill');
+      window.fetch = function () {
+        return Promise.reject(new Error('Fetch API not supported'));
+      };
+    }
+
+    // Polyfill for localStorage if needed
+    if (!window.localStorage) {
+      console.log('🔧 DEBUG: Adding localStorage polyfill');
+      window.localStorage = {
+        getItem: function () { return null; },
+        setItem: function () { },
+        removeItem: function () { },
+        clear: function () { }
+      };
+    }
+
+    // Ensure search bar is visible by forcing display styles
+    function ensureSearchBarVisibility() {
+      console.log('🔍 DEBUG: Ensuring search bar visibility...');
+      var searchContainer = document.querySelector('.search-container');
+      var input = document.querySelector('#input');
+      var form = document.querySelector('#fv');
+
+      if (searchContainer) {
+        searchContainer.style.display = 'flex !important';
+        searchContainer.style.justifyContent = 'center !important';
+        searchContainer.style.alignItems = 'center !important';
+        searchContainer.style.position = 'relative !important';
+        searchContainer.style.visibility = 'visible !important';
+        searchContainer.style.opacity = '1 !important';
+        searchContainer.style.zIndex = '9999 !important';
+        searchContainer.style.margin = '0 !important';
+        searchContainer.style.padding = '0 !important';
+        searchContainer.style.maxWidth = '100% !important';
+        searchContainer.style.width = '100% !important';
+        console.log('✅ DEBUG: Search container styled with !important');
+      } else {
+        console.log('❌ DEBUG: Search container not found');
+      }
+
+      if (input) {
+        input.style.display = 'block !important';
+        input.style.visibility = 'visible !important';
+        input.style.opacity = '1 !important';
+        input.style.width = '50vw !important';
+        input.style.height = '5vh !important';
+        input.style.minWidth = '300px !important';
+        input.style.maxWidth = '800px !important';
+        input.style.fontSize = '16px !important';
+        input.style.padding = '15px !important';
+        input.style.border = '2px solid #fff !important';
+        input.style.borderRadius = '25px !important';
+        input.style.backgroundColor = 'rgba(255, 255, 255, 0.9) !important';
+        input.style.color = '#000 !important';
+        input.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3) !important';
+        input.style.zIndex = '10000 !important';
+        input.style.position = 'relative !important';
+        console.log('✅ DEBUG: Search input styled with !important');
+      } else {
+        console.log('❌ DEBUG: Search input not found');
+      }
+
+      if (form) {
+        form.style.display = 'block !important';
+        form.style.visibility = 'visible !important';
+        form.style.opacity = '1 !important';
+        form.style.margin = '0 !important';
+        form.style.padding = '0 !important';
+        form.style.width = '100% !important';
+        console.log('✅ DEBUG: Search form styled with !important');
+      } else {
+        console.log('❌ DEBUG: Search form not found');
+      }
+
+      // Force visibility on the main container as well
+      var mainContainer = document.querySelector('.main');
+      if (mainContainer) {
+        mainContainer.style.visibility = 'visible !important';
+        mainContainer.style.opacity = '1 !important';
+        mainContainer.style.display = 'block !important';
+        console.log('✅ DEBUG: Main container visibility enforced');
+      }
+    }
+
+    // Run visibility check on load and after DOM is ready
+    if (document.readyState === 'loading') {
+      console.log('🔍 DEBUG: Document loading, adding DOMContentLoaded listener');
+      document.addEventListener('DOMContentLoaded', ensureSearchBarVisibility);
+    } else {
+      console.log('🔍 DEBUG: Document already loaded, running visibility check');
+      ensureSearchBarVisibility();
+    }
+
+    // Also run after window load to ensure all styles are applied
+    window.addEventListener('load', function () {
+      console.log('🔍 DEBUG: Window loaded, running final visibility check');
+      ensureSearchBarVisibility();
+    });
+
+    console.log('🔍 DEBUG: Browser compatibility and polyfill setup complete');
+  </script>
 </head>
 
-<body class="center" onload="SplashT">
+<body class="center" onload="SplashText()">
   <div class="f-nav"></div>
   <div id="particles-js">
     <div class="main">
@@ -23,29 +355,214 @@
         <span id="welcome-text">Welcome</span>
       </div>
       <p id="splash"></p>
-      <div class="search-container">
-        <form id="fv" method="POST">
-          <input id="input" class="truncate" placeholder="Search or enter a URL" type="text" />
+      <div class="search-container"
+        style="display: flex !important; justify-content: center !important; align-items: center !important; position: relative !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important;">
+        <form id="fv" method="POST"
+          style="display: block !important; visibility: visible !important; opacity: 1 !important; margin: 0 !important; padding: 0 !important; width: 100% !important;">
+          <input id="input" class="truncate" placeholder="Search or enter a URL" type="text"
+            style="display: block !important; visibility: visible !important; opacity: 1 !important; width: 50vw !important; height: 5vh !important; min-width: 300px !important; max-width: 800px !important; font-size: 16px !important; padding: 15px !important; border: 2px solid #fff !important; border-radius: 25px !important; background-color: rgba(255, 255, 255, 0.9) !important; color: #000 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; z-index: 10000 !important; position: relative !important;" />
         </form>
-        <button id="search-history-btn" class="search-history-btn" title="View Search History">
+        <button id="search-history-btn" class="search-history-btn" title="View Search History"
+          style="margin-left: 15px !important; padding: 10px !important; border: none !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.8) !important; color: #000 !important; cursor: pointer !important; z-index: 10000 !important;">
           <i class="fas fa-history"></i>
         </button>
       </div>
       <div class="now-playing">
-        <span>Now Playing: <span id="song-title">morning tape - nilöwh.</span> <button id="audio-control" class="audio-btn"><i class="fas fa-pause"></i></button></span>
+        <span>Now Playing: <span id="song-title">morning tape - nilöwh.</span> <button id="audio-control"
+            class="audio-btn"><i class="fas fa-pause"></i></button></span>
       </div>
     </div>
   </div>
 
   <script>
+    console.log('🎬 DEBUG: Starting SplashText system initialization...');
+
+    // OLD SplashText system - complex animation with multiple effects
+    function SplashText() {
+      console.log('🎬 DEBUG: SplashText function called');
+
+      const welcomeText = document.getElementById('welcome-text');
+      const splash = document.getElementById('splash');
+
+      if (!welcomeText || !splash) {
+        console.error('❌ DEBUG: Required elements not found for SplashText');
+        return;
+      }
+
+      console.log('🎬 DEBUG: SplashText elements found, starting animation sequence');
+
+      // OLD SYSTEM: Complex welcome text animation
+      if (welcomeText) {
+        console.log('🎬 DEBUG: Starting welcome text animation');
+
+        // Typewriter effect for welcome text
+        const welcomeTextContent = welcomeText.textContent;
+        welcomeText.textContent = '';
+
+        let i = 0;
+        const typeWriter = setInterval(() => {
+          if (i < welcomeTextContent.length) {
+            welcomeText.textContent += welcomeTextContent.charAt(i);
+            i++;
+          } else {
+            clearInterval(typeWriter);
+            console.log('🎬 DEBUG: Welcome text typewriter effect complete');
+
+            // OLD SYSTEM: Complex fade out with multiple effects
+            setTimeout(() => {
+              console.log('🎬 DEBUG: Starting welcome text fade out sequence');
+
+              // Multiple animation classes for old system
+              welcomeText.style.transition = 'all 1.5s ease-in-out';
+              welcomeText.style.opacity = '0';
+              welcomeText.style.transform = 'scale(1.5)';
+              welcomeText.style.filter = 'blur(5px)';
+
+              setTimeout(() => {
+                welcomeText.style.display = 'none';
+                console.log('🎬 DEBUG: Welcome text completely hidden');
+              }, 1500);
+            }, 2000);
+          }
+        }, 100);
+      }
+
+
+      let currentMessageIndex = 0;
+      let charIndex = 0;
+      let isDeleting = false;
+      let typingSpeed = 100;
+
+      function typeWriterEffect() {
+        const currentMessage = messages[currentMessageIndex];
+
+        if (isDeleting) {
+          splash.textContent = currentMessage.substring(0, charIndex - 1);
+          charIndex--;
+          typingSpeed = 50;
+        } else {
+          splash.textContent = currentMessage.substring(0, charIndex + 1);
+          charIndex++;
+          typingSpeed = 100;
+        }
+
+        if (!isDeleting && charIndex === currentMessage.length) {
+          isDeleting = true;
+          setTimeout(typeWriterEffect, 2000);
+        } else if (isDeleting && charIndex === 0) {
+          isDeleting = false;
+          currentMessageIndex = (currentMessageIndex + 1) % messages.length;
+          setTimeout(typeWriterEffect, 500);
+        } else {
+          setTimeout(typeWriterEffect, typingSpeed);
+        }
+      }
+
+      // Start the old system typewriter effect
+      setTimeout(typeWriterEffect, 1000);
+
+      // OLD SYSTEM: Multiple click animations
+      splash.addEventListener('click', function () {
+        console.log('🎬 DEBUG: Splash text clicked, triggering old system animation');
+
+        // Multiple animation effects
+        this.style.transition = 'all 0.3s ease';
+        this.style.transform = 'scale(1.2) rotate(5deg)';
+        this.style.color = '#ff6b6b';
+        this.style.textShadow = '0 0 10px rgba(255, 107, 107, 0.5)';
+
+        setTimeout(() => {
+          this.style.transform = 'scale(1) rotate(0deg)';
+          this.style.color = '';
+          this.style.textShadow = '';
+        }, 300);
+
+        // OLD SYSTEM: Additional effects on double click
+        let clickCount = 0;
+        const clickTimer = setTimeout(() => {
+          clickCount = 0;
+        }, 300);
+
+        clickCount++;
+        if (clickCount === 2) {
+          clearTimeout(clickTimer);
+          console.log('🎬 DEBUG: Double click detected, triggering special animation');
+
+          // Special animation sequence
+          const originalText = this.textContent;
+          this.textContent = "✨ Special effect activated! ✨";
+          this.style.fontSize = '2rem';
+          this.style.color = '#ffd700';
+          this.style.textShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
+
+          setTimeout(() => {
+            this.textContent = originalText;
+            this.style.fontSize = '';
+            this.style.color = '';
+            this.style.textShadow = '';
+          }, 2000);
+        }
+      });
+
+      // OLD SYSTEM: Hover effects
+      splash.addEventListener('mouseenter', function () {
+        this.style.transition = 'all 0.2s ease';
+        this.style.transform = 'translateY(-2px)';
+        this.style.textShadow = '0 4px 8px rgba(0,0,0,0.3)';
+      });
+
+      splash.addEventListener('mouseleave', function () {
+        this.style.transition = 'all 0.2s ease';
+        this.style.transform = 'translateY(0)';
+        this.style.textShadow = 'none';
+      });
+
+      console.log('🎬 DEBUG: Splash text animation system initialized');
+    }
+
+    // OLD SYSTEM: Additional initialization effects
+    console.log('🎬 DEBUG: Starting additional SplashText effects');
+
+    // Add floating particles effect to splash text
+    const createFloatingText = () => {
+      const floatingDiv = document.createElement('div');
+      floatingDiv.style.position = 'absolute';
+      floatingDiv.style.top = Math.random() * 100 + '%';
+      floatingDiv.style.left = Math.random() * 100 + '%';
+      floatingDiv.style.fontSize = '0.8rem';
+      floatingDiv.style.opacity = '0.5';
+      floatingDiv.style.pointerEvents = 'none';
+      floatingDiv.style.transition = 'all 3s ease';
+      floatingDiv.textContent = ['✨', '🌟', '💫', '🚀', '🌐'][Math.floor(Math.random() * 5)];
+
+      document.querySelector('.main').appendChild(floatingDiv);
+
+      setTimeout(() => {
+        floatingDiv.style.transform = 'translateY(-' + Math.random() * 100 + 'px)';
+        floatingDiv.style.opacity = '0';
+        setTimeout(() => {
+          floatingDiv.remove();
+        }, 3000);
+      }, 100);
+    };
+
+    // Create floating effects periodically
+    setInterval(createFloatingText, 2000);
+
+    console.log('🎬 DEBUG: SplashText system fully initialized');
+    }
+
     // Check device token on page load
     async function checkAuth() {
+      console.log('🔐 DEBUG: Starting authentication check...');
       const deviceToken = localStorage.getItem('deviceToken');
       if (!deviceToken) {
+        console.log('🔐 DEBUG: No device token found, redirecting to signin');
         window.location.href = '/signin';
         return;
       }
 
+      console.log('🔐 DEBUG: Device token found, validating...');
       try {
         const response = await fetch('/api/validate-token', {
           method: 'POST',
@@ -54,29 +571,40 @@
         });
 
         const data = await response.json();
+        console.log('🔐 DEBUG: Token validation response:', data);
+
         if (!data.valid) {
+          console.log('🔐 DEBUG: Token invalid, removing and redirecting to signin');
           localStorage.removeItem('deviceToken');
           window.location.href = '/signin';
         } else {
+          console.log('🔐 DEBUG: Token valid, loading notifications');
           // Load notifications after auth check
           loadNotifications();
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('🔐 DEBUG: Auth check failed:', error);
         window.location.href = '/signin';
       }
     }
 
     // Load and display notifications
     async function loadNotifications() {
+      console.log('📢 DEBUG: Starting notification loading...');
       const deviceToken = localStorage.getItem('deviceToken');
-      if (!deviceToken) return;
+      if (!deviceToken) {
+        console.log('📢 DEBUG: No device token, skipping notifications');
+        return;
+      }
 
       try {
+        console.log('📢 DEBUG: Fetching notifications from API...');
         const response = await fetch(`/api/undismissed-messages?deviceToken=${encodeURIComponent(deviceToken)}`);
         const messages = await response.json();
+        console.log('📢 DEBUG: Notifications fetched:', messages);
 
         if (messages.length > 0) {
+          console.log('📢 DEBUG: Found', messages.length, 'notifications, rendering...');
           const notificationsDiv = document.getElementById('notifications');
           notificationsDiv.innerHTML = messages.map(msg => `
             <div class="notification" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 15px; position: relative;">
@@ -86,31 +614,41 @@
             </div>
           `).join('');
           notificationsDiv.style.display = 'block';
+          console.log('📢 DEBUG: Notifications rendered successfully');
+        } else {
+          console.log('📢 DEBUG: No notifications to display');
         }
       } catch (error) {
-        console.error('Failed to load notifications:', error);
+        console.error('📢 DEBUG: Failed to load notifications:', error);
       }
     }
 
     // Dismiss notification
     async function dismissNotification(messageId) {
+      console.log('📢 DEBUG: Dismissing notification ID:', messageId);
       const deviceToken = localStorage.getItem('deviceToken');
-      if (!deviceToken) return;
+      if (!deviceToken) {
+        console.log('📢 DEBUG: No device token, cannot dismiss notification');
+        return;
+      }
 
       try {
+        console.log('📢 DEBUG: Sending dismiss request to API...');
         await fetch('/api/dismiss-message', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ deviceToken, messageId })
         });
+        console.log('📢 DEBUG: Notification dismissed, reloading notifications');
         // Reload notifications
         loadNotifications();
       } catch (error) {
-        console.error('Failed to dismiss notification:', error);
+        console.error('📢 DEBUG: Failed to dismiss notification:', error);
       }
     }
 
     // Check auth immediately
+    console.log('🚀 DEBUG: Starting page initialization sequence...');
     checkAuth();
 
     // Search history functionality
@@ -136,7 +674,7 @@
             </div>
             <div class="modal-body">
               ${history.length === 0 ? '<p>No search history found.</p>' :
-                history.map(item => `
+            history.map(item => `
                   <div class="history-item">
                     <div class="history-info">
                       <div class="history-title">${item.title || item.url}</div>
@@ -149,7 +687,7 @@
                     </div>
                   </div>
                 `).join('')
-              }
+          }
             </div>
             <div class="modal-footer">
               <button onclick="clearAllHistory()" class="clear-btn">Clear All History</button>
@@ -326,7 +864,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <audio id="menu-audio" autoplay>
-     <source src="assets/media/audio/menu.mp3" type="audio/mpeg">
+    <source src="assets/media/audio/menu.mp3" type="audio/mpeg">
   </audio>
   <script src="assets/js/index-3.js"></script>
   <script src="/assets/js/h1.js"></script>
@@ -334,39 +872,57 @@
   <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
   <script src="/assets/js/m1.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎵 DEBUG: Starting audio system initialization...');
+
+    document.addEventListener('DOMContentLoaded', function () {
+      console.log('🎵 DEBUG: DOM loaded, initializing audio system');
       let selectedSong;
       let songName;
+
       // king von 
       if (Math.random() < 0.0033) {
         selectedSong = ' - Armed _ Dangerous - King Von.mp3';
         songName = ' - Armed _ Dangerous - King Von';
-        // normal shit
+        console.log('🎵 DEBUG: Selected special song:', selectedSong);
       } else {
         const audioFiles = ['Bliss.mp3', 'Broken Attachment.mp3', 'Frank Saint.mp3', 'Goodnight Dad I Love You.mp3', 'hide the pain.mp3', 'menu.mp3', 'milk cassette x.mp3', 'old memories of you.mp3', 'pointless.mp3', 'sakura zxc.mp3', 'see you in heaven.mp3', 'Song For Those Who Keep Silent.mp3', 'The Lobotomy.mp3', 'thought you were sweet.mp3'];
         const randomIndex = Math.floor(Math.random() * audioFiles.length);
         selectedSong = audioFiles[randomIndex];
         songName = selectedSong.replace(/\.mp3$/, '');
+        console.log('🎵 DEBUG: Selected random song:', selectedSong);
       }
 
       const audio = document.getElementById('menu-audio');
-      audio.querySelector('source').src = `assets/media/audio/${selectedSong}`;
+      const audioSource = audio.querySelector('source');
+      audioSource.src = `assets/media/audio/${selectedSong}`;
+      console.log('🎵 DEBUG: Audio source set to:', selectedSong);
+
       document.getElementById('song-title').textContent = songName;
+      console.log('🎵 DEBUG: Song title set to:', songName);
 
       audio.volume = 0.65;
+      console.log('🎵 DEBUG: Audio volume set to:', audio.volume);
+
       const audioControl = document.getElementById('audio-control');
       const icon = audioControl.querySelector('i');
 
-      audioControl.addEventListener('click', function() {
+      audioControl.addEventListener('click', function () {
+        console.log('🎵 DEBUG: Audio control clicked, current state:', audio.paused ? 'paused' : 'playing');
         if (audio.paused) {
           audio.play();
           icon.className = 'fas fa-pause';
+          console.log('🎵 DEBUG: Audio started playing');
         } else {
           audio.pause();
           icon.className = 'fas fa-play';
+          console.log('🎵 DEBUG: Audio paused');
         }
       });
+
+      console.log('🎵 DEBUG: Audio system fully initialized');
     });
+
+    console.log('🎵 DEBUG: Audio system setup complete');
   </script>
 </body>
 
