@@ -1,7 +1,6 @@
-.center {
-   display: flex;
-   justify-content: center;
-   align-items: center;
+html, body {
+  height: 100%;
+  margin: 0;
 }
 
 .title {
@@ -66,6 +65,7 @@
    justify-content: center;
    align-items: center;
    position: relative;
+   margin: 0 auto;
 }
 
 /* Fallback styles for browsers without flexbox support */
@@ -92,16 +92,13 @@
    font-family: "Poppins", sans-serif;
    font-size: 16px !important;
    box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2) !important;
-   background: var(--background-input) !important;
-   -webkit-backdrop-filter: var(--backdrop-filter) !important;
-   -moz-backdrop-filter: var(--backdrop-filter) !important;
-   -ms-backdrop-filter: var(--backdrop-filter) !important;
-   -o-backdrop-filter: var(--backdrop-filter) !important;
-   backdrop-filter: var(--backdrop-filter) !important;
-   /* Multiple fallbacks for better browser support */
-   background: rgba(66, 65, 77, 0.8) !important;
-   background: var(--background-input) !important;
-   color: var(--text-primary) !important;
+   background: rgba(50, 50, 50, 0.5) !important;
+   -webkit-backdrop-filter: blur(10px) !important;
+   -moz-backdrop-filter: blur(10px) !important;
+   -ms-backdrop-filter: blur(10px) !important;
+   -o-backdrop-filter: blur(10px) !important;
+   backdrop-filter: blur(10px) !important;
+   color: #ffffff !important;
    border-radius: 25px !important;
    border: none !important;
    outline: none !important;
@@ -131,14 +128,14 @@ input#input {
    width: 50vw !important;
    height: 5vh !important;
    border-radius: 25px !important;
-   background: var(--background-input) !important;
-   -webkit-backdrop-filter: var(--backdrop-filter) !important;
-   backdrop-filter: var(--backdrop-filter) !important;
+   background: rgba(50, 50, 50, 0.5) !important;
+   -webkit-backdrop-filter: blur(10px) !important;
+   backdrop-filter: blur(10px) !important;
    text-align: center !important;
    font-size: 16px !important;
    border: none !important;
    outline: none !important;
-   color: var(--text-primary) !important;
+   color: #ffffff !important;
    transition: 0.4s !important;
    min-width: 300px !important;
    max-width: 800px !important;
@@ -146,8 +143,8 @@ input#input {
    z-index: 10000 !important;
    position: relative !important;
    /* Add fallback for browsers that don't support backdrop-filter */
-   background: rgba(255, 255, 255, 0.9) !important;
-   color: #000 !important;
+   background: rgba(50, 50, 50, 0.5) !important;
+   color: #ffffff !important;
 }
 
 /* Fallback styles for browsers without backdrop-filter support */
@@ -179,8 +176,8 @@ form#fv input {
    max-width: 800px !important;
    font-size: 16px !important;
    padding: 20px !important;
-   background: rgba(255, 255, 255, 0.9) !important;
-   color: #000 !important;
+   background: rgba(50, 50, 50, 0.5) !important;
+   color: #ffffff !important;
    border: 2px solid #fff !important;
    border-radius: 25px !important;
    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
@@ -189,7 +186,8 @@ form#fv input {
 }
 
 #particles-js {
-   position: absolute;
+   position: fixed;
+   inset: 0;
    width: 100%;
    height: 100%;
    top: 0vw;
