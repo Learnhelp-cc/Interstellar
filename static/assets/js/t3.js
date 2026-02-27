@@ -316,29 +316,28 @@ function goForward() {
     console.error("No active iframe found");
   }
 }
-// Remove Nav
+// Remove Nav - Always hide the tab overlay and position site below nav bar
 document.addEventListener("DOMContentLoaded", () => {
   const tb = document.getElementById("tabs-button");
   const nb = document.getElementById("right-side-nav");
+  
   if (tb && nb) {
-    tb.addEventListener("click", () => {
-      const activeIframe = document.querySelector("#frame-container iframe.active");
-      if (activeIframe) {
-        if (nb.style.display === "none") {
-          nb.style.display = "";
-          activeIframe.style.top = "10%";
-          activeIframe.style.height = "90%";
-          tb.querySelector("i").classList.remove("fa-magnifying-glass-plus");
-          tb.querySelector("i").classList.add("fa-magnifying-glass-minus");
-        } else {
-          nb.style.display = "none";
-          activeIframe.style.top = "5%";
-          activeIframe.style.height = "95%";
-          tb.querySelector("i").classList.remove("fa-magnifying-glass-minus");
-          tb.querySelector("i").classList.add("fa-magnifying-glass-plus");
-        }
-      }
-    });
+    // Always hide the tab overlay by default
+    nb.style.display = "none";
+    
+    // Position the iframe below the navigation bar
+    const activeIframe = document.querySelector("#frame-container iframe.active");
+    if (activeIframe) {
+      activeIframe.style.top = "2.5em"; // Below the nav bar (2.5em height)
+      activeIframe.style.height = "calc(100% - 2.5em)";
+    }
+    
+    // Update the tabs button icon to indicate it's always hidden
+    tb.querySelector("i").classList.remove("fa-magnifying-glass-minus");
+    tb.querySelector("i").classList.add("fa-magnifying-glass-plus");
+    
+    // Remove the click functionality since overlay is always hidden
+    tb.style.display = "none"; // Hide the tabs button entirely
   }
 });
 if (navigator.userAgent.includes("Chrome")) {

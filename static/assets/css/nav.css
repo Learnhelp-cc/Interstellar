@@ -97,6 +97,61 @@ img {
    right: 2%;
 }
 
+.container-with-nav {
+   position: relative;
+   width: 100%;
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 20px;
+   z-index: 10;
+}
+
+.container-with-nav .f-nav {
+   margin-bottom: 20px;
+   width: 100%;
+}
+
+.container-with-nav .input-c {
+   margin-bottom: 20px;
+   display: flex;
+   gap: 15px;
+   align-items: center;
+   justify-content: center;
+}
+
+.container-with-nav .input-c input {
+   width: 300px;
+   padding: 10px;
+   border-radius: 5px;
+   border: 1px solid #ccc;
+   background: rgba(255, 255, 255, 0.1);
+   color: white;
+}
+
+.container-with-nav .input-c select {
+   padding: 10px;
+   border-radius: 5px;
+   border: 1px solid #ccc;
+   background: rgba(255, 255, 255, 0.1);
+   color: white;
+   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+   .container-with-nav {
+      padding: 10px;
+   }
+   
+   .container-with-nav .input-c {
+      flex-direction: column;
+      gap: 10px;
+   }
+   
+   .container-with-nav .input-c input {
+      width: 100%;
+   }
+}
+
 .f-nav-right .navbar-link {
    margin-left: 10px;
    text-transform: uppercase;

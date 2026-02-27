@@ -124,7 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="f-nav-right">
         <a class="navbar-link" href="/./a"><i class="fa-solid fa-gamepad navbar-icon"></i><an>&#71;&#97;</an><an>&#109;&#101;&#115;</an></a>
         <a class="navbar-link" href="/./b"><i class="fa-solid fa-phone navbar-icon"></i><an>&#65;&#112;</an><an>&#112;&#115;</an></a>
-        <a class="navbar-link" href="/./chat"><i class="fa-solid fa-comments navbar-icon"></i><an>&#67;&#104;&#97;&#116;</an></a>
         <a class="navbar-link" href="/./ai"><i class="fa-solid fa-brain navbar-icon"></i><an>&#65;&#73;</an></a>
         <a class="navbar-link" href="/./account"><i class="fa-solid fa-user navbar-icon"></i><an>&#77;&#121;&#32;</an><an>&#65;&#99;&#99;&#111;&#117;&#110;&#116;</an></a>
         ${qp ? "" : '<a class="navbar-link" href="/./d"><i class="fa-solid fa-laptop navbar-icon"></i><an>&#84;&#97;</an><an>&#98;&#115;</an></a>'}

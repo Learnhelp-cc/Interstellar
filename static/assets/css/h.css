@@ -187,16 +187,31 @@ form#fv input {
 
 #particles-js {
    position: fixed;
-   inset: 0;
+   top: 0;
+   left: 0;
    width: 100%;
    height: 100%;
-   top: 0vw;
-   background-color: var(--bg-c);
-   background-repeat: no-repeat;
-   background-size: cover;
-   background-position: 50% 50%;
-   overflow: hidden;
+   z-index: 0;
+}
+
+#particles-js canvas {
+   position: absolute;
+   z-index: 0;
+}
+
+.frame-container,
+iframe,
+.nav-bar,
+.nav {
+   position: relative;
+   z-index: 10;
+}
+
+.app {
+   position: relative;
    z-index: 1;
+   width: 100%;
+   height: 100%;
 }
 
 /* Fallback styles for browsers without CSS variables support */
