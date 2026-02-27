@@ -35,11 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const nameElement = document.getElementById("name");
   const customIcon = localStorage.getItem("CustomIcon");
   const customName = localStorage.getItem("CustomName");
-  iconElement.value = customIcon;
-  nameElement.value = customName;
+  if (iconElement) iconElement.value = customIcon || "";
+  if (nameElement) nameElement.value = customName || "";
 
-  if (localStorage.getItem("ab") === "true") {
-    document.getElementById("ab-settings-switch").checked = true;
+  const abSwitch = document.getElementById("ab-settings-switch");
+  if (abSwitch && localStorage.getItem("ab") === "true") {
+    abSwitch.checked = true;
   }
 });
 
@@ -264,10 +265,10 @@ function AB() {
       const style = iframe.style;
       const link = doc.createElement("link");
 
-      const name = localStorage.getItem("name") || "My Drive - Google Drive";
+      const siteName = localStorage.getItem("siteName") || "My Drive - Google Drive";
       const icon = localStorage.getItem("icon") || "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
 
-      doc.title = name;
+      doc.title = siteName;
       link.rel = "icon";
       link.href = icon;
 

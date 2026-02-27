@@ -18,7 +18,6 @@ window.addEventListener("load", () => {
     activeIframe.src = `/a/${__uv$config.encodeUrl(url)}`;
     activeIframe.dataset.tabUrl = url;
     input.value = url;
-    console.log(activeIframe.dataset.tabUrl);
   }
   function isUrl(val = "") {
     if (/^http(s?):\/\//.test(val) || (val.includes(".") && val.substr(0, 1) !== " ")) {
@@ -163,14 +162,10 @@ document.addEventListener("DOMContentLoaded", event => {
     if (selectedTab) {
       selectedTab.classList.add("active");
       Load();
-    } else {
-      console.log("No selected tab found with ID:", tabId);
     }
     const selectedIframe = iframeContainer.querySelector(`[data-tab-id='${tabId}']`);
     if (selectedIframe) {
       selectedIframe.classList.add("active");
-    } else {
-      console.log("No selected iframe found with ID:", tabId);
     }
   }
   let dragTab = null;
@@ -213,9 +208,9 @@ function popout() {
   if (activeIframe) {
     const newWindow = window.open("about:blank", "_blank");
     if (newWindow) {
-      const name = localStorage.getItem("name") || "My Drive - Google Drive";
+      const siteName = localStorage.getItem("siteName") || "My Drive - Google Drive";
       const icon = localStorage.getItem("icon") || "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
-      newWindow.document.title = name;
+      newWindow.document.title = siteName;
       const link = newWindow.document.createElement("link");
       link.rel = "icon";
       link.href = encodeURI(icon);
@@ -316,26 +311,29 @@ function goForward() {
     console.error("No active iframe found");
   }
 }
-// Remove Nav
+// Remove Nav - Always hide the tab overlay and position site below nav bar
 document.addEventListener("DOMContentLoaded", () => {
   const tb = document.getElementById("tabs-button");
   const nb = document.getElementById("right-side-nav");
-  tb.addEventListener("click", () => {
+  
+  if (tb && nb) {
+    // Always hide the tab overlay by default
+    nb.style.display = "none";
+    
+    // Position the iframe below the navigation bar
     const activeIframe = document.querySelector("#frame-container iframe.active");
-    if (nb.style.display === "none") {
-      nb.style.display = "";
-      activeIframe.style.top = "10%";
-      activeIframe.style.height = "90%";
-      tb.querySelector("i").classList.remove("fa-magnifying-glass-plus");
-      tb.querySelector("i").classList.add("fa-magnifying-glass-minus");
-    } else {
-      nb.style.display = "none";
-      activeIframe.style.top = "5%";
-      activeIframe.style.height = "95%";
-      tb.querySelector("i").classList.remove("fa-magnifying-glass-minus");
-      tb.querySelector("i").classList.add("fa-magnifying-glass-plus");
+    if (activeIframe) {
+      activeIframe.style.top = "2.5em"; // Below the nav bar (2.5em height)
+      activeIframe.style.height = "calc(100% - 2.5em)";
     }
-  });
+    
+    // Update the tabs button icon to indicate it's always hidden
+    tb.querySelector("i").classList.remove("fa-magnifying-glass-minus");
+    tb.querySelector("i").classList.add("fa-magnifying-glass-plus");
+    
+    // Remove the click functionality since overlay is always hidden
+    tb.style.display = "none"; // Hide the tabs button entirely
+  }
 });
 if (navigator.userAgent.includes("Chrome")) {
   window.addEventListener("resize", () => {

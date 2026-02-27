@@ -18,22 +18,24 @@
 
 <body class="center" onload="SplashT">
   <div id="particles-js">
-    <div class="f-nav"></div>
-    <div class="input-c">
-      <input type="text" id="search" onkeyup="bar()" placeholder="Search" />
-      <select id="category" name="category" onchange="category()">
-        <option value="all">&#65;&#108;&#108;</option>
-        <option value="android">
-          &#65;&#110;&#100;&#114;&#111;&#105;&#100;&#32;&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
-        <option value="2P">&#77;&#117;&#108;&#116;&#105;&#112;&#108;&#97;&#121;&#101;&#114;</option>
-        <option value="sports">&#83;&#112;&#111;&#114;&#116;&#115;</option>
-        <option value="flash">&#70;&#108;&#97;&#115;&#104;</option>
-        <option value="emu">&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
-        <option value="local">&#76;&#111;&#99;&#97;&#108;</option>
-      </select>
+    <div class="container-with-nav">
+      <div class="f-nav"></div>
+      <div class="input-c">
+        <input type="text" id="search" onkeyup="bar()" placeholder="Search" />
+        <select id="category" name="category" onchange="category()">
+          <option value="all">&#65;&#108;&#108;</option>
+          <option value="android">
+            &#65;&#110;&#100;&#114;&#111;&#105;&#100;&#32;&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
+          <option value="2P">&#77;&#117;&#108;&#116;&#105;&#112;&#108;&#97;&#121;&#101;&#114;</option>
+          <option value="sports">&#83;&#112;&#111;&#114;&#116;&#115;</option>
+          <option value="flash">&#70;&#108;&#97;&#115;&#104;</option>
+          <option value="emu">&#69;&#109;&#117;&#108;&#97;&#116;&#111;&#114;</option>
+          <option value="local">&#76;&#111;&#99;&#97;&#108;</option>
+        </select>
+      </div>
+      <div class="pinned"></div>
+      <div class="apps"></div>
     </div>
-    <div class="pinned"></div>
-    <div class="apps"></div>
   </div>
   <script>
     // Check device token on page load

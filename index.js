@@ -20,12 +20,12 @@ import multer from 'multer';
 import * as openpgp from 'openpgp';
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
-import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb, addMusicFile, getMusicFiles, getMusicFileByHash, deleteMusicFile, addToQueue, getMusicQueue, removeFromQueue, clearMusicQueue, ensureUserGPGKey, createWarnlistTable } from "./db.js";
+import { initDB, getUser, createUser, updateUser, getAllUsers, deleteUser, getUserByDeviceToken, updateDeviceToken, createMessage, getActiveMessages, getAllMessages, updateMessage, deleteMessage, dismissMessage, getUndismissedMessages, addSearchHistory, getSearchHistory, deleteSearchHistory, clearSearchHistory, createAIChat, getAIChats, getAIChat, deleteAIChat, addAIMessage, getAIMessages, ensureUserAESKey, encryptAES128, decryptAES128, generateReferralCode, setUserReferralCode, getUserByReferralCode, getUserReferrals, createUserWithReferral, referDb, addMusicFile, getMusicFiles, getMusicFileByHash, deleteMusicFile, addToQueue, getMusicQueue, removeFromQueue, clearMusicQueue, ensureUserGPGKey, createWarnlistTable, db } from "./db.js";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-dotenv.config({ path: path.join(__dirname, "creds.env") });
+const __dirname = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, '$1');
+dotenv.config({ path: path.join(process.cwd(), "creds.env") });
 
 // AES-256 encryption setup
 const MASTER_KEY = process.env.MASTER_KEY;
@@ -60,7 +60,7 @@ function decryptPassword(encryptedPassword) {
 
 // Configure multer for file uploads
 const upload = multer({
-  dest: path.join(__dirname, 'uploads'),
+  dest: path.join(process.cwd(), 'uploads'),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
@@ -76,7 +76,7 @@ const upload = multer({
 
 // Configure multer for music file uploads
 const musicUpload = multer({
-  dest: path.join(__dirname, 'static/assets/custommusic'),
+  dest: path.join(process.cwd(), 'static/assets/custommusic'),
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit for music files
   },
@@ -91,13 +91,13 @@ const musicUpload = multer({
 });
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Ensure custom music directory exists
-const customMusicDir = path.join(__dirname, 'static/assets/custommusic');
+const customMusicDir = path.join(process.cwd(), 'static/assets/custommusic');
 if (!fs.existsSync(customMusicDir)) {
   fs.mkdirSync(customMusicDir, { recursive: true });
 }
@@ -115,8 +115,9 @@ try {
 }
 
 // Migrate existing plain text passwords to encrypted
-const migrationDb = new Database(path.join(__dirname, 'users.db'));
+const migrationDb = new Database(path.join(process.cwd(), 'users.db'));
 const users = migrationDb.prepare('SELECT id, password FROM users').all();
+
 for (const user of users) {
   try {
     // Try to decrypt - if it fails, it's plain text
@@ -128,7 +129,6 @@ for (const user of users) {
     console.log(chalk.yellow(`🔐 Migrated password for user ID ${user.id} to encrypted format`));
   }
 }
-migrationDb.close();
 
 const server = http.createServer();
 const app = express();
@@ -374,7 +374,7 @@ function securityMiddleware(req, res, next) {
     "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://particlesjs.com https://*.particlesjs.com; " +
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
     "img-src 'self' data: https: blob:; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
+    "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
     "connect-src 'self' wss: ws: https:; " +
     "media-src 'self' data: blob:; " +
     "object-src 'none'; " +
@@ -840,6 +840,7 @@ app.get('/admin', adminAuth, (req, res) => {
         <button onclick="manageUsers()">Manage Users</button>
         <button onclick="manageMessages()">Manage Messages</button>
         <button onclick="viewReferrals()">View Referrals</button>
+        <button onclick="manageSearchHistory()">Manage Search History</button>
         <button onclick="toggleLockdown()">${isLockedDown ? 'Lift Lockdown' : 'Activate Lockdown'}</button>
       </div>
       <div id="content"></div>
@@ -1068,6 +1069,9 @@ app.get('/admin', adminAuth, (req, res) => {
               document.getElementById('content').innerHTML = '<h2>Referral Information</h2>' + html;
             });
         }
+        function manageSearchHistory() {
+          window.open('/search-history', '_blank');
+        }
         function toggleLockdown() {
           const action = '${isLockedDown ? 'unlock' : 'lockdown'}';
           fetch('/admin/' + action, { method: 'POST' })
@@ -1078,6 +1082,143 @@ app.get('/admin', adminAuth, (req, res) => {
     </html>
   `);
 });
+
+// Admin search history routes
+app.get('/admin/search-history', adminAuth, async (req, res) => {
+  try {
+    // Get all search history with user information
+    const stmt = db.prepare(`
+      SELECT 
+        sh.id,
+        sh.user_id,
+        sh.url,
+        sh.title,
+        sh.visited_at,
+        u.username
+      FROM search_history sh
+      JOIN users u ON sh.user_id = u.id
+      ORDER BY sh.visited_at DESC
+      LIMIT 1000
+    `);
+    const history = stmt.all();
+    
+    // Add domain extraction
+    const historyWithDomains = history.map(item => ({
+      ...item,
+      domain: extractDomain(item.url)
+    }));
+    
+    res.json(historyWithDomains);
+  } catch (error) {
+    console.error('Error fetching search history:', error);
+    res.status(500).json({ message: 'Failed to fetch search history' });
+  }
+});
+
+app.get('/admin/search-history/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const stmt = db.prepare(`
+      SELECT 
+        sh.id,
+        sh.user_id,
+        sh.url,
+        sh.title,
+        sh.visited_at,
+        u.username
+      FROM search_history sh
+      JOIN users u ON sh.user_id = u.id
+      WHERE sh.id = ?
+    `);
+    const history = stmt.get(id);
+    
+    if (!history) {
+      return res.status(404).json({ message: 'Search history entry not found' });
+    }
+    
+    res.json({
+      ...history,
+      domain: extractDomain(history.url)
+    });
+  } catch (error) {
+    console.error('Error fetching search history entry:', error);
+    res.status(500).json({ message: 'Failed to fetch search history entry' });
+  }
+});
+
+app.delete('/admin/search-history/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const stmt = db.prepare('DELETE FROM search_history WHERE id = ?');
+    const result = stmt.run(id);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ message: 'Search history entry not found' });
+    }
+    
+    res.json({ message: 'Search history entry deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting search history entry:', error);
+    res.status(500).json({ message: 'Failed to delete search history entry' });
+  }
+});
+
+app.delete('/admin/search-history', adminAuth, async (req, res) => {
+  try {
+    const stmt = db.prepare('DELETE FROM search_history');
+    stmt.run();
+    res.json({ message: 'All search history cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing search history:', error);
+    res.status(500).json({ message: 'Failed to clear search history' });
+  }
+});
+
+app.delete('/admin/search-history/bulk', adminAuth, async (req, res) => {
+  try {
+    const { history_ids } = req.body;
+    if (!history_ids || !Array.isArray(history_ids)) {
+      return res.status(400).json({ message: 'history_ids array is required' });
+    }
+    
+    const placeholders = history_ids.map(() => '?').join(',');
+    const stmt = db.prepare(`DELETE FROM search_history WHERE id IN (${placeholders})`);
+    stmt.run(...history_ids);
+    
+    res.json({ message: 'Selected search history entries deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting search history entries:', error);
+    res.status(500).json({ message: 'Failed to delete search history entries' });
+  }
+});
+
+app.delete('/admin/search-history/user-bulk', adminAuth, async (req, res) => {
+  try {
+    const { user_ids } = req.body;
+    if (!user_ids || !Array.isArray(user_ids)) {
+      return res.status(400).json({ message: 'user_ids array is required' });
+    }
+    
+    const placeholders = user_ids.map(() => '?').join(',');
+    const stmt = db.prepare(`DELETE FROM search_history WHERE user_id IN (${placeholders})`);
+    stmt.run(...user_ids);
+    
+    res.json({ message: 'Search history for selected users deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user search history:', error);
+    res.status(500).json({ message: 'Failed to delete user search history' });
+  }
+});
+
+// Helper function to extract domain from URL
+function extractDomain(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (error) {
+    return 'unknown';
+  }
+}
 
 app.get('/admin/logs', adminAuth, (req, res) => {
   res.json(suspectLogs);
@@ -2211,12 +2352,35 @@ const routes = [
   { path: "/ai", file: "ai.html" },
   { path: "/account", file: "account.html" },
   { path: "/metrics", file: "metrics.html" },
+  { path: "/search-history", file: "search-history.html" },
   { path: "/", file: "index.html" },
 ];
 
 // biome-ignore lint: idk
 routes.forEach(route => {
   app.get(route.path, (req, res) => {
+    // Check authentication for search history page
+    if (route.path === '/search-history') {
+      const deviceToken = req.cookies.deviceToken || req.headers['x-device-token'];
+      if (!deviceToken) {
+        return res.redirect('/signin');
+      }
+
+      try {
+        const user = getUserByDeviceToken(deviceToken);
+        if (!user || user.pending) {
+          return res.redirect('/signin');
+        }
+        
+        // Check if user is admin (simplified check - in real app, verify properly)
+        // For now, we'll allow all authenticated users to access search history
+        // but you could add admin role checking here
+      } catch (error) {
+        console.error('Authentication error for search history:', error);
+        return res.redirect('/signin');
+      }
+    }
+    
     res.sendFile(path.join(__dirname, "static", route.file));
   });
 });
@@ -2497,10 +2661,18 @@ app.use((err, req, res, next) => {
 });
 
 server.on("request", (req, res) => {
-  if (bareServer.shouldRoute(req)) {
+  // First check if this is a static file request
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = url.pathname;
+
+  // Check if it's a static file (has an extension or starts with /assets)
+  const isStaticFile = pathname.includes('.') || pathname.startsWith('/assets/') || pathname.startsWith('/uploads/');
+
+  if (isStaticFile) {
+    app(req, res);
+  } else if (bareServer.shouldRoute(req)) {
     // Log proxy requests as potentially suspect
     const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
-    const url = new URL(req.url, `http://${req.headers.host}`);
     logSuspectActivity(clientIP, url.hostname);
 
     // Collect metrics for proxy requests
@@ -2800,5 +2972,183 @@ wssChat.on('connection', (ws, req) => {
     }
   });
 });
+
+// Function to create the main search interface
+function createMain() {
+  const main = document.createElement("div");
+  main.className = "main";
+  main.id = "main";
+  main.style.display = "flex";
+  main.style.flexDirection = "column";
+  main.style.alignItems = "center";
+  main.style.justifyContent = "center";
+  main.style.minHeight = "100vh";
+  main.style.width = "100%";
+  main.style.padding = "20px";
+  main.style.boxSizing = "border-box";
+
+  const searchBar = document.createElement("div");
+  searchBar.className = "search-bar";
+  searchBar.style.display = "flex";
+  searchBar.style.gap = "10px";
+  searchBar.style.marginBottom = "20px";
+  searchBar.style.width = "100%";
+  searchBar.style.maxWidth = "600px";
+  searchBar.style.justifyContent = "center";
+  searchBar.style.alignItems = "center";
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = "Search the web...";
+  searchInput.style.padding = "12px 16px";
+  searchInput.style.border = "2px solid #ccc";
+  searchInput.style.borderRadius = "25px";
+  searchInput.style.fontSize = "16px";
+  searchInput.style.width = "100%";
+  searchInput.style.maxWidth = "500px";
+  searchInput.style.outline = "none";
+  searchInput.style.transition = "border-color 0.3s ease";
+  searchInput.style.background = "rgba(255, 255, 255, 0.9)";
+  searchInput.style.backdropFilter = "blur(10px)";
+
+  searchInput.addEventListener("focus", () => {
+    searchInput.style.borderColor = "#007bff";
+  });
+
+  searchInput.addEventListener("blur", () => {
+    searchInput.style.borderColor = "#ccc";
+  });
+
+  searchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      const query = searchInput.value.trim();
+      if (query) {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank");
+      }
+    }
+  });
+
+  const searchButton = document.createElement("button");
+  searchButton.textContent = "Search";
+  searchButton.style.padding = "12px 24px";
+  searchButton.style.backgroundColor = "#007bff";
+  searchButton.style.color = "white";
+  searchButton.style.border = "none";
+  searchButton.style.borderRadius = "25px";
+  searchButton.style.cursor = "pointer";
+  searchButton.style.fontSize = "16px";
+  searchButton.style.transition = "background-color 0.3s ease";
+  searchButton.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+
+  searchButton.addEventListener("mouseover", () => {
+    searchButton.style.backgroundColor = "#0056b3";
+  });
+
+  searchButton.addEventListener("mouseout", () => {
+    searchButton.style.backgroundColor = "#007bff";
+  });
+
+  searchButton.addEventListener("click", () => {
+    const query = searchInput.value.trim();
+    if (query) {
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank");
+    }
+  });
+
+  const title = document.createElement("h1");
+  title.textContent = "Interstellar";
+  title.style.fontSize = "3rem";
+  title.style.marginBottom = "10px";
+  title.style.textAlign = "center";
+  title.style.color = "#333";
+  title.style.textShadow = "2px 2px 4px rgba(0,0,0,0.1)";
+
+  const splashText = document.createElement("p");
+  splashText.textContent = "Explore the universe of knowledge";
+  splashText.style.fontSize = "1.2rem";
+  splashText.style.color = "#666";
+  splashText.style.textAlign = "center";
+  splashText.style.maxWidth = "600px";
+  splashText.style.lineHeight = "1.6";
+
+  searchBar.appendChild(searchInput);
+  searchBar.appendChild(searchButton);
+  main.appendChild(searchBar);
+  main.appendChild(title);
+  main.appendChild(splashText);
+
+  return main;
+}
+
+// Function to create the navigation
+function createNav() {
+  const nav = document.createElement("div");
+  nav.className = "f-nav";
+  nav.style.position = "fixed";
+  nav.style.top = "0";
+  nav.style.left = "0";
+  nav.style.width = "100%";
+  nav.style.height = "60px";
+  nav.style.background = "rgba(255, 255, 255, 0.9)";
+  nav.style.backdropFilter = "blur(10px)";
+  nav.style.borderBottom = "1px solid #eee";
+  nav.style.display = "flex";
+  nav.style.justifyContent = "center";
+  nav.style.alignItems = "center";
+  nav.style.zIndex = "1000";
+
+  const navContainer = document.createElement("div");
+  navContainer.style.display = "flex";
+  navContainer.style.gap = "20px";
+
+  const links = [
+    { text: "Apps", href: "/b" },
+    { text: "Games", href: "/a" },
+    { text: "Settings", href: "/c" },
+    { text: "Tabs", href: "/d" },
+    { text: "Chat", href: "/chat" },
+    { text: "AI", href: "/ai" },
+    { text: "Account", href: "/account" },
+    { text: "Metrics", href: "/metrics" },
+    { text: "Search History", href: "/search-history" }
+  ];
+
+  links.forEach(link => {
+    const a = document.createElement("a");
+    a.href = link.href;
+    a.textContent = link.text;
+    a.style.color = "#333";
+    a.style.textDecoration = "none";
+    a.style.padding = "8px 16px";
+    a.style.borderRadius = "20px";
+    a.style.transition = "background-color 0.3s ease";
+    
+    a.addEventListener("mouseover", () => {
+      a.style.backgroundColor = "#f0f0f0";
+    });
+    
+    a.addEventListener("mouseout", () => {
+      a.style.backgroundColor = "transparent";
+    });
+    
+    navContainer.appendChild(a);
+  });
+
+  nav.appendChild(navContainer);
+  return nav;
+}
+
+// Initialize the page when DOM is loaded
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Create and append navigation
+    const nav = createNav();
+    document.body.appendChild(nav);
+
+    // Create and append main content
+    const main = createMain();
+    document.body.appendChild(main);
+  });
+}
 
 server.listen({ port: PORT });

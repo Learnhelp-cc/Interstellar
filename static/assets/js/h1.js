@@ -1,27 +1,42 @@
 // home.js
+console.log('🏠 DEBUG: Starting h1.js initialization...');
+
 let inFrame;
 
 try {
   inFrame = window !== top;
+  console.log('🏠 DEBUG: Frame detection result:', inFrame);
 } catch (e) {
   inFrame = true;
+  console.log('🏠 DEBUG: Frame detection error, assuming in frame:', e);
 }
-if (!localStorage.getItem("ab")) localStorage.setItem("ab", true);
-if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem("ab") === "true") {
+
+if (!localStorage.getItem("ab")) {
+  localStorage.setItem("ab", true);
+  console.log('🏠 DEBUG: Set default ab setting to true');
+}
+
+console.log('🏠 DEBUG: ab setting:', localStorage.getItem("ab"));
+console.log('🏠 DEBUG: Firefox detection:', navigator.userAgent.includes("Firefox"));
+
+  if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem("ab") === "true") {
+  console.log('🏠 DEBUG: Opening about:blank popup...');
   const popup = open("about:blank", "_blank");
   setTimeout(() => {
     if (!popup || popup.closed) {
+      console.log('🏠 DEBUG: Popup failed to open or was closed');
       alert("Please allow popups for this site. Doing so will allow us to open the site in a about:blank tab and preventing this site from showing up in your history. You can turn this off in the site settings.");
     } else {
+      console.log('🏠 DEBUG: Popup opened successfully');
       const doc = popup.document;
       const iframe = doc.createElement("iframe");
       const style = iframe.style;
       const link = doc.createElement("link");
 
-      const name = localStorage.getItem("name") || "My Drive - Google Drive";
+      const siteName = localStorage.getItem("siteName") || "My Drive - Google Drive";
       const icon = localStorage.getItem("icon") || "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
 
-      doc.title = name;
+      doc.title = siteName;
       link.rel = "icon";
       link.href = icon;
 
@@ -35,6 +50,7 @@ if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem
       doc.body.appendChild(iframe);
 
       const pLink = localStorage.getItem(encodeURI("pLink")) || getRandomUrl();
+      console.log('🏠 DEBUG: Redirecting to:', pLink);
       location.replace(pLink);
 
       const script = doc.createElement("script");
@@ -48,6 +64,11 @@ if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem
       doc.head.appendChild(script);
     }
   }, 2000);
+} else {
+  console.log('🏠 DEBUG: Skipping popup - conditions not met');
+  console.log('  - inFrame:', inFrame);
+  console.log('  - Firefox:', navigator.userAgent.includes("Firefox"));
+  console.log('  - ab setting:', localStorage.getItem("ab"));
 }
 // Splash texts
 const SplashT = [
@@ -66,14 +87,21 @@ const SplashT = [
 let SplashI = Math.floor(Math.random() * SplashT.length);
 const SplashE = document.getElementById("splash");
 
+console.log('🏠 DEBUG: Splash element found:', SplashE);
+
 function US() {
   SplashI = (SplashI + 1) % SplashT.length;
   SplashE.innerText = SplashT[SplashI];
+  console.log('🏠 DEBUG: Splash text changed to:', SplashT[SplashI]);
 }
 
-SplashE.innerText = SplashT[SplashI];
-
-SplashE.addEventListener("click", US);
+if (SplashE) {
+  SplashE.innerText = SplashT[SplashI];
+  SplashE.addEventListener("click", US);
+  console.log('🏠 DEBUG: Splash text set to:', SplashT[SplashI]);
+} else {
+  console.error('🏠 DEBUG: Splash element not found!');
+}
 
 // Rotating Welcome Messages
 const welcomeMessages = [
@@ -134,7 +162,14 @@ const christmasMessages = [
 let currentMessageIndex = 0;
 const welcomeText = document.getElementById("welcome-text");
 
+console.log('🏠 DEBUG: Welcome text element found:', welcomeText);
+
 function rotateWelcomeMessage() {
+  if (!welcomeText) {
+    console.error('🏠 DEBUG: Welcome text element not found!');
+    return;
+  }
+  
   // Check if it's December (month 11) or January (month 0)
   const currentMonth = new Date().getMonth();
   const isChristmasSeason = currentMonth === 11 || currentMonth === 0;
@@ -155,14 +190,20 @@ function rotateWelcomeMessage() {
 
     // Fade in
     welcomeText.classList.remove("fade-out");
+    console.log('🏠 DEBUG: Welcome message updated to:', welcomeText.textContent);
   }, 1000); // Half of transition time
 }
 
 // Start rotating after page load
-setTimeout(() => {
-  rotateWelcomeMessage();
-  setInterval(rotateWelcomeMessage, 3000); // Change every 3 seconds
-}, 2000); // Start after 2 seconds
+document.addEventListener('DOMContentLoaded', function() {
+  if (welcomeText) {
+    rotateWelcomeMessage();
+    setInterval(rotateWelcomeMessage, 3000); // Change every 3 seconds
+    console.log('🏠 DEBUG: Welcome message rotation started');
+  } else {
+    console.error('🏠 DEBUG: Cannot start welcome message rotation - element not found');
+  }
+});
 
 // Random URL
 function getRandomUrl() {
@@ -187,3 +228,128 @@ function getRandomUrl() {
 function randRange(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
+
+// Particles
+document.addEventListener("DOMContentLoaded", event => {
+  // Enable particles by default for rain effect (except on tabs page)
+  if (!window.localStorage.getItem("particles")) {
+    window.localStorage.setItem("particles", "true");
+  }
+  if (window.localStorage.getItem("particles") === "true" && window.location.pathname !== '/d') {
+    // Check if it's December (month 11) or January (month 0) for Christmas season
+    const currentMonth = new Date().getMonth();
+    const isChristmasSeason = currentMonth === 11 || currentMonth === 0;
+    
+    const particlesConfig = {
+      particles: {
+        number: {
+          value: 800,
+          density: {
+            enable: true,
+            value_area: 400,
+          },
+        },
+        color: {
+          value: "#ffffff",
+        },
+        shape: {
+          type: "circle",
+          stroke: {
+            width: 0,
+            color: "#ffffff",
+          },
+          polygon: {
+            nb_sides: 5,
+          },
+          image: {
+            src: "img/github.svg",
+            width: 100,
+            height: 100,
+          },
+        },
+        opacity: {
+          value: 0.6,
+          random: false,
+          anim: {
+            enable: false,
+            speed: 1,
+            opacity_min: 0.3,
+            sync: false,
+          },
+        },
+        size: {
+          value: 2,
+          random: true,
+          anim: {
+            enable: false,
+            speed: 40,
+            size_min: 4,
+            sync: false,
+          },
+        },
+        line_linked: {
+          enable: false,
+          distance: 150,
+          color: "#ffffff",
+          opacity: 0.4,
+          width: 1,
+        },
+        move: {
+          enable: true,
+          speed: isChristmasSeason ? 5 : 20, // Slow down for snow effect during Christmas season
+          direction: "bottom",
+          random: false,
+          straight: true,
+          out_mode: "out",
+          bounce: false,
+          attract: {
+            enable: false,
+            rotateX: 600,
+            rotateY: 1200,
+          },
+        },
+      },
+      interactivity: {
+        detect_on: "canvas",
+        events: {
+          onhover: {
+            enable: true,
+            mode: "repulse",
+          },
+          onclick: {
+            enable: false,
+            mode: "push",
+          },
+          resize: true,
+        },
+        modes: {
+          grab: {
+            distance: 400,
+            line_linked: {
+              opacity: 1,
+            },
+          },
+          bubble: {
+            distance: 400,
+            size: 40,
+            duration: 2,
+            opacity: 8,
+            speed: 3,
+          },
+          repulse: {
+            distance: 40,
+            duration: 0.4,
+          },
+          push: {
+            particles_nb: 4,
+          },
+          remove: {
+            particles_nb: 2,
+          },
+        },
+      },
+      retina_detect: true,
+    };
+    particlesJS("particles-js", particlesConfig);
+  }
+});
