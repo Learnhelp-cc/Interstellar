@@ -213,9 +213,9 @@ function popout() {
   if (activeIframe) {
     const newWindow = window.open("about:blank", "_blank");
     if (newWindow) {
-      const name = localStorage.getItem("name") || "My Drive - Google Drive";
+      const siteName = localStorage.getItem("siteName") || "My Drive - Google Drive";
       const icon = localStorage.getItem("icon") || "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
-      newWindow.document.title = name;
+      newWindow.document.title = siteName;
       const link = newWindow.document.createElement("link");
       link.rel = "icon";
       link.href = encodeURI(icon);
@@ -320,22 +320,26 @@ function goForward() {
 document.addEventListener("DOMContentLoaded", () => {
   const tb = document.getElementById("tabs-button");
   const nb = document.getElementById("right-side-nav");
-  tb.addEventListener("click", () => {
-    const activeIframe = document.querySelector("#frame-container iframe.active");
-    if (nb.style.display === "none") {
-      nb.style.display = "";
-      activeIframe.style.top = "10%";
-      activeIframe.style.height = "90%";
-      tb.querySelector("i").classList.remove("fa-magnifying-glass-plus");
-      tb.querySelector("i").classList.add("fa-magnifying-glass-minus");
-    } else {
-      nb.style.display = "none";
-      activeIframe.style.top = "5%";
-      activeIframe.style.height = "95%";
-      tb.querySelector("i").classList.remove("fa-magnifying-glass-minus");
-      tb.querySelector("i").classList.add("fa-magnifying-glass-plus");
-    }
-  });
+  if (tb && nb) {
+    tb.addEventListener("click", () => {
+      const activeIframe = document.querySelector("#frame-container iframe.active");
+      if (activeIframe) {
+        if (nb.style.display === "none") {
+          nb.style.display = "";
+          activeIframe.style.top = "10%";
+          activeIframe.style.height = "90%";
+          tb.querySelector("i").classList.remove("fa-magnifying-glass-plus");
+          tb.querySelector("i").classList.add("fa-magnifying-glass-minus");
+        } else {
+          nb.style.display = "none";
+          activeIframe.style.top = "5%";
+          activeIframe.style.height = "95%";
+          tb.querySelector("i").classList.remove("fa-magnifying-glass-minus");
+          tb.querySelector("i").classList.add("fa-magnifying-glass-plus");
+        }
+      }
+    });
+  }
 });
 if (navigator.userAgent.includes("Chrome")) {
   window.addEventListener("resize", () => {

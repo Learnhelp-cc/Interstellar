@@ -346,9 +346,26 @@
     console.log('🔍 DEBUG: Browser compatibility and polyfill setup complete');
   </script>
   <script src="/assets/js/h1.js" defer></script>
+  
+  <!-- Ensure __uv$config is loaded before other scripts that depend on it -->
+  <script>
+    // Load UV config immediately to ensure it's available for search functionality
+    if (typeof __uv$config === 'undefined') {
+      console.log('🔧 DEBUG: Loading __uv$config for search functionality');
+      const configScript = document.createElement('script');
+      configScript.src = '/assets/mathematics/config.js?v=9-30-2024';
+      configScript.onload = function() {
+        console.log('✅ DEBUG: __uv$config loaded successfully');
+      };
+      configScript.onerror = function() {
+        console.error('❌ DEBUG: Failed to load __uv$config');
+      };
+      document.head.appendChild(configScript);
+    }
+  </script>
 </head>
 
-<body class="center" onload="SplashText()">
+<body class="center">
   <div class="f-nav"></div>
   <div id="particles-js">
     <div class="main">
@@ -377,182 +394,7 @@
   </div>
 
   <script>
-    console.log('🎬 DEBUG: Starting SplashText system initialization...');
-
-    // OLD SplashText system - complex animation with multiple effects
-    function SplashText() {
-      console.log('🎬 DEBUG: SplashText function called');
-
-      const welcomeText = document.getElementById('welcome-text');
-      const splash = document.getElementById('splash');
-
-      if (!welcomeText || !splash) {
-        console.error('❌ DEBUG: Required elements not found for SplashText');
-        return;
-      }
-
-      console.log('🎬 DEBUG: SplashText elements found, starting animation sequence');
-
-      // OLD SYSTEM: Complex welcome text animation
-      if (welcomeText) {
-        console.log('🎬 DEBUG: Starting welcome text animation');
-
-        // Typewriter effect for welcome text
-        const welcomeTextContent = welcomeText.textContent;
-        welcomeText.textContent = '';
-
-        let i = 0;
-        const typeWriter = setInterval(() => {
-          if (i < welcomeTextContent.length) {
-            welcomeText.textContent += welcomeTextContent.charAt(i);
-            i++;
-          } else {
-            clearInterval(typeWriter);
-            console.log('🎬 DEBUG: Welcome text typewriter effect complete');
-
-            // OLD SYSTEM: Complex fade out with multiple effects
-            setTimeout(() => {
-              console.log('🎬 DEBUG: Starting welcome text fade out sequence');
-
-              // Multiple animation classes for old system
-              welcomeText.style.transition = 'all 1.5s ease-in-out';
-              welcomeText.style.opacity = '0';
-              welcomeText.style.transform = 'scale(1.5)';
-              welcomeText.style.filter = 'blur(5px)';
-
-              setTimeout(() => {
-                welcomeText.style.display = 'none';
-                console.log('🎬 DEBUG: Welcome text completely hidden');
-              }, 1500);
-            }, 2000);
-          }
-        }, 100);
-      }
-
-
-      let currentMessageIndex = 0;
-      let charIndex = 0;
-      let isDeleting = false;
-      let typingSpeed = 100;
-
-      function typeWriterEffect() {
-        const currentMessage = messages[currentMessageIndex];
-
-        if (isDeleting) {
-          splash.textContent = currentMessage.substring(0, charIndex - 1);
-          charIndex--;
-          typingSpeed = 50;
-        } else {
-          splash.textContent = currentMessage.substring(0, charIndex + 1);
-          charIndex++;
-          typingSpeed = 100;
-        }
-
-        if (!isDeleting && charIndex === currentMessage.length) {
-          isDeleting = true;
-          setTimeout(typeWriterEffect, 2000);
-        } else if (isDeleting && charIndex === 0) {
-          isDeleting = false;
-          currentMessageIndex = (currentMessageIndex + 1) % messages.length;
-          setTimeout(typeWriterEffect, 500);
-        } else {
-          setTimeout(typeWriterEffect, typingSpeed);
-        }
-      }
-
-      // Start the old system typewriter effect
-      setTimeout(typeWriterEffect, 1000);
-
-      // OLD SYSTEM: Multiple click animations
-      splash.addEventListener('click', function () {
-        console.log('🎬 DEBUG: Splash text clicked, triggering old system animation');
-
-        // Multiple animation effects
-        this.style.transition = 'all 0.3s ease';
-        this.style.transform = 'scale(1.2) rotate(5deg)';
-        this.style.color = '#ff6b6b';
-        this.style.textShadow = '0 0 10px rgba(255, 107, 107, 0.5)';
-
-        setTimeout(() => {
-          this.style.transform = 'scale(1) rotate(0deg)';
-          this.style.color = '';
-          this.style.textShadow = '';
-        }, 300);
-
-        // OLD SYSTEM: Additional effects on double click
-        let clickCount = 0;
-        const clickTimer = setTimeout(() => {
-          clickCount = 0;
-        }, 300);
-
-        clickCount++;
-        if (clickCount === 2) {
-          clearTimeout(clickTimer);
-          console.log('🎬 DEBUG: Double click detected, triggering special animation');
-
-          // Special animation sequence
-          const originalText = this.textContent;
-          this.textContent = "✨ Special effect activated! ✨";
-          this.style.fontSize = '2rem';
-          this.style.color = '#ffd700';
-          this.style.textShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
-
-          setTimeout(() => {
-            this.textContent = originalText;
-            this.style.fontSize = '';
-            this.style.color = '';
-            this.style.textShadow = '';
-          }, 2000);
-        }
-      });
-
-      // OLD SYSTEM: Hover effects
-      splash.addEventListener('mouseenter', function () {
-        this.style.transition = 'all 0.2s ease';
-        this.style.transform = 'translateY(-2px)';
-        this.style.textShadow = '0 4px 8px rgba(0,0,0,0.3)';
-      });
-
-      splash.addEventListener('mouseleave', function () {
-        this.style.transition = 'all 0.2s ease';
-        this.style.transform = 'translateY(0)';
-        this.style.textShadow = 'none';
-      });
-
-      console.log('🎬 DEBUG: Splash text animation system initialized');
-    }
-
-    // OLD SYSTEM: Additional initialization effects
-    console.log('🎬 DEBUG: Starting additional SplashText effects');
-
-    // Add floating particles effect to splash text
-    const createFloatingText = () => {
-      const floatingDiv = document.createElement('div');
-      floatingDiv.style.position = 'absolute';
-      floatingDiv.style.top = Math.random() * 100 + '%';
-      floatingDiv.style.left = Math.random() * 100 + '%';
-      floatingDiv.style.fontSize = '0.8rem';
-      floatingDiv.style.opacity = '0.5';
-      floatingDiv.style.pointerEvents = 'none';
-      floatingDiv.style.transition = 'all 3s ease';
-      floatingDiv.textContent = ['✨', '🌟', '💫', '🚀', '🌐'][Math.floor(Math.random() * 5)];
-
-      document.querySelector('.main').appendChild(floatingDiv);
-
-      setTimeout(() => {
-        floatingDiv.style.transform = 'translateY(-' + Math.random() * 100 + 'px)';
-        floatingDiv.style.opacity = '0';
-        setTimeout(() => {
-          floatingDiv.remove();
-        }, 3000);
-      }, 100);
-    };
-
-    // Create floating effects periodically
-    setInterval(createFloatingText, 2000);
-
-    console.log('🎬 DEBUG: SplashText system fully initialized');
-    }
+    console.log('🎬 DEBUG: SplashText system removed - using h1.js instead');
 
     // Check device token on page load
     async function checkAuth() {

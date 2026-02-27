@@ -43,6 +43,21 @@ window.addEventListener("load", function() {
   }
 });
 
+// Ensure __uv$config is available for search functionality
+if (typeof __uv$config === 'undefined') {
+  console.warn('⚠️ DEBUG: __uv$config not found, loading default configuration');
+  // Load the UV config from the mathematics config file
+  const script = document.createElement('script');
+  script.src = '/assets/mathematics/config.js?v=9-30-2024';
+  script.onload = function() {
+    console.log('✅ DEBUG: __uv$config loaded successfully');
+  };
+  script.onerror = function() {
+    console.error('❌ DEBUG: Failed to load __uv$config');
+  };
+  document.head.appendChild(script);
+}
+
 let xl;
 
 try {
