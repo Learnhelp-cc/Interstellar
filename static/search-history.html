@@ -433,27 +433,24 @@
 
         // Check authentication
         async function checkAuth() {
-            const deviceToken = localStorage.getItem('deviceToken');
-            if (!deviceToken) {
-                window.location.href = '/signin';
+            // Check if user is already authenticated via basic auth
+            const response = await fetch('/api/admin/search-history', {
+                method: 'GET'
+            });
+
+            if (response.ok) {
+                // Already authenticated, load the page
+                loadHistory();
                 return;
             }
 
-            try {
-                const response = await fetch('/api/validate-token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deviceToken })
-                });
-
-                const data = await response.json();
-                if (!data.valid) {
-                    localStorage.removeItem('deviceToken');
-                    window.location.href = '/signin';
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                window.location.href = '/signin';
+            if (response.status === 401) {
+                // Not authenticated, show admin auth modal
+                showAdminAuthModal();
+            } else {
+                // Other error
+                console.error('Auth check failed:', response.status);
+                showAdminAuthModal();
             }
         }
 
@@ -487,12 +484,27 @@
 
         async function loadHistory() {
             try {
-                const response = await fetch('/api/admin/search-history');
+                // Try to use stored admin auth first
+                const adminAuth = localStorage.getItem('adminAuth');
+                let headers = {};
+                
+                if (adminAuth) {
+                    headers['Authorization'] = `Basic ${adminAuth}`;
+                }
+
+                const response = await fetch('/api/admin/search-history', {
+                    method: 'GET',
+                    headers: headers
+                });
+
                 if (response.ok) {
                     allHistory = await response.json();
                     filteredHistory = [...allHistory];
                     renderTable();
                     updateStats();
+                } else if (response.status === 401) {
+                    // If unauthorized, show auth modal
+                    showAdminAuthModal();
                 } else {
                     console.error('Failed to load history');
                     document.getElementById('history-table-body').innerHTML = 
@@ -754,10 +766,16 @@
             }
 
             try {
+                const adminAuth = localStorage.getItem('adminAuth');
+                if (!adminAuth) {
+                    showAdminAuthModal();
+                    return;
+                }
+
                 const response = await fetch(`/api/admin/search-history/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                        'Authorization': `Basic ${adminAuth}`
                     }
                 });
 
@@ -786,6 +804,12 @@
                 return;
             }
 
+            const adminAuth = localStorage.getItem('adminAuth');
+            if (!adminAuth) {
+                showAdminAuthModal();
+                return;
+            }
+
             if (action === 'delete') {
                 if (!confirm(`Are you sure you want to delete ${selectedItems.length} selected items?`)) {
                     return;
@@ -796,7 +820,7 @@
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                            'Authorization': `Basic ${adminAuth}`
                         },
                         body: JSON.stringify({ history_ids: selectedItems })
                     });
@@ -832,7 +856,7 @@
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                            'Authorization': `Basic ${adminAuth}`
                         },
                         body: JSON.stringify({ user_ids: userIds })
                     });
@@ -868,10 +892,16 @@
             }
 
             try {
+                const adminAuth = localStorage.getItem('adminAuth');
+                if (!adminAuth) {
+                    showAdminAuthModal();
+                    return;
+                }
+
                 const response = await fetch('/api/admin/search-history', {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('deviceToken')}`
+                        'Authorization': `Basic ${adminAuth}`
                     }
                 });
 
@@ -905,6 +935,128 @@
             document.getElementById('unique-users').textContent = uniqueUsers;
             document.getElementById('unique-domains').textContent = uniqueDomains;
             document.getElementById('today-entries').textContent = todayEntries;
+        }
+
+        // Admin authentication modal
+        function showAdminAuthModal() {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'admin-auth-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100vw';
+            overlay.style.height = '100vh';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '9999';
+            overlay.style.backdropFilter = 'blur(5px)';
+
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.background = 'white';
+            modal.style.padding = '40px';
+            modal.style.borderRadius = '12px';
+            modal.style.textAlign = 'center';
+            modal.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+            modal.style.maxWidth = '400px';
+            modal.style.width = '90%';
+
+            modal.innerHTML = `
+                <h2 style="margin-top: 0; color: #333;">Admin Authentication Required</h2>
+                <p style="color: #666; margin-bottom: 20px;">Please enter admin credentials to access search history.</p>
+                
+                <div style="margin-bottom: 15px; text-align: left;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Username</label>
+                    <input type="text" id="admin-username" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;">
+                </div>
+                
+                <div style="margin-bottom: 25px; text-align: left;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Password</label>
+                    <input type="password" id="admin-password" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;">
+                </div>
+                
+                <div id="admin-auth-message" style="margin-bottom: 15px; min-height: 20px; color: #d9534f;"></div>
+                
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="admin-auth-submit" style="flex: 1; padding: 12px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                        Authenticate
+                    </button>
+                    <button id="admin-auth-cancel" style="flex: 1; padding: 12px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                        Cancel
+                    </button>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Focus on username field
+            document.getElementById('admin-username').focus();
+
+            // Handle submit
+            document.getElementById('admin-auth-submit').addEventListener('click', authenticateAdmin);
+            
+            // Handle cancel
+            document.getElementById('admin-auth-cancel').addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                // Redirect to home page
+                window.location.href = '/';
+            });
+
+            // Handle Enter key
+            document.getElementById('admin-password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    authenticateAdmin();
+                }
+            });
+        }
+
+        async function authenticateAdmin() {
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            const messageDiv = document.getElementById('admin-auth-message');
+
+            if (!username || !password) {
+                messageDiv.style.color = '#d9534f';
+                messageDiv.textContent = 'Please enter both username and password';
+                return;
+            }
+
+            try {
+                // Use basic auth for admin authentication
+                const authString = btoa(`${username}:${password}`);
+                
+                const response = await fetch('/api/admin/search-history', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Basic ${authString}`
+                    }
+                });
+
+                if (response.ok) {
+                    // Store admin credentials for future API calls
+                    localStorage.setItem('adminAuth', authString);
+                    
+                    // Remove modal
+                    const overlay = document.getElementById('admin-auth-overlay');
+                    if (overlay) {
+                        document.body.removeChild(overlay);
+                    }
+                    
+                    // Load the search history
+                    loadHistory();
+                } else {
+                    messageDiv.style.color = '#d9534f';
+                    messageDiv.textContent = 'Invalid admin credentials';
+                }
+            } catch (error) {
+                console.error('Admin authentication error:', error);
+                messageDiv.style.color = '#d9534f';
+                messageDiv.textContent = 'Authentication failed. Please try again.';
+            }
         }
     </script>
 </body>

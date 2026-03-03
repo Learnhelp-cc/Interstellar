@@ -540,6 +540,9 @@ const adminAuth = (req, res, next) => {
   res.status(401).send('Authentication required');
 };
 
+// Apply admin auth to all /admin routes
+app.use('/admin', adminAuth);
+
 app.get("/e/*", async (req, res, next) => {
   try {
     if (cache.has(req.path)) {
@@ -810,7 +813,7 @@ app.get('/request', (req, res) => {
 });
 
 // Admin routes
-app.get('/admin', adminAuth, (req, res) => {
+app.get('/admin', (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
@@ -1084,7 +1087,34 @@ app.get('/admin', adminAuth, (req, res) => {
 });
 
 // Admin search history routes
-app.get('/admin/search-history', adminAuth, async (req, res) => {
+
+// Admin auth middleware for search history (basic auth)
+const adminAuthBasic = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
+  const credentials = Buffer.from(authHeader.slice(6), 'base64').toString('utf-8');
+  const [username, password] = credentials.split(':');
+
+  // Check if credentials match admin credentials
+  const adminUser = process.env.ADMIN_USER;
+  const adminPass = process.env.ADMIN_PASS;
+
+  if (!adminUser || !adminPass) {
+    return res.status(500).json({ message: 'Admin credentials not configured' });
+  }
+
+  if (username === adminUser && password === adminPass) {
+    return next();
+  }
+
+  res.status(401).json({ message: 'Invalid credentials' });
+};
+
+// Admin search history routes with basic auth
+app.get('/api/admin/search-history', adminAuthBasic, async (req, res) => {
   try {
     // Get all search history with user information
     const stmt = db.prepare(`
@@ -1115,7 +1145,7 @@ app.get('/admin/search-history', adminAuth, async (req, res) => {
   }
 });
 
-app.get('/admin/search-history/:id', adminAuth, async (req, res) => {
+app.get('/api/admin/search-history/:id', adminAuthBasic, async (req, res) => {
   try {
     const { id } = req.params;
     const stmt = db.prepare(`
@@ -1146,7 +1176,7 @@ app.get('/admin/search-history/:id', adminAuth, async (req, res) => {
   }
 });
 
-app.delete('/admin/search-history/:id', adminAuth, async (req, res) => {
+app.delete('/api/admin/search-history/:id', adminAuthBasic, async (req, res) => {
   try {
     const { id } = req.params;
     const stmt = db.prepare('DELETE FROM search_history WHERE id = ?');
@@ -1163,7 +1193,7 @@ app.delete('/admin/search-history/:id', adminAuth, async (req, res) => {
   }
 });
 
-app.delete('/admin/search-history', adminAuth, async (req, res) => {
+app.delete('/api/admin/search-history', adminAuthBasic, async (req, res) => {
   try {
     const stmt = db.prepare('DELETE FROM search_history');
     stmt.run();
@@ -1174,7 +1204,7 @@ app.delete('/admin/search-history', adminAuth, async (req, res) => {
   }
 });
 
-app.delete('/admin/search-history/bulk', adminAuth, async (req, res) => {
+app.delete('/api/admin/search-history/bulk', adminAuthBasic, async (req, res) => {
   try {
     const { history_ids } = req.body;
     if (!history_ids || !Array.isArray(history_ids)) {
@@ -1192,7 +1222,7 @@ app.delete('/admin/search-history/bulk', adminAuth, async (req, res) => {
   }
 });
 
-app.delete('/admin/search-history/user-bulk', adminAuth, async (req, res) => {
+app.delete('/api/admin/search-history/user-bulk', adminAuthBasic, async (req, res) => {
   try {
     const { user_ids } = req.body;
     if (!user_ids || !Array.isArray(user_ids)) {
@@ -2361,23 +2391,14 @@ routes.forEach(route => {
   app.get(route.path, (req, res) => {
     // Check authentication for search history page
     if (route.path === '/search-history') {
-      const deviceToken = req.cookies.deviceToken || req.headers['x-device-token'];
-      if (!deviceToken) {
-        return res.redirect('/signin');
-      }
-
-      try {
-        const user = getUserByDeviceToken(deviceToken);
-        if (!user || user.pending) {
-          return res.redirect('/signin');
-        }
-        
-        // Check if user is admin (simplified check - in real app, verify properly)
-        // For now, we'll allow all authenticated users to access search history
-        // but you could add admin role checking here
-      } catch (error) {
-        console.error('Authentication error for search history:', error);
-        return res.redirect('/signin');
+      // Use admin authentication for search history page
+      const auth = { login: process.env.ADMIN_USER, password: process.env.ADMIN_PASS };
+      const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+      const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+      
+      if (!login || !password || login !== auth.login || password !== auth.password) {
+        res.set('WWW-Authenticate', 'Basic realm="Search History"');
+        return res.status(401).send('Authentication required');
       }
     }
     
