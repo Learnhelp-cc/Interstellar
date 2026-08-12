@@ -64,6 +64,9 @@
 <body>
   <div class="f-nav"></div>
   <div id="particles-js">
+    <div class="wave wave1"></div>
+    <div class="wave wave2"></div>
+    <div class="wave wave3"></div>
     <div class="main">
       <div id="notifications" class="notifications" style="display: none;"></div>
       <div class="center-wrapper">
@@ -404,7 +407,6 @@
       }
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <audio id="menu-audio" autoplay>
     <source src="assets/media/audio/menu.mp3" type="audio/mpeg">
   </audio>
@@ -413,10 +415,9 @@
   <script src="./assets/mathematics/config.js?v=2025-04-15"></script>
   <script src="/assets/js/m1.js"></script>
   <script>
-    console.log('🎵 DEBUG: Starting audio system initialization...');
 
     document.addEventListener('DOMContentLoaded', function () {
-      console.log('🎵 DEBUG: DOM loaded, initializing audio system');
+      console.log('i want to commit');
       let selectedSong;
       let songName;
 
@@ -452,18 +453,14 @@
         if (audio.paused) {
           audio.play();
           icon.className = 'fas fa-pause';
-          console.log('🎵 DEBUG: Audio started playing');
         } else {
           audio.pause();
           icon.className = 'fas fa-play';
-          console.log('🎵 DEBUG: Audio paused');
         }
       });
 
-      console.log('🎵 DEBUG: Audio system fully initialized');
     });
 
-    console.log('🎵 DEBUG: Audio system setup complete');
   </script>
 </body>
 

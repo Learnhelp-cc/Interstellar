@@ -1,6 +1,6 @@
 :root {
    /* Background Variables */
-   --background-image: url("/./assets/media/background/full-main.png"); /* Background Image */
+   --background-image: none; /* Background Image */
    --backdrop-filter: blur(10px) brightness(80%); /* Nav Backdrop filter */
    --background-nav: #173055; /* Nav Background */
    --background-color: #173055; /* Main Background Color */

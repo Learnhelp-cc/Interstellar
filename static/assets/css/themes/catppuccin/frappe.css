@@ -1,6 +1,6 @@
 @import url("https://unpkg.com/@catppuccin/palette/css/catppuccin.css");
 :root {
-   --background-image: var(--ctp-frappe-base) /*base*/;
+   --background-image: none; /* Background Image */
    --background: #1e1e2e;
    --background-input: var(--ctp-frappe-mantle) /*mantle*/;
    --background-dark: #11111b /*crust*/;

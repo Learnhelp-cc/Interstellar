@@ -2404,9 +2404,6 @@ app.delete('/api/music/queue', (req, res) => {
 });
 
 const routes = [
-  { path: "/b", file: "apps.html" },
-  { path: "/a", file: "games.html" },
-  { path: "/play.html", file: "games.html" },
   { path: "/c", file: "settings.html" },
   { path: "/d", file: "tabs.html" },
   { path: "/chat", file: "chat.html" },
@@ -3154,8 +3151,6 @@ function createNav() {
   navContainer.style.gap = "20px";
 
   const links = [
-    { text: "Apps", href: "/b" },
-    { text: "Games", href: "/a" },
     { text: "Settings", href: "/c" },
     { text: "Tabs", href: "/d" },
     { text: "Chat", href: "/chat" },

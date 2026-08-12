@@ -1,7 +1,7 @@
 /* CSS Variables Fallback for older browsers */
 :root {
    /* Background Variables */
-   --background-image: url("/assets/media/background/full-main.png"); /* Background Image */
+   --background-image: none; /* Background Image */
    --backdrop-filter: blur(20px) brightness(80%) saturate(1.25); /* Nav Backdrop filter */
    --background-nav: rgba(255, 255, 255, 0.02); /* Nav Background */
    --background-color: #2b2a33; /* Main Background Color */
@@ -29,7 +29,7 @@
 body {
    font-family: "Inter", sans-serif;
    text-decoration: none;
-   background: url("/assets/media/background/full-main.png");
+   background: #2b2a33;
    height: 100%;
    background-position: center;
    background-repeat: no-repeat;
@@ -45,8 +45,7 @@ body {
 
 /* CSS Variables Polyfill Support */
 html:not(.no-css-variables) body {
-   background: var(--background-image);
-   background-color: var(--background-color);
+   background: var(--background-color);
 }
 
 /* Scrollbar styles with fallbacks */
@@ -80,7 +79,7 @@ html:not(.no-css-variables) body {
 body {
    font-family: "Inter", sans-serif;
    text-decoration: none;
-   background: var(--background-image);
+   background: var(--background-color);
    height: 100%;
    background-position: center;
    background-repeat: no-repeat;
@@ -93,9 +92,6 @@ body {
    -o-backdrop-filter: blur(15px) opacity(85%);
    backdrop-filter: blur(15px) opacity(85%);
    /* Multiple fallbacks for better browser support */
-   background-color: #2b2a33;
-   background: #2b2a33 var(--background-image) center/cover no-repeat fixed;
-   /* Fallback for very old browsers */
    background-color: #2b2a33;
 }
 

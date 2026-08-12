@@ -117,8 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="connection-status" class="status-display">Loading connection status...</div>
       </div>
       <div class="f-nav-right">
-        <a class="navbar-link" href="/./a"><i class="fa-solid fa-gamepad navbar-icon"></i><an>&#71;&#97;</an><an>&#109;&#101;&#115;</an></a>
-        <a class="navbar-link" href="/./b"><i class="fa-solid fa-phone navbar-icon"></i><an>&#65;&#112;</an><an>&#112;&#115;</an></a>
         <a class="navbar-link" href="/./account"><i class="fa-solid fa-user navbar-icon"></i><an>&#77;&#121;&#32;</an><an>&#65;&#99;&#99;&#111;&#117;&#110;&#116;</an></a>
         ${qp ? "" : '<a class="navbar-link" href="/./d"><i class="fa-solid fa-laptop navbar-icon"></i><an>&#84;&#97;</an><an>&#98;&#115;</an></a>'}
         <a class="navbar-link" href="/./c"><i class="fa-solid fa-gear navbar-icon settings-icon"></i><an>&#83;&#101;&#116;</an><an>&#116;&#105;&#110;&#103;</an></a>

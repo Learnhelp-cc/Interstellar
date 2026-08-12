@@ -1,6 +1,6 @@
 :root {
    /* Background Variables */
-   --background-image: url("/./assets/media/background/full-inverted.png"); /* Background Image */
+   --background-image: none; /* Background Image */
    --backdrop-filter: blur(10px) brightness(80%); /* Nav Backdrop filter */
    --background-nav: rgba(0, 0, 0, 0.02); /* Nav Background */
    --background-color: #ddd; /* Main Background Color */

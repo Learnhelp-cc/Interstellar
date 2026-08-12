@@ -191,12 +191,69 @@ form#fv input {
    left: 0;
    width: 100%;
    height: 100%;
+   overflow: hidden;
    z-index: 0;
+   background: radial-gradient(circle at top, rgba(96, 163, 255, 0.15), transparent 35%), linear-gradient(180deg, #09101d 0%, #0f1b36 65%, #111d42 100%);
 }
 
 #particles-js canvas {
    position: absolute;
    z-index: 0;
+}
+
+#particles-js .wave {
+   position: absolute;
+   left: 50%;
+   width: 200%;
+   border-radius: 45%;
+   transform: translateX(-50%);
+   opacity: 0.18;
+   background: rgba(255, 255, 255, 0.08);
+   filter: blur(1px);
+   pointer-events: none;
+}
+
+#particles-js .wave1 {
+   bottom: 12%;
+   height: 24%;
+   animation: wave-1 18s linear infinite;
+}
+
+#particles-js .wave2 {
+   bottom: 8%;
+   height: 18%;
+   opacity: 0.14;
+   animation: wave-2 14s linear infinite reverse;
+}
+
+#particles-js .wave3 {
+   bottom: 4%;
+   height: 14%;
+   opacity: 0.1;
+   animation: wave-3 12s linear infinite;
+}
+
+#particles-js .main {
+   position: relative;
+   z-index: 2;
+}
+
+@keyframes wave-1 {
+   0% { transform: translateX(-50%) translateY(0) scaleX(1); }
+   50% { transform: translateX(-55%) translateY(-6px) scaleX(0.98); }
+   100% { transform: translateX(-50%) translateY(0) scaleX(1); }
+}
+
+@keyframes wave-2 {
+   0% { transform: translateX(-50%) translateY(0) scaleX(1.05); }
+   50% { transform: translateX(-45%) translateY(-8px) scaleX(1.02); }
+   100% { transform: translateX(-50%) translateY(0) scaleX(1.05); }
+}
+
+@keyframes wave-3 {
+   0% { transform: translateX(-50%) translateY(0) scaleX(0.9); }
+   50% { transform: translateX(-48%) translateY(-5px) scaleX(0.92); }
+   100% { transform: translateX(-50%) translateY(0) scaleX(0.9); }
 }
 
 .frame-container,

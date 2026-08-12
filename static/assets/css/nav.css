@@ -87,14 +87,18 @@ img {
 }
 
 .f-nav-right {
-   position: absolute;
-   top: 50%;
-   transform: translateY(-50%);
+   position: relative;
+   top: auto;
+   transform: none;
+   right: auto;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 16px;
    text-transform: uppercase;
    font-size: 18px;
    color: var(--text-primary);
    font-weight: 600;
-   right: 2%;
 }
 
 .container-with-nav {
