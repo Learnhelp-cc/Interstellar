@@ -125,28 +125,24 @@ for (const option of sortedOptions) {
 function saveIcon() {
   const iconElement = document.getElementById("icon");
   const iconValue = iconElement.value;
-  console.log("saveIcon function called with icon value:", iconValue);
   localStorage.setItem("icon", iconValue);
 }
 
 function saveName() {
   const nameElement = document.getElementById("name");
   const nameValue = nameElement.value;
-  console.log("saveName function called with name value:", nameValue);
   localStorage.setItem("name", nameValue);
 }
 
 function CustomIcon() {
   const iconElement = document.getElementById("icon");
   const iconValue = iconElement.value;
-  console.log("saveIcon function called with icon value:", iconValue);
   localStorage.setItem("CustomIcon", iconValue);
 }
 
 function CustomName() {
   const nameElement = document.getElementById("name");
   const nameValue = nameElement.value;
-  console.log("saveName function called with name value:", nameValue);
   localStorage.setItem("CustomName", nameValue);
 }
 function ResetCustomCloak() {
@@ -216,7 +212,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.style.backgroundImage = `url('${imageURL}')`;
       backgroundInput.value = "";
     } else {
-      console.log("No image URL entered.");
     }
   });
 
@@ -737,6 +732,5 @@ document.addEventListener("DOMContentLoaded", () => {
 function playMusic(filepath) {
   // This would need to be implemented based on how music playing is handled in the app
   // For now, just log it
-  console.log('Playing music:', filepath);
   // You might want to implement actual audio playing here
 }

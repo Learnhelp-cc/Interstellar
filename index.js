@@ -4,6 +4,7 @@ import https from "node:https";
 import path from "node:path";
 import { createBareServer } from "@nebula-services/bare-server-node";
 import chalk from "chalk";
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
@@ -132,6 +133,36 @@ for (const user of users) {
 
 const server = http.createServer();
 const app = express();
+
+app.disable("x-powered-by");
+app.use(compression({
+  level: 6,
+  threshold: 1024,
+  filter: (req, res) => {
+    if (req.headers["x-no-compression"]) return false;
+    return compression.filter(req, res);
+  }
+}));
+
+const staticOptions = {
+  maxAge: process.env.NODE_ENV === "production" ? "7d" : 0,
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    const immutableAssets = new Set([
+      ".js", ".css", ".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico",
+      ".woff", ".woff2", ".ttf", ".mp3", ".ogg", ".wav", ".webm", ".json",
+      ".map"
+    ]);
+
+    if (immutableAssets.has(ext)) {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    } else if (ext === ".html") {
+      res.setHeader("Cache-Control", "no-cache");
+    }
+  }
+};
 
 // Session store for user authentication
 const sessions = new Map();
@@ -700,7 +731,7 @@ app.use((req, res, next) => {
   setupMasqr(app);
 } */
 
-app.use(express.static(path.join(__dirname, "static")));
+app.use(express.static(path.join(__dirname, "static"), staticOptions));
 app.use("/ca", cors({ origin: true }));
 
 // Authentication is handled client-side

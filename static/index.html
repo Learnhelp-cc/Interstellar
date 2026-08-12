@@ -8,234 +8,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
   <title id="t">Home</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="stylesheet" href="/assets/css/global.css?v=6" />
   <link rel="stylesheet" href="/assets/css/h.css?v=01" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=01" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
-  <!-- Browser compatibility detection and polyfills -->
   <script>
-    console.log('🔍 DEBUG: Starting browser compatibility detection...');
+    (() => {
+      const html = document.documentElement;
+      const isSupported = (fn, ...args) => !!(fn && fn(...args));
+      const classes = [];
 
-    // Browser feature detection
-    (function () {
-      console.log('🔍 DEBUG: Detecting browser features...');
-      var html = document.documentElement;
-      var classes = [];
+      if (!isSupported(CSS?.supports, '--fake-var', '0')) classes.push('no-css-variables');
+      if (!isSupported(CSS?.supports, 'backdrop-filter', 'blur(5px)')) classes.push('no-backdrop-filter');
+      if (!isSupported(CSS?.supports, 'display', 'flex')) classes.push('no-flexbox');
+      if (!isSupported(CSS?.supports, 'display', 'grid')) classes.push('no-cssgrid');
+      if (!('serviceWorker' in navigator)) classes.push('no-serviceworker');
+      if (!window.localStorage) classes.push('no-localstorage');
+      if (!window.fetch) classes.push('no-fetch');
+      if (!window.Promise) classes.push('no-promise');
 
-      // Check for CSS variables support
-      if (!CSS || !CSS.supports || !CSS.supports('--fake-var', '0')) {
-        classes.push('no-css-variables');
-        console.log('⚠️ DEBUG: CSS variables not supported');
-      } else {
-        console.log('✅ DEBUG: CSS variables supported');
-      }
+      const userAgent = navigator.userAgent.toLowerCase();
+      if (userAgent.includes('chrome') && !userAgent.includes('edge')) html.classList.add('chrome');
+      else if (userAgent.includes('firefox')) html.classList.add('firefox');
+      else if (userAgent.includes('safari') && !userAgent.includes('chrome')) html.classList.add('safari');
+      else if (userAgent.includes('edge')) html.classList.add('edge');
+      else if (userAgent.includes('opera') || userAgent.includes('opr')) html.classList.add('opera');
+      else html.classList.add('other-browser');
 
-      // Check for backdrop-filter support
-      if (!CSS || !CSS.supports || !CSS.supports('backdrop-filter', 'blur(5px)')) {
-        classes.push('no-backdrop-filter');
-        console.log('⚠️ DEBUG: backdrop-filter not supported');
-      } else {
-        console.log('✅ DEBUG: backdrop-filter supported');
-      }
-
-      // Check for flexbox support
-      if (!CSS || !CSS.supports || !CSS.supports('display', 'flex')) {
-        classes.push('no-flexbox');
-        console.log('⚠️ DEBUG: flexbox not supported');
-      } else {
-        console.log('✅ DEBUG: flexbox supported');
-      }
-
-      // Check for CSS grid support
-      if (!CSS || !CSS.supports || !CSS.supports('display', 'grid')) {
-        classes.push('no-cssgrid');
-        console.log('⚠️ DEBUG: CSS grid not supported');
-      } else {
-        console.log('✅ DEBUG: CSS grid supported');
-      }
-
-      // Add classes to html element
-      if (classes.length > 0) {
-        html.className += ' ' + classes.join(' ');
-        console.log('🏷️ DEBUG: Added browser compatibility classes:', classes);
-      } else {
-        console.log('✅ DEBUG: All modern features supported');
-      }
-
-      // Check for service worker support
-      if (!('serviceWorker' in navigator)) {
-        html.className += ' no-serviceworker';
-        console.log('⚠️ DEBUG: Service Worker not supported');
-      } else {
-        console.log('✅ DEBUG: Service Worker supported');
-      }
-
-      // Check for localStorage support
-      if (!window.localStorage) {
-        html.className += ' no-localstorage';
-        console.log('⚠️ DEBUG: localStorage not supported');
-      } else {
-        console.log('✅ DEBUG: localStorage supported');
-      }
-
-      // Check for fetch API support
-      if (!window.fetch) {
-        html.className += ' no-fetch';
-        console.log('⚠️ DEBUG: fetch API not supported');
-      } else {
-        console.log('✅ DEBUG: fetch API supported');
-      }
-
-      // Check for Promise support
-      if (!window.Promise) {
-        html.className += ' no-promise';
-        console.log('⚠️ DEBUG: Promise not supported');
-      } else {
-        console.log('✅ DEBUG: Promise supported');
-      }
-
-      // Add browser-specific classes
-      var userAgent = navigator.userAgent.toLowerCase();
-      if (userAgent.indexOf('chrome') > -1 && userAgent.indexOf('edge') === -1) {
-        html.className += ' chrome';
-        console.log('🏷️ DEBUG: Detected Chrome browser');
-      } else if (userAgent.indexOf('firefox') > -1) {
-        html.className += ' firefox';
-        console.log('🏷️ DEBUG: Detected Firefox browser');
-      } else if (userAgent.indexOf('safari') > -1 && userAgent.indexOf('chrome') === -1) {
-        html.className += ' safari';
-        console.log('🏷️ DEBUG: Detected Safari browser');
-      } else if (userAgent.indexOf('edge') > -1) {
-        html.className += ' edge';
-        console.log('🏷️ DEBUG: Detected Edge browser');
-      } else if (userAgent.indexOf('opera') > -1 || userAgent.indexOf('opr') > -1) {
-        html.className += ' opera';
-        console.log('🏷️ DEBUG: Detected Opera browser');
-      } else {
-        html.className += ' other-browser';
-        console.log('🏷️ DEBUG: Detected unknown browser');
-      }
-
-      console.log('🔍 DEBUG: Browser compatibility detection complete');
+      if (classes.length) html.classList.add(...classes);
     })();
-
-    // Polyfill for addEventListener if needed
-    if (!window.addEventListener) {
-      console.log('🔧 DEBUG: Adding addEventListener polyfill');
-      window.addEventListener = function (event, callback) {
-        if (window.attachEvent) {
-          window.attachEvent('on' + event, callback);
-        } else {
-          window['on' + event] = callback;
-        }
-      };
-    }
-
-    // Polyfill for fetch if needed
-    if (!window.fetch) {
-      console.log('🔧 DEBUG: Adding fetch polyfill');
-      window.fetch = function () {
-        return Promise.reject(new Error('Fetch API not supported'));
-      };
-    }
-
-    // Polyfill for localStorage if needed
-    if (!window.localStorage) {
-      console.log('🔧 DEBUG: Adding localStorage polyfill');
-      window.localStorage = {
-        getItem: function () { return null; },
-        setItem: function () { },
-        removeItem: function () { },
-        clear: function () { }
-      };
-    }
-
-    // Ensure search bar is visible by forcing display styles
-    function ensureSearchBarVisibility() {
-      console.log('🔍 DEBUG: Ensuring search bar visibility...');
-      var searchContainer = document.querySelector('.search-container');
-      var input = document.querySelector('#input');
-      var form = document.querySelector('#fv');
-
-      if (searchContainer) {
-        searchContainer.style.display = 'flex !important';
-        searchContainer.style.justifyContent = 'center !important';
-        searchContainer.style.alignItems = 'center !important';
-        searchContainer.style.position = 'relative !important';
-        searchContainer.style.visibility = 'visible !important';
-        searchContainer.style.opacity = '1 !important';
-        searchContainer.style.zIndex = '9999 !important';
-        searchContainer.style.margin = '0 !important';
-        searchContainer.style.padding = '0 !important';
-        searchContainer.style.maxWidth = '100% !important';
-        searchContainer.style.width = '100% !important';
-        console.log('✅ DEBUG: Search container styled with !important');
-      } else {
-        console.log('❌ DEBUG: Search container not found');
-      }
-
-      if (input) {
-        input.style.display = 'block !important';
-        input.style.visibility = 'visible !important';
-        input.style.opacity = '1 !important';
-        input.style.width = '50vw !important';
-        input.style.height = '5vh !important';
-        input.style.minWidth = '300px !important';
-        input.style.maxWidth = '800px !important';
-        input.style.fontSize = '16px !important';
-        input.style.padding = '15px !important';
-        input.style.border = '2px solid #fff !important';
-        input.style.borderRadius = '25px !important';
-        input.style.backgroundColor = 'rgba(255, 255, 255, 0.9) !important';
-        input.style.color = '#000 !important';
-        input.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3) !important';
-        input.style.zIndex = '10000 !important';
-        input.style.position = 'relative !important';
-        console.log('✅ DEBUG: Search input styled with !important');
-      } else {
-        console.log('❌ DEBUG: Search input not found');
-      }
-
-      if (form) {
-        form.style.display = 'block !important';
-        form.style.visibility = 'visible !important';
-        form.style.opacity = '1 !important';
-        form.style.margin = '0 !important';
-        form.style.padding = '0 !important';
-        form.style.width = '100% !important';
-        console.log('✅ DEBUG: Search form styled with !important');
-      } else {
-        console.log('❌ DEBUG: Search form not found');
-      }
-
-      // Force visibility on the main container as well
-      var mainContainer = document.querySelector('.main');
-      if (mainContainer) {
-        mainContainer.style.visibility = 'visible !important';
-        mainContainer.style.opacity = '1 !important';
-        mainContainer.style.display = 'block !important';
-        console.log('✅ DEBUG: Main container visibility enforced');
-      }
-    }
-
-    // Run visibility check on load and after DOM is ready
-    if (document.readyState === 'loading') {
-      console.log('🔍 DEBUG: Document loading, adding DOMContentLoaded listener');
-      document.addEventListener('DOMContentLoaded', ensureSearchBarVisibility);
-    } else {
-      console.log('🔍 DEBUG: Document already loaded, running visibility check');
-      ensureSearchBarVisibility();
-    }
-
-    // Also run after window load to ensure all styles are applied
-    window.addEventListener('load', function () {
-      console.log('🔍 DEBUG: Window loaded, running final visibility check');
-      ensureSearchBarVisibility();
-    });
-
-    console.log('🔍 DEBUG: Browser compatibility and polyfill setup complete');
   </script>
   <script src="/assets/js/h1.js" defer></script>
 
@@ -269,19 +73,19 @@
         <p id="splash"></p>
         <div class="search-container"
           style="display: flex !important; justify-content: center !important; align-items: center !important; position: relative !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; margin: 0 auto !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; left: 0 !important; right: 0 !important;">
-        <form id="fv" method="POST"
-          style="display: block !important; visibility: visible !important; opacity: 1 !important; margin: 0 !important; padding: 0 !important; width: 100% !important;">
-          <input id="input" class="truncate" placeholder="Search or enter a URL" type="text"
-            style="display: block !important; visibility: visible !important; opacity: 1 !important; width: 50vw !important; height: 5vh !important; min-width: 300px !important; max-width: 800px !important; font-size: 16px !important; padding: 15px !important; border: 2px solid #fff !important; border-radius: 25px !important; background-color: rgba(50, 50, 50, 0.5) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; z-index: 10000 !important; position: relative !important; -webkit-backdrop-filter: blur(10px) !important; backdrop-filter: blur(10px) !important;" />
-        </form>
-        <button id="search-history-btn" class="search-history-btn" title="View Search History"
-          style="margin-left: 15px !important; padding: 10px !important; border: none !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.8) !important; color: #000 !important; cursor: pointer !important; z-index: 10000 !important;">
-          <i class="fas fa-history"></i>
-        </button>
-      </div>
-      <div class="now-playing">
-        <span>Now Playing: <span id="song-title">morning tape - nilöwh.</span> <button id="audio-control"
-            class="audio-btn"><i class="fas fa-pause"></i></button></span>
+          <form id="fv" method="POST"
+            style="display: block !important; visibility: visible !important; opacity: 1 !important; margin: 0 !important; padding: 0 !important; width: 100% !important;">
+            <input id="input" class="truncate" placeholder="Search or enter a URL" type="text"
+              style="display: block !important; visibility: visible !important; opacity: 1 !important; width: 50vw !important; height: 5vh !important; min-width: 300px !important; max-width: 800px !important; font-size: 16px !important; padding: 15px !important; border: 2px solid #fff !important; border-radius: 25px !important; background-color: rgba(50, 50, 50, 0.5) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; z-index: 10000 !important; position: relative !important; -webkit-backdrop-filter: blur(10px) !important; backdrop-filter: blur(10px) !important;" />
+          </form>
+          <button id="search-history-btn" class="search-history-btn" title="View Search History"
+            style="margin-left: 15px !important; padding: 10px !important; border: none !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.8) !important; color: #000 !important; cursor: pointer !important; z-index: 10000 !important;">
+            <i class="fas fa-history"></i>
+          </button>
+        </div>
+        <div class="now-playing">
+          <span>Now Playing: <span id="song-title">morning tape - nilöwh.</span> <button id="audio-control"
+              class="audio-btn"><i class="fas fa-pause"></i></button></span>
         </div>
       </div>
     </div>

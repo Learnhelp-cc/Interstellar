@@ -1,74 +1,60 @@
 // home.js
-console.log('🏠 DEBUG: Starting h1.js initialization...');
-
 let inFrame;
 
 try {
   inFrame = window !== top;
-  console.log('🏠 DEBUG: Frame detection result:', inFrame);
 } catch (e) {
   inFrame = true;
-  console.log('🏠 DEBUG: Frame detection error, assuming in frame:', e);
 }
 
 if (!localStorage.getItem("ab")) {
   localStorage.setItem("ab", true);
-  console.log('🏠 DEBUG: Set default ab setting to true');
 }
 
-console.log('🏠 DEBUG: ab setting:', localStorage.getItem("ab"));
-console.log('🏠 DEBUG: Firefox detection:', navigator.userAgent.includes("Firefox"));
+const shouldOpenPopup = !inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem("ab") === "true" && location.pathname === "/";
 
-  if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem("ab") === "true") {
-  console.log('🏠 DEBUG: Opening about:blank popup...');
+if (shouldOpenPopup) {
   const popup = open("about:blank", "_blank");
   setTimeout(() => {
     if (!popup || popup.closed) {
-      console.log('🏠 DEBUG: Popup failed to open or was closed');
-      alert("Please allow popups for this site. Doing so will allow us to open the site in a about:blank tab and preventing this site from showing up in your history. You can turn this off in the site settings.");
-    } else {
-      console.log('🏠 DEBUG: Popup opened successfully');
-      const doc = popup.document;
-      const iframe = doc.createElement("iframe");
-      const style = iframe.style;
-      const link = doc.createElement("link");
+      alert("Please allow popups for this site so we can open the destination in a clean tab without adding it to your browsing history.");
+      return;
+    }
 
-      const siteName = localStorage.getItem("siteName") || "My Drive - Google Drive";
-      const icon = localStorage.getItem("icon") || "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
+    const doc = popup.document;
+    const iframe = doc.createElement("iframe");
+    const style = iframe.style;
+    const link = doc.createElement("link");
 
-      doc.title = siteName;
-      link.rel = "icon";
-      link.href = icon;
+    const siteName = localStorage.getItem("siteName") || "My Drive - Google Drive";
+    const icon = localStorage.getItem("icon") || "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
 
-      iframe.src = location.href;
-      style.position = "fixed";
-      style.top = style.bottom = style.left = style.right = 0;
-      style.border = style.outline = "none";
-      style.width = style.height = "100%";
+    doc.title = siteName;
+    link.rel = "icon";
+    link.href = icon;
 
-      doc.head.appendChild(link);
-      doc.body.appendChild(iframe);
+    iframe.src = location.href;
+    style.position = "fixed";
+    style.top = style.bottom = style.left = style.right = 0;
+    style.border = style.outline = "none";
+    style.width = style.height = "100%";
 
-      const pLink = localStorage.getItem(encodeURI("pLink")) || getRandomUrl();
-      console.log('🏠 DEBUG: Redirecting to:', pLink);
-      location.replace(pLink);
+    doc.head.appendChild(link);
+    doc.body.appendChild(iframe);
 
-      const script = doc.createElement("script");
-      script.textContent = `
+    const pLink = localStorage.getItem(encodeURI("pLink")) || getRandomUrl();
+    location.replace(pLink);
+
+    const script = doc.createElement("script");
+    script.textContent = `
       window.onbeforeunload = function (event) {
         const confirmationMessage = 'Leave Site?';
         (event || window.event).returnValue = confirmationMessage;
         return confirmationMessage;
       };
     `;
-      doc.head.appendChild(script);
-    }
-  }, 2000);
-} else {
-  console.log('🏠 DEBUG: Skipping popup - conditions not met');
-  console.log('  - inFrame:', inFrame);
-  console.log('  - Firefox:', navigator.userAgent.includes("Firefox"));
-  console.log('  - ab setting:', localStorage.getItem("ab"));
+    doc.head.appendChild(script);
+  }, 1500);
 }
 // Splash texts
 const SplashT = [
@@ -87,20 +73,14 @@ const SplashT = [
 let SplashI = Math.floor(Math.random() * SplashT.length);
 const SplashE = document.getElementById("splash");
 
-console.log('🏠 DEBUG: Splash element found:', SplashE);
-
 function US() {
   SplashI = (SplashI + 1) % SplashT.length;
-  SplashE.innerText = SplashT[SplashI];
-  console.log('🏠 DEBUG: Splash text changed to:', SplashT[SplashI]);
+  if (SplashE) SplashE.innerText = SplashT[SplashI];
 }
 
 if (SplashE) {
   SplashE.innerText = SplashT[SplashI];
   SplashE.addEventListener("click", US);
-  console.log('🏠 DEBUG: Splash text set to:', SplashT[SplashI]);
-} else {
-  console.error('🏠 DEBUG: Splash element not found!');
 }
 
 // Rotating Welcome Messages
@@ -162,11 +142,8 @@ const christmasMessages = [
 let currentMessageIndex = 0;
 const welcomeText = document.getElementById("welcome-text");
 
-console.log('🏠 DEBUG: Welcome text element found:', welcomeText);
-
 function rotateWelcomeMessage() {
   if (!welcomeText) {
-    console.error('🏠 DEBUG: Welcome text element not found!');
     return;
   }
   
@@ -190,18 +167,13 @@ function rotateWelcomeMessage() {
 
     // Fade in
     welcomeText.classList.remove("fade-out");
-    console.log('🏠 DEBUG: Welcome message updated to:', welcomeText.textContent);
-  }, 1000); // Half of transition time
+  }, 1000);
 }
 
-// Start rotating after page load
 document.addEventListener('DOMContentLoaded', function() {
   if (welcomeText) {
     rotateWelcomeMessage();
-    setInterval(rotateWelcomeMessage, 3000); // Change every 3 seconds
-    console.log('🏠 DEBUG: Welcome message rotation started');
-  } else {
-    console.error('🏠 DEBUG: Cannot start welcome message rotation - element not found');
+    setInterval(rotateWelcomeMessage, 3000);
   }
 });
 
