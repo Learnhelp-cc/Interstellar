@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node index.js",
+    "build:assets": "esbuild static/assets/js/*.js --bundle --minify --outdir=static/dist",
     "format": "pnpm biome format --write .",
     "precommit": "pnpm run format && pnpm biome check --write .",
     "lint": "biome lint --write ."
@@ -33,7 +34,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.2",
-    "node-gyp": "^12.2.0"
+    "node-gyp": "^12.2.0",
+    "esbuild": "^0.18.0"
   },
   "packageManager": "pnpm@9.10.0"
 }
