@@ -85,7 +85,7 @@ if (SplashE) {
 
 // Rotating Welcome Messages
 const welcomeMessages = [
-  "Welcome",        // English
+"Welcome",        // English
   "Bienvenido",     // Spanish
   "Welkom",         // Dutch
   "Willkommen",     // German
@@ -93,10 +93,11 @@ const welcomeMessages = [
   "Välkommen",      // Swedish
   "ようこそ",       // Japanese
   "환영합니다",     // Korean
-  "欢迎",           // Chinese
+  "欢迎",           // Chinese (Simplified)
+  "歡迎",           // Chinese (Traditional / Cantonese)
   "Добро пожаловать", // Russian
   "أهلا وسهلا",     // Arabic
-  "მოგესალმებით",   // Georgian
+  "მოဂესალმებით",   // Georgian
   "Bem-vindo",      // Portuguese
   "Dobrodošli",     // Croatian
   "Vitajte",        // Slovakian
@@ -108,12 +109,122 @@ const welcomeMessages = [
   "Chào mừng",      // Vietnamese
   "A jaɓɓorgo",     // Fulfulde
   "Ir ka koy",      // Zarma
-  "Marhaban"        // Tamasheq
+  "Marhaban",       // Tamasheq
+  "Ласкаво просимо",     // Ukrainian
+  "Сардэчна запрашаем",  // Belarusian
+  "Добре дошли",         // Bulgarian
+  "Добродошли",          // Serbian (Cyrillic)
+  "Добредојдовте",       // Macedonian
+  "Қош келдіңіз",        // Kazakh (Cyrillic)
+  "Кош келиңиз",        // Kyrgyz
+  "Хуш омадед",         // Tajik
+  "Тавтай морил",        // Mongolian (Cyrillic)
+  "स्वागत है",       // Hindi
+  "স্বাগতম",         // Bengali
+  "خوش آمدید",       // Urdu / Persian
+  "நல்வரவு",        // Tamil
+  "స్వాగతం",       // Telugu
+  "സ്വാഗതം",       // Malayalam
+  "ಸ್ವಾಗತ",        // Kannada
+  "सुस्वागतम",     // Marathi
+  "સ્વાગત છે",      // Gujarati
+  "ਜੀ ਆਇਆਂ ਨੂੰ",   // Punjabi
+  "සාදරයෙන් පිළිගන්නවා", // Sinhala
+  "ยินดีต้อนรับ",    // Thai
+  "Selamat datang",  // Indonesian / Malay
+  "Maligayang pagdating", // Filipino / Tagalog
+  "ស្វាគមន៍",      // Khmer
+  "ຍິນດີຕ້ອນຮັບ",    // Lao
+  "ကြိုဆိုပါတယျ",   // Burmese
+  "Benvindo",        // Tetum
+  "Xush kelibsiz",   // Uzbek
+  "Hoş geldiňiz",    // Turkmen
+  "Xoş gəlmisiniz",  // Azerbaijani
+  "Բարի ալուստ",     // Armenian
+  "Hoş geldiniz",    // Turkish
+  "Bi xêr hatî",     // Kurdish (Kurmanji)
+  "بەخێربێن",        // Kurdish (Sorani)
+  "བྱོན་པ་ལེགས།",    // Tibetan
+  "خۇش كېلىپسىز",    // Uyghur
+  "Witaj",          // Polish
+  "Vítejte",        // Czech
+  "Üdvözöljük",     // Hungarian
+  "Bun venit",      // Romanian
+  "Velkommen",      // Danish / Norwegian
+  "Tervetuloa",     // Finnish
+  "Tere tulemast",  // Estonian
+  "Laipni lūdzam",  // Latvian
+  "Sveiki atvykę",  // Lithuanian
+  "Fáilte",         // Irish
+  "Croeso",         // Welsh
+  "Fàilte",         // Scottish Gaelic
+  "Ongietorri",     // Basque
+  "Benvingut",      // Catalan
+  "Benvindo",       // Galician
+  "Benvengut",      // Occitan
+  "Merħba",         // Maltese
+  "Mire se vini",   // Albanian
+  "Wollkomm",       // Luxembourgish
+  "Velkomin",       // Icelandic
+  "Bæntschit",      // Romansh
+  "Benvegni",       // Venetian
+  "Benvignù",       // Piedmontese
+  "Degemer mat",    // Breton
+  "Fostaiid",       // Sami (Northern)
+  "Karibu",         // Swahili
+  "E kaabo",        // Yoruba
+  "Nnọọ",           // Igbo
+  "Barke",          // Hausa
+  "Akwaaba",        // Twi (Akan)
+  "Siyakwamukela",  // Zulu
+  "Re a go amogela",// Tswana
+  "Molweni",        // Xhosa
+  "Wamkelekile",    // Southern Sotho
+  "Soyez le bienvenue", // Lingala (often shared with French)
+  "Muyoobii",       // Oromo
+  "እንኳን ደህና መጣችሁ", // Amharic
+  "Marhaban",       // Somali
+  "Murakaza neza",  // Kinyarwanda / Kirundi
+  "Kalibu",         // Luganda
+  "Tongai",         // Shona
+  "Tongai",         // Malagasy
+  "Bienvenido",     // Quechua (Often borrows / "Allichu")
+  "Tere",           // Guarani ("Maitei")
+  "Chaltmay",       // Mapudungun
+  "Kamisaraki",     // Aymara
+  "Yá'át'ééh",      // Navajo
+  "Halito",         // Choctaw
+  "Kwe",            // Mi'kmaq
+  "Tunngasugit",    // Inuktitut
+  "Failte",         // Michif
+  "Haere mai",      // Maori
+  "Aloha",          // Hawaiian
+  "Bula",           // Fijian
+  "Amiang",         // Marshallese
+  "Malo e lelei",   // Tongan
+  "Talofa",         // Samoan
+  "Kia orana",      // Cook Islands Maori
+  "Kaselehlie",     // Pohnpeian
+  "Hafa adai",      // Chamorro
+  "Welkam",         // Bislama
+  "Maimai",         // Tok Pisin
+  "Sugeng rawuh",   // Sundanese ("Wilujeng sumping")
+  "Mabuhay",        // Tagalog (Greeting/Welcome variant)
+  "Fiandem",        // Balinese ("Om Swastyastu")
+  "Sua s'dei",      // Khmer (Alternative formal)
+  "Shagatam",       // Assamese ("স্বাগতম")
+  "स्वागतम्",       // Sanskrit
+  "স্বাগতম",         // Manipuri (Meitei)
+  "رحمـــت",        // Pashto ("پخير راغلاست")
+  "Khush Aamdeed",  // Balochi
+  "خوش آمدید"        // Sindhi
 ];
+
+
 
 // Merry Christmas messages in different languages
 const christmasMessages = [
-  "Merry Christmas",        // English
+ "Merry Christmas",        // English
   "Feliz Navidad",          // Spanish
   "Vrolijk Kerstfeest",     // Dutch
   "Frohe Weihnachten",      // German
@@ -121,12 +232,13 @@ const christmasMessages = [
   "God Jul",                // Swedish
   "メリークリスマス",       // Japanese
   "메리 크리스마스",        // Korean
-  "圣诞快乐",               // Chinese
+  "圣诞快乐",               // Chinese (Simplified)
+  "聖誕快樂",               // Chinese (Traditional / Cantonese: Sing1 daan3 faai3 lok6)
   "Счастливого Рождества",  // Russian
   "عيد ميلاد مجيد",         // Arabic
   "საუკეთესო შობა",         // Georgian
   "Feliz Natal",            // Portuguese
-  "Sretni Božić",           // Croatian
+  "Sretan Božić",           // Croatian
   "Veselé Vianoce",         // Slovakian
   "Buon Natale",            // Italian
   "Καλά Χριστούγεννα",     // Greek
@@ -136,8 +248,110 @@ const christmasMessages = [
   "Chúc mừng Giáng sinh",   // Vietnamese
   "Kirismasu njoddi",       // Fulfulde
   "Ir ka koy Kirismasu",    // Zarma
-  "Marhaban Kirismasu"      // Tamasheq
+  "Marhaban Kirismasu",      // Tamasheq
+  "З Різдвом Христовим!",    // Ukrainian
+  "З Калядамі!",            // Belarusian
+  "Весела Коледа",          // Bulgarian
+  "Срећан Божић",           // Serbian (Cyrillic)
+  "Среќен Божик",           // Macedonian
+  "Рождество құтты болсын",  // Kazakh
+  "Рождество кут болсун",   // Kyrgyz
+  "Мавлуди Исо муборак",    // Tajik
+  "Зул сарын мэнд хүргэе",  // Mongolian
+  "Wesołych Świąt",         // Polish
+  "Veselé Vánoce",          // Czech
+  "Boldog Karácsonyt",      // Hungarian
+  "Crăciun Fericit",        // Romanian
+  "Glædelig Jul",           // Danish
+  "God Jul",                // Norwegian
+  "Hyvää Joulua",           // Finnish
+  "Häid Jõule",             // Estonian
+  "Priecīgus Ziemassvētkus",// Latvian
+  "Su šventomis Kalėdomis", // Lithuanian
+  "Nollaig Shona Duit",     // Irish
+  "Nadolig Llawen",         // Welsh
+  "Nollaig Chridheil",      // Scottish Gaelic
+  "Zorionak eta Urte Berri On", // Basque
+  "Bon Nadal",               // Catalan / Occitan
+  "Feliz Nadal",            // Galician
+  "Il-Milied it-Tajjeb",    // Maltese
+  "Gëzuar Krishtlindjet",   // Albanian
+  "Schéi Chrëschtdag",      // Luxembourgish
+  "Gleðileg Jól",           // Icelandic
+  "Bellas Festas da Nadal", // Romansh
+  "Buon Nadale",            // Sardinian
+  "Nedeleg Mat",            // Breton
+  "Buorrit Juovllat",        // Northern Sami
+  "क्रिसमस की शुभकामनाएं",// Hindi
+  "শুভ বড়দিন",              // Bengali
+  "کرسمس مبارک",            // Urdu
+  "இனிய கிறிஸ்துமஸ் வாழ்த்துகள்", // Tamil
+  "క్రిస్మస్ శుభాకాంక్షలు", // Telugu
+  "ക്രിസ്മസ് ആശംസകൾ",    // Malayalam
+  "ಕ್ರಿಸ್ಮಸ್ ಹಬ್ಬದ ಶುಭಾಶಯಗಳು", // Kannada
+  "शुभ नाताळ",              // Marathi
+  "નાતાલની શુભકામનાઓ",     // Gujarati
+  "ਮੈਰੀ ਕ੍ਰਿਸਮਸ",            // Punjabi
+  "සුබ නත්තලක් වේවා",     // Sinhala
+  "สุขสันต์วันคริสต์มาส",   // Thai
+  "Selamat Hari Natal",     // Indonesian / Malay
+  "Maligayang Pasko",       // Filipino / Tagalog
+  "រីករាយថ្ងៃបុណ្យណូអែល",    // Khmer
+  "ສຸກສັນວັນຄຣິດສະມາດ",    // Lao
+  "မေရီခရစ္စမတ်",           // Burmese
+  "Ksolok ba Natal",        // Tetum
+  "Rojdestvo muborak",      // Uzbek
+  "Rojdestwo baýramyňyz gutly bolsun", // Turkmen
+  "Milad bayramınız mübarək", // Azerbaijani
+  "Շնորհավոր Սուրբ Ծնունդ", // Armenian
+  "Mutlu Noeller",          // Turkish
+  "Krîsmes pîroz be",       // Kurdish (Kurmanji)
+  "کریسمس پیرۆز بێت",       // Kurdish (Sorani)
+  "کریسمس مبارک",            // Persian / Farsi
+  "ཡེ་ཤུའི་འཁྲུངས་སྐར་ལ་བཀྲ་ཤིས་བདེ་ལེགས།", // Tibetan
+  "مەسىھنىڭ تۇغۇلغان كۈنىگە مۇبارەك بولسۇن", // Uyghur
+  "Wilujeng Natal",         // Sundanese
+  "Selamat Natal",          // Balinese
+  "ক্রিসমাসৰ শুভেচ্ছা",      // Assamese
+  "क्रिसमसस्य शुभकामनाः",   // Sanskrit
+  "Krismasi Njema",         // Swahili
+  "E ku odun keresimesi",   // Yoruba
+  "Ekeresimesi Oma",        // Igbo
+  "Barka da Kirsimeti",     // Hausa
+  "Afishapa",               // Twi (Akan)
+  "Ukrisimusi omnandi",     // Zulu
+  "Masego a Keresemose",    // Tswana
+  "Krismesi emnandi",       // Xhosa
+  "Keresemese e monate",     // Southern Sotho
+  "Joyeux Noël",            // Lingala
+  "Baga Ayyaana Qillee Gaarii Isiniif Haa Ta'u", // Oromo
+  "መልካም বড়ገና",            // Amharic
+  "Kristmas Wanaagsan",     // Somali
+  "Noheli Nziza",           // Kinyarwanda / Kirundi
+  "Sekukulu Enungi",         // Luganda
+  "Kisimusi Sere",          // Shona
+  "Tratry ny Krismasy",     // Malagasy
+  "Sumaq Navidad",          // Quechua
+  "Vy'apave Marangatu Ára", // Guarani
+  "Küme Tripantu Che",       // Mapudungun
+  "Suma Jach'a Uru",        // Aymara
+  "Yá'át'ééh Késhmish",     // Navajo
+  "Yukpa Késhmish",         // Choctaw
+  "Welálin Nuwel",          // Mi'kmaq
+  "Quviasuvviksiutsiarit",   // Inuktitut
+  "Meri Kirihimete",        // Maori
+  "Mele Kalikimaka",        // Hawaiian
+  "Meno Kalikimaka",        // Fijian
+  "Monōņōņ kōņān Kūrjin-m̧ōş", // Marshallese
+  "Kilisimasi Fiefia",      // Tongan
+  "La Maopia Le Kerisimasi",// Samoan
+  "Kia koa i te Raa Kiritimiti", // Cook Islands Maori
+  "Kirisimas Mwahmwa",      // Pohnpeian
+  "Felissat Nabidåt",       // Chamorro
+  "Apinun we long Krismas", // Bislama / Tok Pisin
+  "Ia orana i te Noera"      // Tahitian
 ];
+
 
 let currentMessageIndex = 0;
 const welcomeText = document.getElementById("welcome-text");
