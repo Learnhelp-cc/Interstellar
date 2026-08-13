@@ -93,7 +93,7 @@ async function updateConnectionStatus() {
     const ping = await measurePing();
 
     // Update status
-    const statusText = `connected to ${serverData.serverIP} via cloudflare tunnel (${serverData.domain}), from ${clientIP}. ping: ${ping}ms`;
+    const statusText = `Your IP Address: ${clientIP}. Ping: ${ping}ms`;
     statusElement.textContent = statusText;
     statusElement.title = statusText; // Show full text on hover
 
