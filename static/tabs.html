@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -19,7 +19,7 @@
 
 <body id="no" class="center" onload="SplashT">
   <div id="particles-js"></div>
-  
+
   <div class="app">
     <nav class="nav" id="right-side-nav">
       <ul id="tab-list"></ul>
@@ -47,7 +47,8 @@
           </form>
         </div>
         <div class="nav-right">
-          <button title="Search History" id="search-history-btn" class="nav-button nav-btn-right" onclick="showSearchHistory()">
+          <button title="Search History" id="search-history-btn" class="nav-button nav-btn-right"
+            onclick="showSearchHistory()">
             <i class="fas fa-history"></i>
           </button>
           <button title="Fullscreen" id="fullscreen-button" class="nav-button nav-btn-right" onclick="FS()">
@@ -118,7 +119,7 @@
             </div>
             <div class="modal-body">
               ${history.length === 0 ? '<p>No search history found.</p>' :
-                history.map(item => `
+            history.map(item => `
                   <div class="history-item">
                     <div class="history-info">
                       <div class="history-title">${item.title || item.url}</div>
@@ -131,7 +132,7 @@
                     </div>
                   </div>
                 `).join('')
-              }
+          }
             </div>
             <div class="modal-footer">
               <button onclick="clearAllHistory()" class="clear-btn">Clear All History</button>

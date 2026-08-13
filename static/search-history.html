@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,10 +15,10 @@
             padding: 20px;
             background: rgba(240, 240, 240, 0.5);
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             border: 1px solid #d0d0d0;
         }
-        
+
         .search-history-header {
             display: flex;
             justify-content: space-between;
@@ -26,7 +27,7 @@
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 10px;
         }
-        
+
         .search-history-tabs {
             display: flex;
             gap: 10px;
@@ -34,7 +35,7 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
         }
-        
+
         .search-history-tabs button {
             padding: 8px 16px;
             border: 1px solid #ccc;
@@ -44,13 +45,13 @@
             border-radius: 4px;
             font-weight: bold;
         }
-        
+
         .search-history-tabs button.active {
             background: #333;
             color: white;
             border-color: #333;
         }
-        
+
         .search-controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -62,14 +63,15 @@
             overflow: hidden;
             box-sizing: border-box;
         }
-        
+
         .search-controls .form-group {
             display: flex;
             flex-direction: column;
             gap: 5px;
-            min-width: 0; /* Prevent overflow */
+            min-width: 0;
+            /* Prevent overflow */
         }
-        
+
         .search-controls label {
             font-size: 12px;
             font-weight: bold;
@@ -80,7 +82,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
+
         .search-controls input,
         .search-controls select {
             padding: 8px;
@@ -93,14 +95,14 @@
             width: 100%;
             min-width: 0;
         }
-        
+
         .search-controls .actions-group {
             display: flex;
             flex-direction: column;
             gap: 10px;
             align-self: end;
         }
-        
+
         .search-controls button {
             padding: 10px 20px;
             border: none;
@@ -112,17 +114,17 @@
             white-space: nowrap;
             min-width: 120px;
         }
-        
+
         .search-controls .btn-secondary {
             background: #666;
         }
-        
+
         .bulk-actions {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
-        
+
         .bulk-actions select {
             padding: 8px;
             border: 1px solid #ccc;
@@ -130,7 +132,7 @@
             background: #fff;
             color: #333;
         }
-        
+
         .history-table {
             width: 100%;
             border-collapse: collapse;
@@ -140,7 +142,7 @@
             overflow: hidden;
             border: 1px solid #ddd;
         }
-        
+
         .history-table th,
         .history-table td {
             padding: 12px;
@@ -149,7 +151,7 @@
             color: #333;
             vertical-align: top;
         }
-        
+
         .history-table th {
             background: #f5f5f5;
             font-weight: bold;
@@ -158,16 +160,16 @@
             z-index: 1;
             border-bottom: 2px solid #ddd;
         }
-        
+
         .history-table tbody tr:hover {
             background: #f9f9f9;
         }
-        
+
         .history-actions {
             display: flex;
             gap: 8px;
         }
-        
+
         .history-actions button {
             padding: 4px 8px;
             border: none;
@@ -177,25 +179,25 @@
             background: #666;
             color: white;
         }
-        
+
         .btn-view {
             background: #666;
         }
-        
+
         .btn-delete {
             background: #333;
         }
-        
+
         .btn-select {
             background: #999;
         }
-        
+
         .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .user-avatar {
             width: 32px;
             height: 32px;
@@ -208,7 +210,7 @@
             font-weight: bold;
             font-size: 14px;
         }
-        
+
         .domain-badge {
             background: #f5f5f5;
             padding: 2px 8px;
@@ -216,19 +218,19 @@
             font-size: 12px;
             color: #333;
         }
-        
+
         .date-time {
             font-size: 12px;
             color: #666;
         }
-        
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
-        
+
         .stat-card {
             background: #fff;
             padding: 15px;
@@ -236,13 +238,13 @@
             border: 1px solid #ddd;
             text-align: center;
         }
-        
+
         .stat-number {
             font-size: 24px;
             font-weight: bold;
             color: #333;
         }
-        
+
         .stat-label {
             font-size: 12px;
             color: #666;
@@ -250,14 +252,14 @@
             letter-spacing: 1px;
             margin-top: 5px;
         }
-        
+
         .pagination {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-top: 20px;
         }
-        
+
         .pagination button {
             padding: 8px 16px;
             border: 1px solid #ccc;
@@ -266,32 +268,32 @@
             cursor: pointer;
             border-radius: 4px;
         }
-        
+
         .pagination button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         .no-data {
             text-align: center;
             padding: 40px;
             color: #666;
             font-style: italic;
         }
-        
+
         .loading {
             text-align: center;
             padding: 20px;
             color: #666;
         }
-        
+
         .filters-active {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             margin-bottom: 10px;
         }
-        
+
         .filter-badge {
             background: #333;
             color: white;
@@ -302,7 +304,7 @@
             align-items: center;
             gap: 5px;
         }
-        
+
         .filter-badge .remove-filter {
             background: none;
             border: none;
@@ -312,6 +314,7 @@
         }
     </style>
 </head>
+
 <body class="center">
     <div id="particles-js">
         <div class="f-nav"></div>
@@ -338,17 +341,17 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="search-history-tabs">
                     <button class="active" onclick="switchTab('recent')" id="tab-recent">Recent</button>
                     <button onclick="switchTab('user')" id="tab-user">By User</button>
                     <button onclick="switchTab('website')" id="tab-website">By Website</button>
                 </div>
-                
+
                 <div class="filters-active" id="filters-display">
                     <!-- Active filters will be displayed here -->
                 </div>
-                
+
                 <div class="search-controls">
                     <div class="form-group">
                         <label>Search Domain</label>
@@ -375,7 +378,7 @@
                         <button class="btn-secondary" onclick="clearFilters()">Clear</button>
                     </div>
                 </div>
-                
+
                 <div class="bulk-actions">
                     <select id="bulk-action">
                         <option value="">Bulk Actions</option>
@@ -386,7 +389,7 @@
                     <button class="btn-secondary" onclick="exportHistory()">Export</button>
                     <button class="btn-secondary" onclick="clearAllHistory()">Clear All History</button>
                 </div>
-                
+
                 <div style="overflow-x: auto;">
                     <table class="history-table">
                         <thead>
@@ -406,7 +409,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div class="pagination">
                     <button onclick="previousPage()" id="prev-btn">Previous</button>
                     <span id="page-info">Page 1</span>
@@ -422,7 +425,7 @@
     <script src="/assets/js/m1.js" defer></script>
     <script src="/assets/js/s1.js" defer></script>
     <script src="/assets/js/h1.js" defer></script>
-    
+
     <script>
         let allHistory = [];
         let filteredHistory = [];
@@ -455,7 +458,7 @@
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             checkAuth();
             loadHistory();
             setupEventListeners();
@@ -487,7 +490,7 @@
                 // Try to use stored admin auth first
                 const adminAuth = localStorage.getItem('adminAuth');
                 let headers = {};
-                
+
                 if (adminAuth) {
                     headers['Authorization'] = `Basic ${adminAuth}`;
                 }
@@ -507,19 +510,19 @@
                     showAdminAuthModal();
                 } else {
                     console.error('Failed to load history');
-                    document.getElementById('history-table-body').innerHTML = 
+                    document.getElementById('history-table-body').innerHTML =
                         '<tr><td colspan="6" class="no-data">Failed to load search history</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading history:', error);
-                document.getElementById('history-table-body').innerHTML = 
+                document.getElementById('history-table-body').innerHTML =
                     '<tr><td colspan="6" class="no-data">Error loading search history</td></tr>';
             }
         }
 
         function switchTab(tabName) {
             currentTab = tabName;
-            
+
             // Update tab buttons
             document.querySelectorAll('.search-history-tabs button').forEach(btn => {
                 btn.classList.remove('active');
@@ -544,7 +547,7 @@
             // Apply domain filter
             const domainFilter = document.getElementById('domain-filter').value.trim().toLowerCase();
             if (domainFilter) {
-                filtered = filtered.filter(item => 
+                filtered = filtered.filter(item =>
                     item.domain.toLowerCase().includes(domainFilter)
                 );
             }
@@ -552,7 +555,7 @@
             // Apply user filter
             const userFilter = document.getElementById('user-filter').value.trim().toLowerCase();
             if (userFilter) {
-                filtered = filtered.filter(item => 
+                filtered = filtered.filter(item =>
                     item.username.toLowerCase().includes(userFilter)
                 );
             }
@@ -560,7 +563,7 @@
             // Apply user ID filter
             const userIdFilter = document.getElementById('user-id-filter').value.trim();
             if (userIdFilter) {
-                filtered = filtered.filter(item => 
+                filtered = filtered.filter(item =>
                     item.user_id.toString() === userIdFilter
                 );
             }
@@ -571,7 +574,7 @@
 
             if (dateFrom) {
                 const fromDate = new Date(dateFrom);
-                filtered = filtered.filter(item => 
+                filtered = filtered.filter(item =>
                     new Date(item.visited_at) >= fromDate
                 );
             }
@@ -579,7 +582,7 @@
             if (dateTo) {
                 const toDate = new Date(dateTo);
                 toDate.setHours(23, 59, 59, 999); // Include the entire day
-                filtered = filtered.filter(item => 
+                filtered = filtered.filter(item =>
                     new Date(item.visited_at) <= toDate
                 );
             }
@@ -587,7 +590,7 @@
             // Apply sorting based on current tab
             filtered.sort((a, b) => {
                 let aVal, bVal;
-                
+
                 if (currentSort.field === 'visited_at') {
                     aVal = new Date(a.visited_at);
                     bVal = new Date(b.visited_at);
@@ -624,7 +627,7 @@
             container.innerHTML = '';
 
             const filters = [];
-            
+
             if (document.getElementById('domain-filter').value.trim()) {
                 filters.push(`Domain: ${document.getElementById('domain-filter').value.trim()}`);
             }
@@ -877,7 +880,7 @@
 
         async function exportHistory() {
             const dataStr = JSON.stringify(filteredHistory, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
@@ -922,7 +925,7 @@
             const totalEntries = allHistory.length;
             const uniqueUsers = new Set(allHistory.map(h => h.user_id)).size;
             const uniqueDomains = new Set(allHistory.map(h => h.domain)).size;
-            
+
             // Count today's entries
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -998,7 +1001,7 @@
 
             // Handle submit
             document.getElementById('admin-auth-submit').addEventListener('click', authenticateAdmin);
-            
+
             // Handle cancel
             document.getElementById('admin-auth-cancel').addEventListener('click', () => {
                 document.body.removeChild(overlay);
@@ -1028,7 +1031,7 @@
             try {
                 // Use basic auth for admin authentication
                 const authString = btoa(`${username}:${password}`);
-                
+
                 const response = await fetch('/api/admin/search-history', {
                     method: 'GET',
                     headers: {
@@ -1039,13 +1042,13 @@
                 if (response.ok) {
                     // Store admin credentials for future API calls
                     localStorage.setItem('adminAuth', authString);
-                    
+
                     // Remove modal
                     const overlay = document.getElementById('admin-auth-overlay');
                     if (overlay) {
                         document.body.removeChild(overlay);
                     }
-                    
+
                     // Load the search history
                     loadHistory();
                 } else {
@@ -1060,4 +1063,5 @@
         }
     </script>
 </body>
+
 </html>

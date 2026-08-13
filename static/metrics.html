@@ -150,28 +150,28 @@
     <script>
         // Check device token on page load
         async function checkAuth() {
-          const deviceToken = localStorage.getItem('deviceToken');
-          if (!deviceToken) {
-            window.location.href = '/signin';
-            return;
-          }
-
-          try {
-            const response = await fetch('/api/validate-token', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ deviceToken })
-            });
-
-            const data = await response.json();
-            if (!data.valid) {
-              localStorage.removeItem('deviceToken');
-              window.location.href = '/signin';
+            const deviceToken = localStorage.getItem('deviceToken');
+            if (!deviceToken) {
+                window.location.href = '/signin';
+                return;
             }
-          } catch (error) {
-            console.error('Auth check failed:', error);
-            window.location.href = '/signin';
-          }
+
+            try {
+                const response = await fetch('/api/validate-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceToken })
+                });
+
+                const data = await response.json();
+                if (!data.valid) {
+                    localStorage.removeItem('deviceToken');
+                    window.location.href = '/signin';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/signin';
+            }
         }
 
         // Check auth immediately
@@ -179,302 +179,302 @@
     </script>
     <div id="particles-js">
         <div class="main">
-        <div id="loading" class="loading">
-            <i class="fas fa-chart-line"></i><br>
-            Loading metrics data...
-        </div>
+            <div id="loading" class="loading">
+                <i class="fas fa-chart-line"></i><br>
+                Loading metrics data...
+            </div>
 
-        <div id="error" class="error" style="display: none;">
-            <i class="fas fa-exclamation-triangle"></i>
-            Failed to load metrics data. Please check your authentication.
-        </div>
+            <div id="error" class="error" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Failed to load metrics data. Please check your authentication.
+            </div>
 
-        <div id="dashboard" style="display: none;">
-            <h1 class="metrics-title">Metrics</h1>
-            <p class="metrics-subtitle">Real-time analytics for network traffic and user activity</p>
+            <div id="dashboard" style="display: none;">
+                <h1 class="metrics-title">Metrics</h1>
+                <p class="metrics-subtitle">Real-time analytics for network traffic and user activity</p>
 
-            <div class="metrics-container">
-                <div class="metrics-card">
-                    <h3><i class="fas fa-users"></i> Overview</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value" id="activeUsers">0</span>
-                            <span class="stat-label">Active Users</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="totalRequests">0</span>
-                            <span class="stat-label">Total Requests (24h)</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="uniqueSites">0</span>
-                            <span class="stat-label">Unique Sites</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="avgSessionTime">0m</span>
-                            <span class="stat-label">Avg Session Time</span>
+                <div class="metrics-container">
+                    <div class="metrics-card">
+                        <h3><i class="fas fa-users"></i> Overview</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value" id="activeUsers">0</span>
+                                <span class="stat-label">Active Users</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="totalRequests">0</span>
+                                <span class="stat-label">Total Requests (24h)</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="uniqueSites">0</span>
+                                <span class="stat-label">Unique Sites</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="avgSessionTime">0m</span>
+                                <span class="stat-label">Avg Session Time</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="metrics-card">
-                    <h3><i class="fas fa-chart-line"></i> Network Traffic</h3>
-                    <div class="chart-container">
-                        <canvas id="trafficChart"></canvas>
+                    <div class="metrics-card">
+                        <h3><i class="fas fa-chart-line"></i> Network Traffic</h3>
+                        <div class="chart-container">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
                     </div>
-                </div>
 
-                <div class="metrics-card">
-                    <h3><i class="fas fa-globe"></i> Top Websites</h3>
-                    <div class="chart-container">
-                        <canvas id="sitesChart"></canvas>
+                    <div class="metrics-card">
+                        <h3><i class="fas fa-globe"></i> Top Websites</h3>
+                        <div class="chart-container">
+                            <canvas id="sitesChart"></canvas>
+                        </div>
                     </div>
-                </div>
 
-                <div class="metrics-card">
-                    <h3><i class="fas fa-clock"></i> Time Distribution</h3>
-                    <div class="chart-container">
-                        <canvas id="timeChart"></canvas>
+                    <div class="metrics-card">
+                        <h3><i class="fas fa-clock"></i> Time Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="timeChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        let trafficChart, sitesChart, timeChart;
-        let updateInterval;
+        <script>
+            let trafficChart, sitesChart, timeChart;
+            let updateInterval;
 
-        async function fetchMetrics() {
-            try {
-                const response = await fetch('/api/metrics');
-                if (!response.ok) {
-                    throw new Error('Authentication required');
+            async function fetchMetrics() {
+                try {
+                    const response = await fetch('/api/metrics');
+                    if (!response.ok) {
+                        throw new Error('Authentication required');
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('Failed to fetch metrics:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                    return null;
                 }
-                return await response.json();
-            } catch (error) {
-                console.error('Failed to fetch metrics:', error);
+            }
+
+            function formatDuration(ms) {
+                const minutes = Math.floor(ms / 60000);
+                const hours = Math.floor(minutes / 60);
+                if (hours > 0) {
+                    return `${hours}h ${minutes % 60}m`;
+                }
+                return `${minutes}m`;
+            }
+
+            function updateStats(data) {
+                document.getElementById('activeUsers').textContent = data.activeUsers;
+                document.getElementById('totalRequests').textContent = data.totalRequests.toLocaleString();
+
+                const uniqueSites = Object.keys(data.networkTraffic).length;
+                document.getElementById('uniqueSites').textContent = uniqueSites;
+
+                // Calculate average session time
+                if (data.timeSpent.length > 0) {
+                    const avgDuration = data.timeSpent.reduce((sum, session) => sum + session.duration, 0) / data.timeSpent.length;
+                    document.getElementById('avgSessionTime').textContent = formatDuration(avgDuration);
+                }
+            }
+
+            function updateTrafficChart(data) {
+                const labels = [];
+                const values = [];
+
+                // Group traffic history by hour
+                const hourlyData = {};
+                data.trafficHistory.forEach(entry => {
+                    const hour = new Date(entry.timestamp).getHours();
+                    if (!hourlyData[hour]) {
+                        hourlyData[hour] = 0;
+                    }
+                    hourlyData[hour] += entry.requests;
+                });
+
+                // Create labels for last 24 hours
+                for (let i = 23; i >= 0; i--) {
+                    const hour = (new Date().getHours() - i + 24) % 24;
+                    labels.push(`${hour}:00`);
+                    values.push(hourlyData[hour] || 0);
+                }
+
+                if (trafficChart) {
+                    trafficChart.data.labels = labels;
+                    trafficChart.data.datasets[0].data = values;
+                    trafficChart.update();
+                } else {
+                    const ctx = document.getElementById('trafficChart').getContext('2d');
+                    trafficChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Requests per Hour',
+                                data: values,
+                                borderColor: '#3498db',
+                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function (value) {
+                                            return value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            function updateSitesChart(data) {
+                const topSites = data.topVisitedSites.slice(0, 10);
+                const labels = topSites.map(site => site.domain.length > 20 ? site.domain.substring(0, 20) + '...' : site.domain);
+                const values = topSites.map(site => site.count);
+
+                if (sitesChart) {
+                    sitesChart.data.labels = labels;
+                    sitesChart.data.datasets[0].data = values;
+                    sitesChart.update();
+                } else {
+                    const ctx = document.getElementById('sitesChart').getContext('2d');
+                    sitesChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Visit Count',
+                                data: values,
+                                backgroundColor: 'rgba(46, 204, 113, 0.6)',
+                                borderColor: '#27ae60',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function (value) {
+                                            return value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            function updateTimeChart(data) {
+                const timeData = data.timeSpent.slice(0, 10);
+                const labels = timeData.map(session => session.domain.length > 15 ? session.domain.substring(0, 15) + '...' : session.domain);
+                const values = timeData.map(session => session.duration / 60000); // Convert to minutes
+
+                if (timeChart) {
+                    timeChart.data.labels = labels;
+                    timeChart.data.datasets[0].data = values;
+                    timeChart.update();
+                } else {
+                    const ctx = document.getElementById('timeChart').getContext('2d');
+                    timeChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: [
+                                    '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
+                                    '#9b59b6', '#1abc9c', '#34495e', '#e67e22',
+                                    '#95a5a6', '#f1c40f'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        boxWidth: 12,
+                                        font: {
+                                            size: 11
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            return `${context.label}: ${formatDuration(context.raw * 60000)}`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            async function updateDashboard() {
+                const data = await fetchMetrics();
+                if (!data) return;
+
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').style.display = 'block';
-                return null;
+                document.getElementById('dashboard').style.display = 'block';
+
+                updateStats(data);
+                updateTrafficChart(data);
+                updateSitesChart(data);
+                updateTimeChart(data);
             }
-        }
 
-        function formatDuration(ms) {
-            const minutes = Math.floor(ms / 60000);
-            const hours = Math.floor(minutes / 60);
-            if (hours > 0) {
-                return `${hours}h ${minutes % 60}m`;
-            }
-            return `${minutes}m`;
-        }
+            // Initial load
+            updateDashboard();
 
-        function updateStats(data) {
-            document.getElementById('activeUsers').textContent = data.activeUsers;
-            document.getElementById('totalRequests').textContent = data.totalRequests.toLocaleString();
+            // Update every 30 seconds
+            updateInterval = setInterval(updateDashboard, 30000);
 
-            const uniqueSites = Object.keys(data.networkTraffic).length;
-            document.getElementById('uniqueSites').textContent = uniqueSites;
-
-            // Calculate average session time
-            if (data.timeSpent.length > 0) {
-                const avgDuration = data.timeSpent.reduce((sum, session) => sum + session.duration, 0) / data.timeSpent.length;
-                document.getElementById('avgSessionTime').textContent = formatDuration(avgDuration);
-            }
-        }
-
-        function updateTrafficChart(data) {
-            const labels = [];
-            const values = [];
-
-            // Group traffic history by hour
-            const hourlyData = {};
-            data.trafficHistory.forEach(entry => {
-                const hour = new Date(entry.timestamp).getHours();
-                if (!hourlyData[hour]) {
-                    hourlyData[hour] = 0;
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', () => {
+                if (updateInterval) {
+                    clearInterval(updateInterval);
                 }
-                hourlyData[hour] += entry.requests;
             });
-
-            // Create labels for last 24 hours
-            for (let i = 23; i >= 0; i--) {
-                const hour = (new Date().getHours() - i + 24) % 24;
-                labels.push(`${hour}:00`);
-                values.push(hourlyData[hour] || 0);
-            }
-
-            if (trafficChart) {
-                trafficChart.data.labels = labels;
-                trafficChart.data.datasets[0].data = values;
-                trafficChart.update();
-            } else {
-                const ctx = document.getElementById('trafficChart').getContext('2d');
-                trafficChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Requests per Hour',
-                            data: values,
-                            borderColor: '#3498db',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function (value) {
-                                        return value.toLocaleString();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function updateSitesChart(data) {
-            const topSites = data.topVisitedSites.slice(0, 10);
-            const labels = topSites.map(site => site.domain.length > 20 ? site.domain.substring(0, 20) + '...' : site.domain);
-            const values = topSites.map(site => site.count);
-
-            if (sitesChart) {
-                sitesChart.data.labels = labels;
-                sitesChart.data.datasets[0].data = values;
-                sitesChart.update();
-            } else {
-                const ctx = document.getElementById('sitesChart').getContext('2d');
-                sitesChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Visit Count',
-                            data: values,
-                            backgroundColor: 'rgba(46, 204, 113, 0.6)',
-                            borderColor: '#27ae60',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function (value) {
-                                        return value.toLocaleString();
-                                    }
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    maxRotation: 45,
-                                    minRotation: 45
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function updateTimeChart(data) {
-            const timeData = data.timeSpent.slice(0, 10);
-            const labels = timeData.map(session => session.domain.length > 15 ? session.domain.substring(0, 15) + '...' : session.domain);
-            const values = timeData.map(session => session.duration / 60000); // Convert to minutes
-
-            if (timeChart) {
-                timeChart.data.labels = labels;
-                timeChart.data.datasets[0].data = values;
-                timeChart.update();
-            } else {
-                const ctx = document.getElementById('timeChart').getContext('2d');
-                timeChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: values,
-                            backgroundColor: [
-                                '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
-                                '#9b59b6', '#1abc9c', '#34495e', '#e67e22',
-                                '#95a5a6', '#f1c40f'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    boxWidth: 12,
-                                    font: {
-                                        size: 11
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        return `${context.label}: ${formatDuration(context.raw * 60000)}`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        async function updateDashboard() {
-            const data = await fetchMetrics();
-            if (!data) return;
-
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-
-            updateStats(data);
-            updateTrafficChart(data);
-            updateSitesChart(data);
-            updateTimeChart(data);
-        }
-
-        // Initial load
-        updateDashboard();
-
-        // Update every 30 seconds
-        updateInterval = setInterval(updateDashboard, 30000);
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (updateInterval) {
-                clearInterval(updateInterval);
-            }
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js" async></script>
-    <script src="./assets/mathematics/bundle.js?v=2025-04-15" defer></script>
-    <script src="./assets/mathematics/config.js?v=2025-04-15" defer></script>
-    <script src="/assets/js/m1.js" defer></script>
-    <script src="/assets/js/h1.js" defer></script>
+        </script>
+        <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js" async></script>
+        <script src="./assets/mathematics/bundle.js?v=2025-04-15" defer></script>
+        <script src="./assets/mathematics/config.js?v=2025-04-15" defer></script>
+        <script src="/assets/js/m1.js" defer></script>
+        <script src="/assets/js/h1.js" defer></script>
 </body>
 
 </html>

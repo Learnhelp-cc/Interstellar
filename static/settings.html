@@ -21,234 +21,241 @@
   <div id="particles-js">
     <div class="f-nav"></div>
     <div class="main">
-    <div class="settings-container">
-      <div class="settings-card">
-        <h3 data-translate="settings.aboutBlank">About:Blank</h3>
-        <p data-translate="settings.aboutBlankDesc">
-          Cloak the site in an about:blank page and toggle about:blank on
-          startup (enabled by default)
-        </p>
-        <div id="ab-settings">
-          <div id="ab-settings-container">
-            <label class="switch">
-              <input type="checkbox" id="ab-settings-switch" class="slider-checkbox" onchange="toggleAB()" />
-              <span class="slider-round"></span>
-            </label>
+      <div class="settings-container">
+        <div class="settings-card">
+          <h3 data-translate="settings.aboutBlank">About:Blank</h3>
+          <p data-translate="settings.aboutBlankDesc">
+            Cloak the site in an about:blank page and toggle about:blank on
+            startup (enabled by default)
+          </p>
+          <div id="ab-settings">
+            <div id="ab-settings-container">
+              <label class="switch">
+                <input type="checkbox" id="ab-settings-switch" class="slider-checkbox" onchange="toggleAB()" />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+            <button onclick="AB()" class="key-button" data-translate="settings.openPopup">Open Popup</button>
           </div>
-          <button onclick="AB()" class="key-button" data-translate="settings.openPopup">Open Popup</button>
         </div>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.setPanicKey">Set Panic Key</h3>
-        <p data-translate="settings.panicKeyDesc">
-          Quick open another site with one press. Used for redirects when
-          about:blank is opened. For multiple key strokes separate them with a
-          comma. Ex. "A,B,C"
-        </p>
-        <input type="text" id="eventKeyInput" placeholder="Panic Keys (comma separated)" class="key-form" />
-        <input class="key-form" placeholder="Panic Link" type="text" id="linkInput" value />
-        <button class="key-button" value="Save" onclick="saveEventKey()" data-translate="settings.save">
-          Save
-        </button>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.tabCloaker">&#84;&#97;&#98;&#32;&#67;&#108;&#111;&#97;&#107;&#101;&#114;</h3>
-        <p data-translate="settings.tabCloakerDesc">Change the title and icon of the page.</p>
-        <select id="dropdown" onchange="handleDropdownChange(this)">
-          <option value="Classroom">Default</option>
-          <option value="Clever">Clever</option>
-          <option value="Canvas">Canvas</option>
-          <option value="Edpuzzle">Edpuzzle</option>
-          <option value="Google">Google</option>
-          <option value="Google Meet">Google Meet</option>
-          <option value="Classroom">Google Classroom</option>
-          <option value="Drive">Google Drive</option>
-          <option value="Google Docs">Google Docs</option>
-          <option value="Google Slides">Google Slides</option>
-          <option value="Gmail">Gmail</option>
-          <option value="Khan">Khan Academy</option>
-          <option value="Campus">Infinite Campus</option>
-          <option value="IXL">IXL</option>
-          <option value="LinkIt">LinkIt!</option>
-          <option value="Schoology">Schoology</option>
-          <option value="i-Ready Math">i-Ready Math</option>
-          <option value="i-Ready Reading">i-Ready Reading</option>
-          <option value="ClassLink Login">ClassLink Login</option>
-          <option value="Wikipedia">Wikipedia</option>
-          <option value="Britannica">Britannica</option>
-          <option value="Ducksters">Ducksters</option>
-          <option value="Minga">Minga</option>
-          <option value="i-Ready Learning Games">
-            i-Ready Learning Games
-          </option>
-          <option value="NoRedInk Home">NoRedInk Home</option>
-          <option value="Newsela Binder">Newsela Binder</option>
-          <option value="Newsela Assignments">Newsela Assignments</option>
-          <option value="Newsela Home">Newsela Home</option>
-          <option value="PowerSchool Sign In">PowerSchool Sign In</option>
-          <option value="PowerSchool Grades and Attendance">
-            PowerSchool Grades and Attendance
-          </option>
-          <option value="PowerSchool Teacher Comments">
-            PowerSchool Teacher Comments
-          </option>
-          <option value="PowerSchool Standards Grades">
-            PowerSchool Standards Grades
-          </option>
-          <option value="PowerSchool Attendance">
-            PowerSchool Attendance
-          </option>
-          <option value="Nearpod">Nearpod</option>
-          <option value="StudentVUE">StudentVUE</option>
-          <option value="Quizlet Home">Quizlet Home</option>
-          <option value="Google Forms Locked Mode">
-            Google Forms - Locked Mode
-          </option>
-          <option value="DeltaMath">DeltaMath</option>
-          <option value="Kami">Kami</option>
-          <option value="GoGuardian Admin Restricted">
-            GoGuardian Admin Block
-          </option>
-          <option value="GoGuardian Teacher Block">
-            GoGuardian Teacher Block
-          </option>
-          <option value="World History Encyclopedia">
-            World History Encyclopedia
-          </option>
-          <option value="Big Ideas Math">Big Ideas Math</option>
-          <option value="Big Ideas Math Assignment Player">
-            Big Ideas Math Assignment Player
-          </option>
-          <option value="Savvas Realize">Savvas Realize</option>
-          <option value="SmartPass">SmartPass</option>
-          <option value="World Book Online - Super Home">
-            World Book Online (Super Home)
-          </option>
-          <option value="World Book Online - Student">
-            World Book Online (Student)
-          </option>
-          <option value="World Book Online - Timelines">
-            World Book Online (Timelines)
-          </option>
-          <option value="Naviance">Naviance Student</option>
-          <option value="PBS Learning Media">PBS Learning Media</option>
-          <option value="PBS Learning Media Student Home">
-            PBS Learning Media Student Home
-          </option>
-          <option value="Dictionary">Dictionary.com</option>
-          <option value="Thesaurus">Thesaurus.com</option>
-        </select>
-        <div id="buttonLayer">
-          <button class="key-button" value="Save" onclick="CustomIcon(); CustomName(); redirectToMainDomain();" data-translate="settings.save">
+        <div class="settings-card">
+          <h3 data-translate="settings.setPanicKey">Set Panic Key</h3>
+          <p data-translate="settings.panicKeyDesc">
+            Quick open another site with one press. Used for redirects when
+            about:blank is opened. For multiple key strokes separate them with a
+            comma. Ex. "A,B,C"
+          </p>
+          <input type="text" id="eventKeyInput" placeholder="Panic Keys (comma separated)" class="key-form" />
+          <input class="key-form" placeholder="Panic Link" type="text" id="linkInput" value />
+          <button class="key-button" value="Save" onclick="saveEventKey()" data-translate="settings.save">
             Save
           </button>
-          <button class="key-button" value="Reset" onclick="ResetCustomCloak(); redirectToMainDomain();" data-translate="settings.resetCloak">
-            Reset Cloak
+        </div>
+        <div class="settings-card">
+          <h3 data-translate="settings.tabCloaker">&#84;&#97;&#98;&#32;&#67;&#108;&#111;&#97;&#107;&#101;&#114;</h3>
+          <p data-translate="settings.tabCloakerDesc">Change the title and icon of the page.</p>
+          <select id="dropdown" onchange="handleDropdownChange(this)">
+            <option value="Classroom">Default</option>
+            <option value="Clever">Clever</option>
+            <option value="Canvas">Canvas</option>
+            <option value="Edpuzzle">Edpuzzle</option>
+            <option value="Google">Google</option>
+            <option value="Google Meet">Google Meet</option>
+            <option value="Classroom">Google Classroom</option>
+            <option value="Drive">Google Drive</option>
+            <option value="Google Docs">Google Docs</option>
+            <option value="Google Slides">Google Slides</option>
+            <option value="Gmail">Gmail</option>
+            <option value="Khan">Khan Academy</option>
+            <option value="Campus">Infinite Campus</option>
+            <option value="IXL">IXL</option>
+            <option value="LinkIt">LinkIt!</option>
+            <option value="Schoology">Schoology</option>
+            <option value="i-Ready Math">i-Ready Math</option>
+            <option value="i-Ready Reading">i-Ready Reading</option>
+            <option value="ClassLink Login">ClassLink Login</option>
+            <option value="Wikipedia">Wikipedia</option>
+            <option value="Britannica">Britannica</option>
+            <option value="Ducksters">Ducksters</option>
+            <option value="Minga">Minga</option>
+            <option value="i-Ready Learning Games">
+              i-Ready Learning Games
+            </option>
+            <option value="NoRedInk Home">NoRedInk Home</option>
+            <option value="Newsela Binder">Newsela Binder</option>
+            <option value="Newsela Assignments">Newsela Assignments</option>
+            <option value="Newsela Home">Newsela Home</option>
+            <option value="PowerSchool Sign In">PowerSchool Sign In</option>
+            <option value="PowerSchool Grades and Attendance">
+              PowerSchool Grades and Attendance
+            </option>
+            <option value="PowerSchool Teacher Comments">
+              PowerSchool Teacher Comments
+            </option>
+            <option value="PowerSchool Standards Grades">
+              PowerSchool Standards Grades
+            </option>
+            <option value="PowerSchool Attendance">
+              PowerSchool Attendance
+            </option>
+            <option value="Nearpod">Nearpod</option>
+            <option value="StudentVUE">StudentVUE</option>
+            <option value="Quizlet Home">Quizlet Home</option>
+            <option value="Google Forms Locked Mode">
+              Google Forms - Locked Mode
+            </option>
+            <option value="DeltaMath">DeltaMath</option>
+            <option value="Kami">Kami</option>
+            <option value="GoGuardian Admin Restricted">
+              GoGuardian Admin Block
+            </option>
+            <option value="GoGuardian Teacher Block">
+              GoGuardian Teacher Block
+            </option>
+            <option value="World History Encyclopedia">
+              World History Encyclopedia
+            </option>
+            <option value="Big Ideas Math">Big Ideas Math</option>
+            <option value="Big Ideas Math Assignment Player">
+              Big Ideas Math Assignment Player
+            </option>
+            <option value="Savvas Realize">Savvas Realize</option>
+            <option value="SmartPass">SmartPass</option>
+            <option value="World Book Online - Super Home">
+              World Book Online (Super Home)
+            </option>
+            <option value="World Book Online - Student">
+              World Book Online (Student)
+            </option>
+            <option value="World Book Online - Timelines">
+              World Book Online (Timelines)
+            </option>
+            <option value="Naviance">Naviance Student</option>
+            <option value="PBS Learning Media">PBS Learning Media</option>
+            <option value="PBS Learning Media Student Home">
+              PBS Learning Media Student Home
+            </option>
+            <option value="Dictionary">Dictionary.com</option>
+            <option value="Thesaurus">Thesaurus.com</option>
+          </select>
+          <div id="buttonLayer">
+            <button class="key-button" value="Save" onclick="CustomIcon(); CustomName(); redirectToMainDomain();"
+              data-translate="settings.save">
+              Save
+            </button>
+            <button class="key-button" value="Reset" onclick="ResetCustomCloak(); redirectToMainDomain();"
+              data-translate="settings.resetCloak">
+              Reset Cloak
+            </button>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3 data-translate="settings.setBackgroundImage">Set Background Image</h3>
+          <p data-translate="settings.backgroundImageDesc">Change the site's background image.</p>
+          <input class="key-form" type="text" id="background-input" placeholder="Enter image URL" />
+          <button class="key-button" id="save-button" data-translate="settings.save">Save</button>
+          <button class="key-button" id="reset-button">Reset</button>
+        </div>
+        <div class="settings-card">
+          <h3 data-translate="settings.searchEngine">Search Engine</h3>
+          <p data-translate="settings.searchEngineDesc">Change the search engine when searching.</p>
+          <select title="engine" id="engine" onchange="EngineChange(this)">
+            <option value="Google">Google (Default)</option>
+            <option value="Bing">Bing</option>
+            <option value="DuckDuckGo">DuckDuckGo</option>
+            <option value="Qwant">Qwant</option>
+            <option value="Startpage">Startpage</option>
+            <option value="SearchEncrypt">SearchEncrypt</option>
+            <option value="Ecosia">Ecosia</option>
+          </select>
+          <input class="key-form" type="text" id="engine-form" placeholder="Change Search Engine" name="engine" />
+          <button class="key-button" value="Save" onclick="SaveEngine();" data-translate="settings.save">
+            Save
           </button>
         </div>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.setBackgroundImage">Set Background Image</h3>
-        <p data-translate="settings.backgroundImageDesc">Change the site's background image.</p>
-        <input class="key-form" type="text" id="background-input" placeholder="Enter image URL" />
-        <button class="key-button" id="save-button" data-translate="settings.save">Save</button>
-        <button class="key-button" id="reset-button">Reset</button>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.searchEngine">Search Engine</h3>
-        <p data-translate="settings.searchEngineDesc">Change the search engine when searching.</p>
-        <select title="engine" id="engine" onchange="EngineChange(this)">
-          <option value="Google">Google (Default)</option>
-          <option value="Bing">Bing</option>
-          <option value="DuckDuckGo">DuckDuckGo</option>
-          <option value="Qwant">Qwant</option>
-          <option value="Startpage">Startpage</option>
-          <option value="SearchEncrypt">SearchEncrypt</option>
-          <option value="Ecosia">Ecosia</option>
-        </select>
-        <input class="key-form" type="text" id="engine-form" placeholder="Change Search Engine" name="engine" />
-        <button class="key-button" value="Save" onclick="SaveEngine();" data-translate="settings.save">
-          Save
-        </button>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.chooseProxy">Choose your <an>Pro</an>xy</h3>
-        <p data-translate="settings.proxyDesc">
-          Ultra<an>vio</an>let is the main <an>pro</an>xy, but Dynamic is
-          faster and supports more sites. (Dynamic is still in beta, so expect
-          some bugs.)
-        </p>
-        <select id="pChange">
-          <option value="uv">Ultra<an>vio</an>let (Default)</option>
-          <option value="dy">Dynamic (Doesn't work in about:blank)</option>
-        </select>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.particles">Particles</h3>
-        <p data-translate="settings.particlesDesc">
-          Add the particles that are from the previous version to the new
-          site.
-        </p>
-        <label class="switch">
-          <input type="checkbox" class="slider-checkbox" id="2" />
-          <span class="slider-round"></span>
-        </label>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.saveDataManagement">Save Data Management</h3>
-        <p data-translate="settings.saveDataDesc">Export your Interstellar data on this site and import it on another site.
-          This is useful because this site might be blocked in the future,
-          but you don't want to lose your save data.
-        </p>
-        <p id="warning">Importing a save file will overwrite your current saves!</p>
-        <button class="key-button" value="Export" onclick="exportSaveData();" data-translate="settings.exportSave">Export Save</button>
-        <button class="key-button" value="Import" onclick="importSaveData();" data-translate="settings.importSave">Import Save</button>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.musicQueue">Music Queue</h3>
-        <p data-translate="settings.musicQueueDesc">Manage your custom music files and queue.</p>
-        <div id="music-settings">
-          <div id="music-upload-section">
-            <input type="file" id="music-file-input" accept="audio/*" style="display: none;">
-            <button class="key-button" onclick="document.getElementById('music-file-input').click()" data-translate="settings.uploadMusic">Upload Music</button>
-          </div>
-          <div id="music-files-list">
-            <h4 data-translate="settings.yourMusicFiles">Your Music Files:</h4>
-            <div id="music-files-container"></div>
-          </div>
-          <div id="music-queue-section">
-            <h4 data-translate="settings.musicQueueTitle">Music Queue:</h4>
-            <button class="key-button" onclick="clearMusicQueue()" data-translate="settings.clearQueue">Clear Queue</button>
-            <div id="music-queue-container"></div>
+        <div class="settings-card">
+          <h3 data-translate="settings.chooseProxy">Choose your <an>Pro</an>xy</h3>
+          <p data-translate="settings.proxyDesc">
+            Ultra<an>vio</an>let is the main <an>pro</an>xy, but Dynamic is
+            faster and supports more sites. (Dynamic is still in beta, so expect
+            some bugs.)
+          </p>
+          <select id="pChange">
+            <option value="uv">Ultra<an>vio</an>let (Default)</option>
+            <option value="dy">Dynamic (Doesn't work in about:blank)</option>
+          </select>
+        </div>
+        <div class="settings-card">
+          <h3 data-translate="settings.particles">Particles</h3>
+          <p data-translate="settings.particlesDesc">
+            Add the particles that are from the previous version to the new
+            site.
+          </p>
+          <label class="switch">
+            <input type="checkbox" class="slider-checkbox" id="2" />
+            <span class="slider-round"></span>
+          </label>
+        </div>
+        <div class="settings-card">
+          <h3 data-translate="settings.saveDataManagement">Save Data Management</h3>
+          <p data-translate="settings.saveDataDesc">Export your Interstellar data on this site and import it on another
+            site.
+            This is useful because this site might be blocked in the future,
+            but you don't want to lose your save data.
+          </p>
+          <p id="warning">Importing a save file will overwrite your current saves!</p>
+          <button class="key-button" value="Export" onclick="exportSaveData();"
+            data-translate="settings.exportSave">Export Save</button>
+          <button class="key-button" value="Import" onclick="importSaveData();"
+            data-translate="settings.importSave">Import Save</button>
+        </div>
+        <div class="settings-card">
+          <h3 data-translate="settings.musicQueue">Music Queue</h3>
+          <p data-translate="settings.musicQueueDesc">Manage your custom music files and queue.</p>
+          <div id="music-settings">
+            <div id="music-upload-section">
+              <input type="file" id="music-file-input" accept="audio/*" style="display: none;">
+              <button class="key-button" onclick="document.getElementById('music-file-input').click()"
+                data-translate="settings.uploadMusic">Upload Music</button>
+            </div>
+            <div id="music-files-list">
+              <h4 data-translate="settings.yourMusicFiles">Your Music Files:</h4>
+              <div id="music-files-container"></div>
+            </div>
+            <div id="music-queue-section">
+              <h4 data-translate="settings.musicQueueTitle">Music Queue:</h4>
+              <button class="key-button" onclick="clearMusicQueue()" data-translate="settings.clearQueue">Clear
+                Queue</button>
+              <div id="music-queue-container"></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.language">Language</h3>
-        <p data-translate="settings.languageDesc">Select your preferred language for the interface.</p>
-        <select id="language-selector">
-          <option value="en">English</option>
-          <option value="es">Español (Spanish)</option>
-          <option value="nl">Nederlands (Dutch)</option>
-          <option value="de">Deutsch (German)</option>
-          <option value="fr">Français (French)</option>
-        </select>
-      </div>
-      <div class="settings-card">
-        <h3 data-translate="settings.information">Information</h3>
-        <p id="version-info">Version: Loading...</p>
-        <p id="last-updated">Last Updated: Loading...</p>
-        <p>
-          <span data-translate="settings.questions">Questions?</span>
-          email us at
-          <a href="mailto:webmaster@ilikepancakes.ink">webmaster</a>, or
-          <a href="https://docs.gointerstellar.app/faq" data-translate="settings.checkFaq">check our FAQ</a>!
-        <p data-translate="settings.credits">full credit to the original contributors!</p>
-        <a href="https://ilikepancakes.ink" data-translate="settings.website">check out my website</a>
-        </p>
+        <div class="settings-card">
+          <h3 data-translate="settings.language">Language</h3>
+          <p data-translate="settings.languageDesc">Select your preferred language for the interface.</p>
+          <select id="language-selector">
+            <option value="en">English</option>
+            <option value="es">Español (Spanish)</option>
+            <option value="nl">Nederlands (Dutch)</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="fr">Français (French)</option>
+          </select>
+        </div>
+        <div class="settings-card">
+          <h3 data-translate="settings.information">Information</h3>
+          <p id="version-info">Version: Loading...</p>
+          <p id="last-updated">Last Updated: Loading...</p>
+          <p>
+            <span data-translate="settings.questions">Questions?</span>
+            email us at
+            <a href="mailto:webmaster@ilikepancakes.ink">webmaster</a>, or
+            <a href="https://docs.gointerstellar.app/faq" data-translate="settings.checkFaq">check our FAQ</a>!
+          <p data-translate="settings.credits">full credit to the original contributors!</p>
+          <a href="https://ilikepancakes.ink" data-translate="settings.website">check out my website</a>
+          </p>
+        </div>
       </div>
     </div>
-  </div>
   </div>
   <script>
     // Check device token on page load
