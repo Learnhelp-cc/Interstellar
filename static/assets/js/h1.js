@@ -220,7 +220,95 @@ const welcomeMessages = [
   "خوش آمدید"        // Sindhi
 ];
 
-
+const workersOfTheWorldUniteMessages = [
+  "Workers of the world, unite!",
+  "Trabajadores del mundo, ¡uníos!",
+  "Werknemers van de wereld, verenigt u!",
+  "Arbeiter der Welt, vereinigt euch!",
+  "Ouvriers du monde, unissons-nous !",
+  "Arbetare i världen, enas er!",
+  "世界の労働者よ、団結せよ！",
+  "세계의 노동자여, 단결하라!",
+  "世界的工人，团结起来！",
+  "世界工人，團結起來！",
+  "Рабочие всего мира, соединяйтесь!",
+  "عمال العالم، متحدوا!",
+  "მსოფლიოს მუშები, ერთდით!",
+  "Trabalhadores do mundo, unam-se!",
+  "Radnici svijeta, ujedinite se!",
+  "Robotníci sveta, spojte sa!",
+  "Lavoratori del mondo, unitevi!",
+  "Εργάτες του κόσμου, ενωθείτε!",
+  "दुनिया के श्रमिकों, एक हो जाओ!",
+  "פועלי העולם, התאחדו!",
+  "Pekerja jagad, manunggal!",
+  "Công nhân trên thế giới, đoàn kết!",
+  "Робітники всіх країн, єднайтеся!",
+  "Рабочыя ўсіх краін, аб'яднайцеся!",
+  "Работници от целия свят, обединявайте се!",
+  "स्वागत है",
+  "বিশ্বের শ্রমিকরা, একত্রিত হও!",
+  "عالم کے کارکنو، متحد ہو جاو!",
+  "உலக தொழிலாளர்கள், ஒன்றுபடுங்கள்!",
+  "ప్రపంచ పనివార్లు, కలిసి గట్టిగా ఉండండి!",
+  "ലോക തൊഴിലാളികളേ, ഐക്യമാർകമായി ഒരുമിക്കൂ!",
+  "ವಿಶ್ವದ ಕಾರ್ಮಿಕರೇ, ಒಗ್ಗೂಡಿ!",
+  "जगातील कामगारांनो, एका हो!",
+  "દુનિયાના મજૂરોએ, એક થાવ!",
+  "ਪ੍ਰਪੰਚ ਦੇ ਮਜ਼ਦੂਰ, ਇਕਠੇ ਹੋ ਜਾਓ!",
+  "ලොවයේ කම්කරුවෝ, එක්වෙන්න!",
+  "คนงานทั้งโลก, จับมือร่วมกัน!",
+  "Pekerja dunia, bersatu!",
+  "Mga manggagawa ng mundo, magkaisa!",
+  "កម្មករទូទាំងពិភពលោក, ចូលរួមគ្នា!",
+  "ຜູ້ງານທົ່ວໂລກ, ຮວມເຂົ້າກັນ!",
+  "ကမၻာ့အလုပ္သမားမ်ား၊ တစုတစည္းတည္းျဖစ္ပါ!",
+  "Dünya işçileri, birleşin!",
+  "İşçilər, dünya birliyinə!",
+  "İşçi dünya, birləşin!",
+  "Բոլոր աշխատավորներ, միավորվեք!",
+  "Robotnicy świata, łączcie się!",
+  "Dělníci světa, spojte se!",
+  "A világ munkásai, egyesüljetek!",
+  "Muncitorii lumii, uniți-vă!",
+  "Verdens arbejdere, foren jer!",
+  "Maailman työläiset, yhdistykää!",
+  "Maailma töölised, ühinege!",
+  "Darbinieki pasaulē, apvienojieties!",
+  "Pasaulio darbininkai, susijunkite!",
+  "Oibrithe an domhain, éirigh le chéile!",
+  "Gweithwyr y byd, uno!",
+  "Luchd an t-saoghail, aonadh!",
+  "Munduko langileak, elkartu!",
+  "Treballadors del món, uneix-te!",
+  "Trabalhadores do mundo, unanse!",
+  "Traballadurs dal mond, unids!",
+  "Ħaddiema tad-dinja, ingħaqqu!",
+  "Punët e botës, bashkohuni!",
+  "Weltarbechter, vereenegt Iech!",
+  "Heimssinna, sameinist!",
+  "Lavoradurs dal mund, uni te!",
+  "Travailleurs du monde, unissez-vous!",
+  "Wafanyakazi wa dunia, united!",
+  "Ndị na-arụ ọrụ nke ụwa, jikọta onwe unu!",
+  "Abahimu b'isi, babatane!",
+  "Abeadole aye, darapọ!",
+  "Ukunzima w'isi, hlangana!",
+  "Vashandi vepasirose, mubatane!",
+  "Abeadole aye, darapọ!",
+  "Maaijra, one!",
+  "Pekerja dunia, bersatu!",
+  "Mga manggagawa ng mundo, magkaisa!",
+  "Tāngata o te ao, whakakotahi!",
+  "Pūna'ā o ka honua, e hui pū!",
+  "Na ka po'e o ke ao, e hui!",
+  "Maka halian, e tolonga!",
+  "Dasigni o'ao, uja!",
+  "Kaitangata o te ao, e mahi tahi!",
+  "Oibrithe an domhain, aontaigh!",
+  "Lavoratori di tutte le nazioni, unitevi!",
+  "Workers of the world, unite!"
+];
 
 // Merry Christmas messages in different languages
 const christmasMessages = [
@@ -360,16 +448,21 @@ function rotateWelcomeMessage() {
   if (!welcomeText) {
     return;
   }
-  
-  // Check if it's December (month 11) or January (month 0)
-  const currentMonth = new Date().getMonth();
-  const isChristmasSeason = currentMonth === 11 || currentMonth === 0;
-  
+
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentDay = today.getDate();
+  const isSovietUnionFoundingDay = currentMonth === 11 && currentDay === 30;
+  const isChristmasSeason = !isSovietUnionFoundingDay && (currentMonth === 11 || currentMonth === 0);
+
   // Fade out
   welcomeText.classList.add("fade-out");
 
   setTimeout(() => {
-    if (isChristmasSeason) {
+    if (isSovietUnionFoundingDay) {
+      welcomeText.textContent = workersOfTheWorldUniteMessages[currentMessageIndex];
+      currentMessageIndex = (currentMessageIndex + 1) % workersOfTheWorldUniteMessages.length;
+    } else if (isChristmasSeason) {
       // Cycle through Merry Christmas messages in different languages
       welcomeText.textContent = christmasMessages[currentMessageIndex];
       currentMessageIndex = (currentMessageIndex + 1) % christmasMessages.length;
