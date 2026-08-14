@@ -221,93 +221,200 @@ const welcomeMessages = [
 ];
 
 const workersOfTheWorldUniteMessages = [
-  "Workers of the world, unite!",
-  "Trabajadores del mundo, ¡uníos!",
-  "Werknemers van de wereld, verenigt u!",
-  "Arbeiter der Welt, vereinigt euch!",
-  "Ouvriers du monde, unissons-nous !",
-  "Arbetare i världen, enas er!",
-  "世界の労働者よ、団結せよ！",
-  "세계의 노동자여, 단결하라!",
-  "世界的工人，团结起来！",
-  "世界工人，團結起來！",
-  "Рабочие всего мира, соединяйтесь!",
-  "عمال العالم، متحدوا!",
-  "მსოფლიოს მუშები, ერთდით!",
-  "Trabalhadores do mundo, unam-se!",
-  "Radnici svijeta, ujedinite se!",
-  "Robotníci sveta, spojte sa!",
-  "Lavoratori del mondo, unitevi!",
-  "Εργάτες του κόσμου, ενωθείτε!",
-  "दुनिया के श्रमिकों, एक हो जाओ!",
-  "פועלי העולם, התאחדו!",
-  "Pekerja jagad, manunggal!",
-  "Công nhân trên thế giới, đoàn kết!",
-  "Робітники всіх країн, єднайтеся!",
-  "Рабочыя ўсіх краін, аб'яднайцеся!",
-  "Работници от целия свят, обединявайте се!",
-  "स्वागत है",
-  "বিশ্বের শ্রমিকরা, একত্রিত হও!",
-  "عالم کے کارکنو، متحد ہو جاو!",
-  "உலக தொழிலாளர்கள், ஒன்றுபடுங்கள்!",
-  "ప్రపంచ పనివార్లు, కలిసి గట్టిగా ఉండండి!",
-  "ലോക തൊഴിലാളികളേ, ഐക്യമാർകമായി ഒരുമിക്കൂ!",
-  "ವಿಶ್ವದ ಕಾರ್ಮಿಕರೇ, ಒಗ್ಗೂಡಿ!",
-  "जगातील कामगारांनो, एका हो!",
-  "દુનિયાના મજૂરોએ, એક થાવ!",
-  "ਪ੍ਰਪੰਚ ਦੇ ਮਜ਼ਦੂਰ, ਇਕਠੇ ਹੋ ਜਾਓ!",
-  "ලොවයේ කම්කරුවෝ, එක්වෙන්න!",
-  "คนงานทั้งโลก, จับมือร่วมกัน!",
-  "Pekerja dunia, bersatu!",
-  "Mga manggagawa ng mundo, magkaisa!",
-  "កម្មករទូទាំងពិភពលោក, ចូលរួមគ្នា!",
-  "ຜູ້ງານທົ່ວໂລກ, ຮວມເຂົ້າກັນ!",
-  "ကမၻာ့အလုပ္သမားမ်ား၊ တစုတစည္းတည္းျဖစ္ပါ!",
-  "Dünya işçileri, birleşin!",
-  "İşçilər, dünya birliyinə!",
-  "İşçi dünya, birləşin!",
-  "Բոլոր աշխատավորներ, միավորվեք!",
-  "Robotnicy świata, łączcie się!",
-  "Dělníci světa, spojte se!",
-  "A világ munkásai, egyesüljetek!",
-  "Muncitorii lumii, uniți-vă!",
-  "Verdens arbejdere, foren jer!",
-  "Maailman työläiset, yhdistykää!",
-  "Maailma töölised, ühinege!",
-  "Darbinieki pasaulē, apvienojieties!",
-  "Pasaulio darbininkai, susijunkite!",
-  "Oibrithe an domhain, éirigh le chéile!",
-  "Gweithwyr y byd, uno!",
-  "Luchd an t-saoghail, aonadh!",
-  "Munduko langileak, elkartu!",
-  "Treballadors del món, uneix-te!",
-  "Trabalhadores do mundo, unanse!",
-  "Traballadurs dal mond, unids!",
-  "Ħaddiema tad-dinja, ingħaqqu!",
-  "Punët e botës, bashkohuni!",
-  "Weltarbechter, vereenegt Iech!",
-  "Heimssinna, sameinist!",
-  "Lavoradurs dal mund, uni te!",
-  "Travailleurs du monde, unissez-vous!",
-  "Wafanyakazi wa dunia, united!",
-  "Ndị na-arụ ọrụ nke ụwa, jikọta onwe unu!",
-  "Abahimu b'isi, babatane!",
-  "Abeadole aye, darapọ!",
-  "Ukunzima w'isi, hlangana!",
-  "Vashandi vepasirose, mubatane!",
-  "Abeadole aye, darapọ!",
-  "Maaijra, one!",
-  "Pekerja dunia, bersatu!",
-  "Mga manggagawa ng mundo, magkaisa!",
-  "Tāngata o te ao, whakakotahi!",
-  "Pūna'ā o ka honua, e hui pū!",
-  "Na ka po'e o ke ao, e hui!",
-  "Maka halian, e tolonga!",
-  "Dasigni o'ao, uja!",
-  "Kaitangata o te ao, e mahi tahi!",
-  "Oibrithe an domhain, aontaigh!",
-  "Lavoratori di tutte le nazioni, unitevi!",
-  "Workers of the world, unite!"
+  "Workers of the world, unite!",                // English
+  "Trabajadores del mundo, ¡uníos!",             // Spanish
+  "Werknemers van de wereld, verenigt u!",       // Dutch
+  "Proletarier aller Länder, vereinigt euch!",   // German
+  "Ouvriers du monde, unissez-vous !",           // French
+  "Arbetare i hela världen, förena er!",         // Swedish
+  "万国の労働者よ、団結せよ！",                     // Japanese
+  "세계의 노동자여, 단결하라!",                       // Korean
+  "全世界无产者，联合起来！",                      // Chinese (Simplified)
+  "全世界無產者，聯合起來！",                      // Chinese (Traditional)
+  "Пролетарии всех стран, соединяйтесь!",        // Russian
+  "يا عمال العالم، اتحدوا!",                       // Arabic
+  "პროლეტარებო ყველა ქვეყნისა, შეერთდით!",       // Georgian
+  "Trabalhadores do mundo, unam-se!",            // Portuguese
+  "Proleteri svih zemalja, ujedinite se!",        // Croatian / Serbian / Bosnian
+  "Proletári всех krajín, spojte sa!",           // Slovakian
+  "Lavoratori di tutto il mondo, unitevi!",      // Italian
+  "Προλετάριοι όλων των χωρών, ενωθείτε!",       // Greek
+  "संसारका मजदूरहरू, एक होऔं!",                   // Nepali
+  "פועלי כל الأרצות, התאחדו!",                     // Hebrew
+  "Pekerja jagad, manunggal!",                   // Javanese
+  "Vô sản toàn thế giới, liên hiệp lại!",        // Vietnamese
+  "Пролетарі всіх країн, єднайтеся!",            // Ukrainian
+  "Пралетарыі ўсіх краін, яднайцеся!",           // Belarusian
+  "Пролетарии от всички страни, съединявайте се!", // Bulgarian
+  "Пролетери од сите земји, обединете се!",      // Macedonian
+  "বিশ্বের শ্রমিকরা, এক হও!",                      // Bengali
+  "دنیا کے محنت کشو، ایک ہو جاؤ!",               // Urdu
+  "உலகத் தொழிலாளர்களே, ஒன்றுபடுங்கள்!",          // Tamil
+  "ప్రపంచ కార్మికులారా, ఏకం కాండి!",             // Telugu
+  "ലോക തൊഴിലാളികളേ, സംഘടിക്കുവിൻ!",              // Malayalam
+  "ವಿಶ್ವದ ಕಾರ್ಮಿಕರೇ, ಒಂದಾಗಿ!",                   // Kannada
+  "जगातील कामगारांनो, एक व्हा!",                 // Marathi
+  "દુનિયાના મજૂરો, એક થાઓ!",                     // Gujarati
+  "ਸੰਸਾਰ ਦੇ ਮਜ਼ਦੂਰੋ, ਇੱਕ ਹੋ ਜਾਓ!",                // Punjabi
+  "ලෝකවාසී කම්කරුවෙනි, එක්වෙන්න!",               // Sinhala
+  "ผู้ใช้แรงงานทั่วโลก จงสามัคคีกัน!",            // Thai
+  "Kaum buruh di seluruh dunia, bersatulah!",     // Indonesian / Malay
+  "Mga manggagawa ng daigdig, magkaisa!",        // Tagalog / Filipino
+  "អ្នកធ្វើការទូទាំងពិភពលោក អើយ ចូររួបរួមគ្នា!",       // Khmer
+  "ຜູ້ອອກແຮງງານທົ່ວໂລກ, ຈົ່ງໂຮມກັນ!",            // Lao
+  "ကမ္ဘာ့အလုပ်သမားများ၊ စည်းလုံးကြပါ!",           // Burmese
+  "Bütün ülkelerin işçileri, birleşin!",         // Turkish
+  "Bütün ölkələrin proletarları, birləşin!",     // Azerbaijani
+  "Բոլոր երկրների պրոլետարներ, միացե՛ք",          // Armenian
+  "Proletariusze wszystkich krajów, łączcie się!", // Polish
+  "Proletáři všech zemí, spojte se!",            // Czech
+  "Világ proletárjai, egyesüljetek!",            // Hungarian
+  "Proletari din toate țările, uniți-vă!",        // Romanian
+  "Arbejdere i alle lande, foren jer!",          // Danish
+  "Kaikkien maiden proletaarit, liittykää yhteen!", // Finnish
+  "Kõigi maade proletaarlased, ühinege!",        // Estonian
+  "Visu zemju proletārieši, savienojieties!",    // Latvian
+  "Visų šalių meilės darbininkai, vienykitės!",  // Lithuanian
+  "Oibrithe an domhain, téigí i dtร่วม!",         // Irish
+  "Gweithwyr yr holl diroedd, unwch!",           // Welsh
+  "Luchd-obrach an t-saoghail, aonaibh!",        // Scottish Gaelic
+  "Munduko langileak, elkartu zaitezte!",        // Basque
+  "Proletaris de tots els països, uniu-vos!",    // Catalan
+  "Trabalhadores de todos os países, unídevos!", // Galician
+  "Ħaddiema tal-dinja, ingħaqdu!",               // Maltese
+  "Proletarë të të gjitha vendeve, bashkohuni!", // Albanian
+  "Aarbechter aller Länner, vereenegt Iech!",    // Luxembourgish
+  "Öreigar katoch landa, þjappið ykkur saman!", // Icelandic
+  "Wafanyakazi wa dunia, unganeni!",             // Swahili
+  "Ndị ọrụ nke ụwa, jikọta ọnụ!",                // Igbo
+  "Eyin osise gbogbo agbaye, e darapo!",          // Yoruba
+  "Ma'aikatan dukkan kasashe, ku haɗu!",         // Hausa
+  "Vashandi vepasi rese, kubatanai!",            // Shona
+  "Tāngata mahi o te ao, whakakotahi!",          // Maori
+  "E ka poʻe hana o ka honua, e hui pū!",         // Hawaiian
+  "Барлық елдердің пролетарлары, бірігіңдер!",    // Kazakh
+  "Бардык өлкөлөрдүн пролетарлары, бириккиле!",   // Kyrgyz
+  "Пролетарҳои ҳамаи мамлакатҳо, як шавед!",      // Tajik
+  "Дэлхийн пролетари нар нэгдэгтүн!",             // Mongolian
+  "Barcha mamlakatlar proletarlari, birlashingiz!", // Uzbek
+  "Ähli ýurtlaryň proletarlary, birleşiň!",       // Turkmen
+  "کارگران جهان، متحد شوید!",                    // Persian / Farsi
+  "د نړۍ کارګرانو، متحد شئ!",                     // Pashto
+  "کرکِران جهان، متحد شو!",                       // Balochi
+  "دنیا جا مزدورو، هڪ ٿيو!",                      // Sindhi
+  "Bijî karkerên cîhanê, yek bibin!",            // Kurdish (Kurmanji)
+  "کرێکارانی جیهان، یەکبگرن!",                   // Kurdish (Sorani)
+  "འཛམ་གླིང་གི་ངལ་རྩོལ་ပ། མཉམ་སྦྲེལ་བྱེད།",     // Tibetan
+  "دۇنيادىكى ئەمگەكچىلەر، بىرلەشىڭلار!",        // Uyghur
+  "Proletarii ex omnibus terris, unimini!",      // Latin
+  "Proletari de tute la landi, unijez!",         // Ido
+  "Proletarioj de chiuj landoj, unuighu!",        // Esperanto
+  "Kaum buruh ti sakuliah dunya, ngahiji!",      // Sundanese
+  "Pekerja makasami ring dunia, ngiring masikian!", // Balinese
+  "বিশ্বৰ সকলো দেশৰ শ্ৰমিকসকল, এক হওঁক!",        // Assamese
+  "සර්වදෙශීය කම්කරුවනි, එක්වෙන්න!",             // Sinhala (Formal Marxist slogan)
+  "Kabuki-an ta manga taw a peg-galbek, pakasakata!", // Maranao
+  "Manggagawa sa buong mundo, magkaisa!",        // Cebuano / Bisaya
+  "Poyetè di tot l' monde, unissîs-vos!",        // Walloon
+  "Treballadors de tot el món, uniu-vos!",        // Valencian
+  "Langile guztiak, elkartu zaitezte!",          // Basque (Variant)
+  "Arbeiderne i alle land, foren dere!",          // Norwegian (Bokmål)
+  "Arbeidarar i alle land, samla dykk!",         // Norwegian (Nynorsk)
+  "Asebenzi bomhlaba, hlangananani!",             // Zulu / Xhosa
+  "Bašomi ba lefase, kopanang!",                 // Northern Sotho
+  "Bodiri ba lefatshe, kopanang!",                // Tswana
+  "የዓለም ሠራተኞች፣ ተባበሩ!",                    // Amharic
+  "Shaqaalaha dunida, unooba!",                  // Somali
+  "Abakozi b'isi yose, nimwimunye!",              // Kinyarwanda
+  "Mpitso-draharaha amin'izao tontolo izao, mampiray!", // Malagasy
+  "Oibrithe an domhain, aontaígí!",               // Irish (Modern spelling)
+  "Gweithwyr y byd, unowch!",                    // Welsh (Variant)
+  "Kaimahi o te ao, whakakotahi!",               // Maori (Alternative)
+];
+
+const longLiveChairmanMaoMessages = [
+  "Long live Chairman Mao!",                      // English
+  "¡Viva el Presidente Mao!",                   // Spanish
+  "Leve voorzitter Mao!",                        // Dutch
+  "Es lebe Vorsitzender Mao!",                  // German
+  "Longue vie au président Mao !",             // French
+  "Länge leve ordförande Mao!",                // Swedish
+  "毛主席万岁！",                                 // Chinese (Simplified)
+  "마오 주석 만세!",                              // Korean
+  "毛主席萬歲！",                                 // Chinese (Traditional / Cantonese)
+  "Да здравствует председатель Мао!",            // Russian
+  "تحيا الرئيس ماو!",                            // Arabic
+  "Viva o Presidente Mao!",                    // Portuguese
+  "Živio predsjednik Mao!",                    // Croatian
+  "Nech žije předseda Mao!",                   // Czech
+  "長壽毛主席！",                                // Taiwanese (Literate phrase)
+  "चेयरमैन माओ ज़िंदाबाद!",                     // Hindi
+  "毛主席万歳！",                                 // Japanese
+  "Niech żyje Przewodniczący Mao!",             // Polish
+  "Éljen Mao elnök!",                          // Hungarian
+  "Trăiască Președintele Mao!",                 // Romanian
+  "Længe leve Formand Mao!",                   // Danish
+  "Lenge leve Formann Mao!",                   // Norwegian
+  "Eläköön puheenjohtaja Mao!",                // Finnish
+  "Elagu esimees Mao!",                        // Estonian
+  "Lai dzīvo priekšsēdētājs Mao!",             // Latvian
+  "Tegyvuoja Pirmininkas Mao!",                // Lithuanian
+  "Go mairfidh an Cathaoirleach Mao!",         // Irish
+  "Hir oes i gadeirydd Mao!",                   // Welsh
+  "Bivat o Presidente Mao!",                   // Galician
+  "Gora Mao Lehendakaria!",                    // Basque
+  "Visca el President Mao!",                   // Catalan
+  "Viva il Presidente Mao!",                   // Italian
+  "Zito o Proedros Mao!",                       // Greek (Ζήτω ο Πρόεδρος Μάο!)
+  "Да живее председателят Мао!",              // Bulgarian
+  "Хай живе голова Мао!",                      // Ukrainian
+  "Няхай жыве старшыня Мао!",                  // Belarusian
+  "Živeo predsednik Mao!",                     // Serbian / Bosnian
+  "Да живее претседателот Мао!",               // Macedonian
+  "Nech žije predseda Mao!",                   // Slovak
+  "Rrofftë Kryetari Mao!",                     // Albanian
+  "Lifa Formaður Mao!",                        // Icelandic
+  "মাও চেয়ারম্যান জিন্দাবাদ!",                  // Bengali
+  "چیئرمین ماؤ زندہ باد!",                       // Urdu
+  "தலைவர் மாஓ வாழ்க!",                         // Tamil
+  "ఛైర్మన్ మావో వర్ధిల్లాలి!",                   // Telugu
+  "ചെയർമാൻ മാവോ ദീർഘായുസ്സായിരിക്കട്ടെ!",       // Malayalam
+  "ಚೇರ್ಮನ್ ಮಾವೋ ದೀರ್ಘಾಯುವಾಗಲಿ!",               // Kannada
+  "चेअरमन माओ जिंदाबाद!",                      // Marathi
+  "ચેરમેન માઓ ઝિંદાબાદ!",                      // Gujarati
+  "ਚੇਅਰਮੈਨ ਮਾਓ ਜ਼ਿੰਦਾਬਾਦ!",                     // Punjabi
+  "මාඕ සභාපතිතුමාට දීර්ඝායු වේවා!",           // Sinhala
+  "ประธานเหมา จงเจริญ!",                        // Thai
+  "Hiduplah Ketua Mao!",                        // Indonesian / Malay
+  "Mabuhay si Tagapulong Mao!",                // Filipino / Tagalog
+  "ប្រធានម៉ៅ ចំរើនអាយុยืน!",                      // Khmer
+  "ປະທານ ເໝົາ ຈົ່ງຈະເລີນ!",                     // Lao
+  "ဥက္ကဋ္ဌမော် ရာဇဝင်ရှည်ပါစေ!",                 // Burmese
+  "Mao Predsedatel xush kelsin!",               // Uzbek (Мао раис яшасин!)
+  "Мао төраға жасасын!",                       // Kazakh
+  "Төрага Мао жашасын!",                        // Kyrgyz
+  "Раиси Мао зинда бод!",                      // Tajik
+  "Мао дарга мандтугай!",                      // Mongolian
+  "چیئرمین ماؤ زندہ باد!",                       // Pashto
+  "رئیس مائو زنده باد!",                        // Persian / Farsi
+  "Yaşasın Başkan Mao!",                       // Turkish
+  "Bijî Serok Mao!",                           // Kurdish (Kurmanji)
+  "بژێت سەرۆک ماۆ!",                           // Kurdish (Sorani)
+  "Chairman Mao Tashi Delek!",                 // Tibetan (毛主席万岁 / མའོ་ကျུའུ་ཞིས་ཁྲི་ལོ་བརྟན་པར་ཤོག།)
+  "Рәйис Мао яшисун!",                         // Uyghur
+  "Mwenyekiti Mao Aishi Maisha Marefu!",       // Swahili
+  "K'ade pe fun Alaga Mao!",                   // Yoruba
+  "Onye isi oche Mao dọrọ ndụ!",               // Igbo
+  "Shugaba Mao Ya Rayu!",                      // Hausa
+  "Mwenyekiti Mao vive!",                      // Lingala
+  "ሊቀመንበር ማኦ ይኖሩ!",                        // Amharic
+  "Guddoomiye Mao Ha Noolaado!",                // Somali
+  "Kia ora te Tiamana Mao!",                   // Maori
+  "E ola ka Luna Mao!",                        // Hawaiian
+  "Kida na Tiamani Mao!",                      // Fijian
+  "¡Viva el Presidente Mao!",                  // Quechua / Aymara (Borrowed)
+  "Chairman Mao Tunngasugit!",                 // Inuktitut
+  "Longfala laef long Tsiaman Mao!"             // Bislama
 ];
 
 // Merry Christmas messages in different languages
@@ -452,8 +559,9 @@ function rotateWelcomeMessage() {
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentDay = today.getDate();
-  const isSovietUnionFoundingDay = currentMonth === 11 && currentDay === 30;
-  const isChristmasSeason = !isSovietUnionFoundingDay && (currentMonth === 11 || currentMonth === 0);
+  const isSovietUnionFoundingDay = currentMonth === 11 && currentDay === 30; // Dec 30
+  const isMaoBirthday = currentMonth === 11 && currentDay === 26; // Dec 26
+  const isChristmasSeason = !isSovietUnionFoundingDay && !isMaoBirthday && (currentMonth === 11 || currentMonth === 0);
 
   // Fade out
   welcomeText.classList.add("fade-out");
@@ -462,6 +570,10 @@ function rotateWelcomeMessage() {
     if (isSovietUnionFoundingDay) {
       welcomeText.textContent = workersOfTheWorldUniteMessages[currentMessageIndex];
       currentMessageIndex = (currentMessageIndex + 1) % workersOfTheWorldUniteMessages.length;
+    } else if (isMaoBirthday) {
+      // Cycle through "Long live Chairman Mao!" messages in different languages
+      welcomeText.textContent = longLiveChairmanMaoMessages[currentMessageIndex % longLiveChairmanMaoMessages.length];
+      currentMessageIndex = (currentMessageIndex + 1) % longLiveChairmanMaoMessages.length;
     } else if (isChristmasSeason) {
       // Cycle through Merry Christmas messages in different languages
       welcomeText.textContent = christmasMessages[currentMessageIndex];
